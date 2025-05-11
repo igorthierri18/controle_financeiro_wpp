@@ -1,862 +1,858 @@
+{% extends 'base.html' %}
 
-    <!DOCTYPE html>
-    <html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Controle Financeiro</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-        <style>
-            :root {
-                --primary-color: #28a745;
-                --secondary-color: #e74c3c;
-                --background-color: #f8f9fa;
-                --card-bg: #ffffff;
-                --text-color: #333;
-                --text-muted: #6c757d;
-            }
-            
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: var(--background-color);
-                color: var(--text-color);
-                padding-bottom: 70px; /* Espaço para a navbar */
-            }
-            
-            .navbar-brand {
-                font-weight: bold;
-                display: flex;
-                align-items: center;
-            }
-            
-            .app-logo {
-                height: 30px;
-                margin-right: 8px;
-            }
-            
-            .header-card {
-                background-color: var(--primary-color);
-                color: white;
-                border-radius: 12px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                margin-bottom: 20px;
-                padding: 15px;
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .header-card h2 {
-                font-size: 20px;
-                margin-bottom: 5px;
-            }
-            
-            .header-card p {
-                font-size: 28px;
-                font-weight: bold;
-                margin-bottom: 0;
-            }
-            
-            .header-card .subtitle {
-                font-size: 14px;
-                opacity: 0.8;
-            }
-            
-            .header-card .icon {
-                position: absolute;
-                right: 20px;
-                top: 50%;
-                transform: translateY(-50%);
-                font-size: 38px;
-                opacity: 0.3;
-            }
-            
-            .card {
-                border-radius: 12px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-                margin-bottom: 20px;
-                border: none;
-            }
-            
-            .card-header {
-                background-color: var(--card-bg);
-                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-                padding: 15px 20px;
-                font-weight: 600;
-                font-size: 16px;
-                border-radius: 12px 12px 0 0 !important;
-            }
-            
-            .chart {
-                height: 300px;
-                width: 100%;
-            }
-            
-            .tab-content {
-                padding-top: 15px;
-            }
-            
-            .category-pill {
-                border-radius: 20px;
-                padding: 5px 12px;
-                font-size: 12px;
-                font-weight: 500;
-            }
-            
-            .expense-item {
-                padding: 12px 15px;
-                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            }
-            
-            .expense-item:last-child {
-                border-bottom: none;
-            }
-            
-            .expense-item-title {
-                font-weight: 500;
-                margin-bottom: 0;
-                font-size: 14px;
-            }
-            
-            .expense-item-subtitle {
-                color: var(--text-muted);
-                font-size: 12px;
-            }
-            
-            .expense-item-amount {
-                font-weight: 600;
-                color: var(--secondary-color);
-                font-size: 15px;
-            }
-            
-            .bottom-nav {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background-color: white;
-                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-                z-index: 1000;
-                border-top-left-radius: 15px;
-                border-top-right-radius: 15px;
-            }
-            
-            .bottom-nav .nav-link {
-                text-align: center;
-                padding: 12px 0;
-                color: var(--text-muted);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                font-size: 10px;
-            }
-            
-            .bottom-nav .nav-link.active {
-                color: var(--primary-color);
-            }
-            
-            .bottom-nav .nav-link i {
-                font-size: 22px;
-                margin-bottom: 2px;
-            }
-            
-            .bottom-nav .fab-button {
-                position: absolute;
-                top: -20px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 50px;
-                height: 50px;
-                background-color: var(--primary-color);
-                border-radius: 50%;
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 24px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            }
-            
-            .period-buttons {
-                display: flex;
-                overflow-x: auto;
-                white-space: nowrap;
-                padding: 10px 0;
-                margin-bottom: 10px;
-            }
-            
-            .period-buttons .btn {
-                flex: 0 0 auto;
-                border-radius: 20px;
-                margin-right: 10px;
-                font-size: 13px;
-                padding: 6px 15px;
-            }
-            
-            .transaction-date {
-                font-size: 14px;
-                font-weight: 500;
-                margin-top: 15px;
-                margin-bottom: 10px;
-                color: var(--text-muted);
-            }
-            
-            /* Estilos responsivos */
-            @media (max-width: 576px) {
-                .header-card {
-                    margin-bottom: 15px;
-                    padding: 12px;
-                }
-                
-                .header-card p {
-                    font-size: 24px;
-                }
-                
-                .chart {
-                    height: 250px;
-                }
-                
-                .card-header {
-                    padding: 12px 15px;
-                }
-            }
-            
-            .category-alimentação { background-color: #FFA726; }
-            .category-transporte { background-color: #42A5F5; }
-            .category-moradia { background-color: #66BB6A; }
-            .category-saúde { background-color: #EC407A; }
-            .category-educação { background-color: #AB47BC; }
-            .category-lazer { background-color: #26C6DA; }
-            .category-vestuário { background-color: #8D6E63; }
-            .category-outros { background-color: #78909C; }
-        </style>
-    </head>
-    <body>
-        <nav class="navbar navbar-expand bg-white shadow-sm mb-3">
-            <div class="container">
-                <a class="navbar-brand" href="#">
-                    <span class="text-success">Controle Financeiro</span>
-                </a>
-                <div class="d-flex">
-                    <button class="btn btn-sm btn-outline-success me-2">
-                        <i class="bi bi-calendar-event"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-gear"></i>
-                    </button>
+{% block title %}Dashboard - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.header-card {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.header-card h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.header-card p {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+.header-card .subtitle {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.header-card .icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 38px;
+    opacity: 0.3;
+}
+
+.chart {
+    height: 300px;
+    width: 100%;
+}
+
+.period-buttons {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 10px 0;
+    margin-bottom: 10px;
+}
+
+.period-buttons .btn {
+    flex: 0 0 auto;
+    border-radius: 20px;
+    margin-right: 10px;
+    font-size: 13px;
+    padding: 6px 15px;
+}
+
+.transaction-date {
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+}
+
+.expense-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.expense-item:last-child {
+    border-bottom: none;
+}
+
+.expense-item-title {
+    font-weight: 500;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.expense-item-subtitle {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.expense-item-amount {
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 15px;
+}
+
+.category-pill {
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tab-content {
+    padding-top: 15px;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.bottom-nav .nav-link {
+    text-align: center;
+    padding: 12px 0;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 10px;
+}
+
+.bottom-nav .nav-link.active {
+    color: var(--primary-color);
+}
+
+.bottom-nav .nav-link i {
+    font-size: 22px;
+    margin-bottom: 2px;
+}
+
+.bottom-nav .fab-button {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos responsivos */
+@media (max-width: 576px) {
+    .header-card {
+        margin-bottom: 15px;
+        padding: 12px;
+    }
+    
+    .header-card p {
+        font-size: 24px;
+    }
+    
+    .chart {
+        height: 250px;
+    }
+    
+    .card-header {
+        padding: 12px 15px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+    <!-- Seletores de período -->
+    <div class="period-buttons">
+        <button class="btn btn-sm btn-outline-success period-btn" data-period="dia">Hoje</button>
+        <button class="btn btn-sm btn-success period-btn" data-period="semana">Esta semana</button>
+        <button class="btn btn-sm btn-outline-success period-btn" data-period="mes">Este mês</button>
+        <button class="btn btn-sm btn-outline-success period-btn" data-period="ano">Este ano</button>
+        <button class="btn btn-sm btn-outline-success period-btn" data-period="custom">Personalizado</button>
+    </div>
+    
+    <!-- Cartões de resumo -->
+    <div class="row">
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="header-card">
+                <h2>Despesas</h2>
+                <p id="total-despesas">R$ 0,00</p>
+                <span class="subtitle" id="period-subtitle">nesta semana</span>
+                <div class="icon">
+                    <i class="bi bi-cash"></i>
                 </div>
             </div>
-        </nav>
-        
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="header-card" style="background-color: #4a6cf7;">
+                <h2>Receitas</h2>
+                <p id="total-receitas">R$ 0,00</p>
+                <span class="subtitle" id="period-subtitle-receitas">nesta semana</span>
+                <div class="icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="header-card" style="background-color: #6440fb;">
+                <h2>Saldo</h2>
+                <p id="total-saldo">R$ 0,00</p>
+                <span class="subtitle" id="period-subtitle-saldo">nesta semana</span>
+                <div class="icon">
+                    <i class="bi bi-piggy-bank"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="header-card" style="background-color: #34c759;">
+                <h2>Economia</h2>
+                <p id="percentual-economia">0%</p>
+                <span class="subtitle" id="period-subtitle-economia">nesta semana</span>
+                <div class="icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico por categoria -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Gráfico por categoria</span>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/api/exportar/despesas" download>Exportar CSV</a></li>
+                    <li><a class="dropdown-item" href="#" id="btn-share-chart">Compartilhar via WhatsApp</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="grafico-categoria" class="chart"></div>
+        </div>
+    </div>
+    
+    <!-- Últimas transações -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Últimas transações</span>
+            <a href="#" class="text-decoration-none text-success">Ver todas</a>
+        </div>
+        <div class="card-body p-0">
+            <ul class="nav nav-tabs nav-fill" id="transactionTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-pane" type="button" role="tab">Todas</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="expense-tab" data-bs-toggle="tab" data-bs-target="#expense-pane" type="button" role="tab">Despesas</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="income-tab" data-bs-toggle="tab" data-bs-target="#income-pane" type="button" role="tab">Receitas</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="transactionTabsContent">
+                <div class="tab-pane fade show active" id="all-pane" role="tabpanel" tabindex="0">
+                    <div id="todas-transacoes">
+                        <!-- As transações serão carregadas aqui -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="expense-pane" role="tabpanel" tabindex="0">
+                    <div id="despesas-container">
+                        <!-- As despesas serão carregadas aqui -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="income-pane" role="tabpanel" tabindex="0">
+                    <div id="receitas-container">
+                        <!-- As receitas serão carregadas aqui -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Barra de navegação inferior (apenas em mobile) -->
+    <div class="bottom-nav d-md-none">
         <div class="container">
-            <!-- Seletores de período -->
-            <div class="period-buttons">
-                <button class="btn btn-sm btn-outline-success period-btn" data-period="day">Hoje</button>
-                <button class="btn btn-sm btn-success period-btn" data-period="week">Esta semana</button>
-                <button class="btn btn-sm btn-outline-success period-btn" data-period="month">Este mês</button>
-                <button class="btn btn-sm btn-outline-success period-btn" data-period="year">Este ano</button>
-                <button class="btn btn-sm btn-outline-success period-btn" data-period="custom">Personalizado</button>
-            </div>
-            
-            <!-- Cartões de resumo -->
             <div class="row">
-                <div class="col-md-6 col-lg-3 mb-3">
-                    <div class="header-card">
-                        <h2>Despesas</h2>
-                        <p id="total-expenses">R$ 0,00</p>
-                        <span class="subtitle" id="period-subtitle">nesta semana</span>
-                        <div class="icon">
-                            <i class="bi bi-cash"></i>
-                        </div>
-                    </div>
+                <div class="col-3">
+                    <a href="/dashboard" class="nav-link active">
+                        <i class="bi bi-house-door"></i>
+                        <span>Início</span>
+                    </a>
                 </div>
-                <div class="col-md-6 col-lg-3 mb-3">
-                    <div class="header-card" style="background-color: #4a6cf7;">
-                        <h2>Receitas</h2>
-                        <p id="total-incomes">R$ 0,00</p>
-                        <span class="subtitle" id="period-subtitle-income">nesta semana</span>
-                        <div class="icon">
-                            <i class="bi bi-wallet2"></i>
-                        </div>
-                    </div>
+                <div class="col-3">
+                    <a href="/relatorios" class="nav-link">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Relatórios</span>
+                    </a>
                 </div>
-                <div class="col-md-6 col-lg-3 mb-3">
-                    <div class="header-card" style="background-color: #6440fb;">
-                        <h2>Saldo</h2>
-                        <p id="total-balance">R$ 0,00</p>
-                        <span class="subtitle" id="period-subtitle-balance">nesta semana</span>
-                        <div class="icon">
-                            <i class="bi bi-piggy-bank"></i>
-                        </div>
-                    </div>
+                <div class="col-3">
+                    <a href="/categorias" class="nav-link">
+                        <i class="bi bi-tags"></i>
+                        <span>Categorias</span>
+                    </a>
                 </div>
-                <div class="col-md-6 col-lg-3 mb-3">
-                    <div class="header-card" style="background-color: #34c759;">
-                        <h2>Economia</h2>
-                        <p id="economy-percent">0%</p>
-                        <span class="subtitle" id="period-subtitle-economy">nesta semana</span>
-                        <div class="icon">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-                    </div>
+                <div class="col-3">
+                    <a href="/perfil" class="nav-link">
+                        <i class="bi bi-person"></i>
+                        <span>Perfil</span>
+                    </a>
                 </div>
             </div>
-            
-            <!-- Gráfico por categoria -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Gráfico por categoria</span>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots-vertical"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/api/export/csv">Exportar dados</a></li>
-                            <li><a class="dropdown-item" href="#">Ver detalhes</a></li>
-                        </ul>
-                    </div>
+            <a href="#" class="fab-button" data-bs-toggle="modal" data-bs-target="#modalAddTransacao">
+                <i class="bi bi-plus"></i>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Modal para adicionar transação -->
+    <div class="modal fade" id="modalAddTransacao" tabindex="-1" aria-labelledby="modalAddTransacaoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAddTransacaoLabel">Adicionar Transação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-                <div class="card-body">
-                    <div id="category-chart" class="chart"></div>
-                </div>
-            </div>
-            
-            <!-- Últimas transações -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Últimas transações</span>
-                    <a href="#" class="text-decoration-none text-success">Ver todas</a>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="nav nav-tabs nav-fill" id="transactionTabs" role="tablist">
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="transactionTypeTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-pane" type="button" role="tab">Todas</button>
+                            <button class="nav-link active" id="tab-despesa" data-bs-toggle="tab" data-bs-target="#despesa-tab-pane" type="button" role="tab">Despesa</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="expense-tab" data-bs-toggle="tab" data-bs-target="#expense-pane" type="button" role="tab">Despesas</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="income-tab" data-bs-toggle="tab" data-bs-target="#income-pane" type="button" role="tab">Receitas</button>
+                            <button class="nav-link" id="tab-receita" data-bs-toggle="tab" data-bs-target="#receita-tab-pane" type="button" role="tab">Receita</button>
                         </li>
                     </ul>
-                    <div class="tab-content" id="transactionTabsContent">
-                        <div class="tab-pane fade show active" id="all-pane" role="tabpanel" tabindex="0">
-                            <div id="all-transactions-container">
-                                <!-- Transações serão carregadas via JavaScript -->
-                                <div class="text-center py-4">
-                                    <div class="spinner-border text-success" role="status">
-                                        <span class="visually-hidden">Carregando...</span>
+                    <div class="tab-content mt-3" id="transactionTypeTabsContent">
+                        <div class="tab-pane fade show active" id="despesa-tab-pane" role="tabpanel" tabindex="0">
+                            <!-- Formulário de despesa -->
+                            <form id="form-despesa">
+                                <div class="mb-3">
+                                    <label for="despesa-valor" class="form-label">Valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" id="despesa-valor" name="valor" step="0.01" min="0.01" required>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="mb-3">
+                                    <label for="despesa-descricao" class="form-label">Descrição</label>
+                                    <input type="text" class="form-control" id="despesa-descricao" name="descricao" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-categoria" class="form-label">Categoria</label>
+                                    <select class="form-select" id="despesa-categoria" name="categoria" required>
+                                        <option value="alimentação">🍽️ Alimentação</option>
+                                        <option value="transporte">🚗 Transporte</option>
+                                        <option value="moradia">🏠 Moradia</option>
+                                        <option value="saúde">⚕️ Saúde</option>
+                                        <option value="educação">📚 Educação</option>
+                                        <option value="lazer">🎭 Lazer</option>
+                                        <option value="vestuário">👕 Vestuário</option>
+                                        <option value="outros">📦 Outros</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-data" class="form-label">Data</label>
+                                    <input type="date" class="form-control" id="despesa-data" name="data" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-forma-pagamento" class="form-label">Forma de Pagamento</label>
+                                    <select class="form-select" id="despesa-forma-pagamento" name="forma_pagamento">
+                                        <option value="">Selecione...</option>
+                                        <option value="Dinheiro">Dinheiro</option>
+                                        <option value="Débito">Cartão de Débito</option>
+                                        <option value="Crédito">Cartão de Crédito</option>
+                                        <option value="PIX">PIX</option>
+                                        <option value="Transferência">Transferência Bancária</option>
+                                        <option value="Boleto">Boleto</option>
+                                    </select>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="despesa-parcelada" name="parcelado">
+                                    <label class="form-check-label" for="despesa-parcelada">
+                                        Despesa parcelada
+                                    </label>
+                                </div>
+                                <div class="mb-3" id="div-parcelas" style="display: none;">
+                                    <label for="despesa-parcelas" class="form-label">Número de Parcelas</label>
+                                    <input type="number" class="form-control" id="despesa-parcelas" name="num_parcelas" min="2" value="2">
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Salvar Despesa</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="tab-pane fade" id="expense-pane" role="tabpanel" tabindex="0">
-                            <div id="expense-transactions-container">
-                                <!-- Despesas serão carregadas via JavaScript -->
-                                <div class="text-center py-4">
-                                    <div class="spinner-border text-success" role="status">
-                                        <span class="visually-hidden">Carregando...</span>
+                        <div class="tab-pane fade" id="receita-tab-pane" role="tabpanel" tabindex="0">
+                            <!-- Formulário de receita -->
+                            <form id="form-receita">
+                                <div class="mb-3">
+                                    <label for="receita-valor" class="form-label">Valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" id="receita-valor" name="valor" step="0.01" min="0.01" required>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="income-pane" role="tabpanel" tabindex="0">
-                            <div id="income-transactions-container">
-                                <!-- Receitas serão carregadas via JavaScript -->
-                                <div class="text-center py-4">
-                                    <div class="spinner-border text-success" role="status">
-                                        <span class="visually-hidden">Carregando...</span>
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="receita-descricao" class="form-label">Descrição</label>
+                                    <input type="text" class="form-control" id="receita-descricao" name="descricao" required>
                                 </div>
-                            </div>
+                                <div class="mb-3">
+                                    <label for="receita-categoria" class="form-label">Categoria</label>
+                                    <select class="form-select" id="receita-categoria" name="categoria" required>
+                                        <option value="salario">💰 Salário</option>
+                                        <option value="freelance">💼 Freelance</option>
+                                        <option value="investimento">📈 Investimento</option>
+                                        <option value="presente">🎁 Presente</option>
+                                        <option value="outros">📦 Outros</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="receita-data" class="form-label">Data</label>
+                                    <input type="date" class="form-control" id="receita-data" name="data" required>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="receita-recorrente" name="recorrente">
+                                    <label class="form-check-label" for="receita-recorrente">
+                                        Receita recorrente
+                                    </label>
+                                </div>
+                                <div class="mb-3" id="div-periodicidade" style="display: none;">
+                                    <label for="receita-periodicidade" class="form-label">Periodicidade</label>
+                                    <select class="form-select" id="receita-periodicidade" name="periodicidade">
+                                        <option value="mensal">Mensal</option>
+                                        <option value="quinzenal">Quinzenal</option>
+                                        <option value="semanal">Semanal</option>
+                                        <option value="anual">Anual</option>
+                                    </select>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Salvar Receita</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Barra de navegação inferior -->
-        <div class="bottom-nav">
-            <div class="container">
-                <div class="row">
-                    <div class="col-3">
-                        <a href="#" class="nav-link active">
-                            <i class="bi bi-house-door"></i>
-                            <span>Início</span>
-                        </a>
-                    </div>
-                    <div class="col-3">
-                        <a href="#" class="nav-link">
-                            <i class="bi bi-graph-up"></i>
-                            <span>Relatórios</span>
-                        </a>
-                    </div>
-                    <div class="col-3">
-                        <a href="#" class="nav-link">
-                            <i class="bi bi-bell"></i>
-                            <span>Alertas</span>
-                        </a>
-                    </div>
-                    <div class="col-3">
-                        <a href="#" class="nav-link">
-                            <i class="bi bi-person"></i>
-                            <span>Perfil</span>
-                        </a>
-                    </div>
-                </div>
-                <a href="#" class="fab-button" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                    <i class="bi bi-plus"></i>
-                </a>
-            </div>
-        </div>
-        
-        <!-- Modal para adicionar despesa -->
-        <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Adicionar Transação</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ul class="nav nav-tabs mb-3" id="addTransactionTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="add-expense-tab" data-bs-toggle="tab" data-bs-target="#add-expense-pane" type="button" role="tab">Despesa</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="add-income-tab" data-bs-toggle="tab" data-bs-target="#add-income-pane" type="button" role="tab">Receita</button>
-                            </li>
-                        </ul>
-                        <div class="tab-content" id="addTransactionTabsContent">
-                            <div class="tab-pane fade show active" id="add-expense-pane" role="tabpanel">
-                                <form id="expense-form">
-                                    <div class="mb-3">
-                                        <label for="expense-amount" class="form-label">Valor</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">R$</span>
-                                            <input type="number" class="form-control" id="expense-amount" name="amount" step="0.01" placeholder="0,00" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="expense-description" class="form-label">Descrição</label>
-                                        <input type="text" class="form-control" id="expense-description" name="description" placeholder="Ex: Supermercado" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="expense-category" class="form-label">Categoria</label>
-                                        <select class="form-select" id="expense-category" name="category" required>
-                                            <option value="alimentação">🍽️ Alimentação</option>
-                                            <option value="transporte">🚗 Transporte</option>
-                                            <option value="moradia">🏠 Moradia</option>
-                                            <option value="saúde">⚕️ Saúde</option>
-                                            <option value="educação">📚 Educação</option>
-                                            <option value="lazer">🎭 Lazer</option>
-                                            <option value="vestuário">👕 Vestuário</option>
-                                            <option value="outros">📦 Outros</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="expense-date" class="form-label">Data</label>
-                                        <input type="date" class="form-control" id="expense-date" name="date" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="expense-payment" class="form-label">Método de Pagamento</label>
-                                        <select class="form-select" id="expense-payment" name="payment_method">
-                                            <option value="Dinheiro">Dinheiro</option>
-                                            <option value="Débito">Cartão de Débito</option>
-                                            <option value="Crédito">Cartão de Crédito</option>
-                                            <option value="PIX">PIX</option>
-                                        </select>
-                                    </div>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-success">Salvar Despesa</button>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="tab-pane fade" id="add-income-pane" role="tabpanel">
-                                <form id="income-form">
-                                    <div class="mb-3">
-                                        <label for="income-amount" class="form-label">Valor</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">R$</span>
-                                            <input type="number" class="form-control" id="income-amount" name="amount" step="0.01" placeholder="0,00" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="income-description" class="form-label">Descrição</label>
-                                        <input type="text" class="form-control" id="income-description" name="description" placeholder="Ex: Salário" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="income-category" class="form-label">Categoria</label>
-                                        <select class="form-select" id="income-category" name="category" required>
-                                            <option value="salario">Salário</option>
-                                            <option value="freelance">Freelance</option>
-                                            <option value="rendimento">Rendimento</option>
-                                            <option value="presente">Presente</option>
-                                            <option value="outros">Outros</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="income-date" class="form-label">Data</label>
-                                        <input type="date" class="form-control" id="income-date" name="date" required>
-                                    </div>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-success">Salvar Receita</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            // Variáveis globais
-            let currentPeriod = 'week';
-            let categoryData = [];
-            let allTransactions = [];
-            
-            // Função para formatar data
-            function formatDate(dateStr) {
-                const date = new Date(dateStr);
-                return date.toLocaleDateString('pt-BR');
-            }
-            
-            // Função para formatar valor monetário
-            function formatCurrency(value) {
-                return 'R$ ' + parseFloat(value).toFixed(2).replace('.', ',');
-            }
-            
-            // Função para carregar os dados com base no período selecionado
-            async function loadData(period = 'week') {
-                currentPeriod = period;
-                
-                // Atualiza os subtítulos com o período selecionado
-                let periodText = 'nesta semana';
-                if (period === 'day') periodText = 'hoje';
-                if (period === 'month') periodText = 'neste mês';
-                if (period === 'year') periodText = 'neste ano';
-                if (period === 'custom') periodText = 'no período selecionado';
-                
-                document.getElementById('period-subtitle').textContent = periodText;
-                document.getElementById('period-subtitle-income').textContent = periodText;
-                document.getElementById('period-subtitle-balance').textContent = periodText;
-                document.getElementById('period-subtitle-economy').textContent = periodText;
-                
-                try {
-                    // Carrega as despesas por categoria
-                    const response = await fetch(`/api/chart/by_category?period=${period}`);
-                    const chartData = await response.json();
-                    
-                    // Atualiza o gráfico
-                    updateCategoryChart(chartData);
-                    
-                    // Carrega as transações
-                    const expensesResponse = await fetch(`/api/expenses?period=${period}`);
-                    const expenses = await expensesResponse.json();
-                    
-                    // TODO: Adicionar chamada para carregar receitas quando implementado
-                    const incomes = []; // Mock para receitas
-                    
-                    // Combina despesas e receitas
-                    allTransactions = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
-                    // Atualiza os totais
-                    updateTotals(expenses, incomes);
-                    
-                    // Atualiza as listas de transações
-                    updateTransactionLists(expenses, incomes);
-                } catch (error) {
-                    console.error('Erro ao carregar dados:', error);
-                }
-            }
-            
-            // Função para atualizar o gráfico de categorias
-            function updateCategoryChart(chartData) {
-                const data = chartData.data || [];
-                const layout = chartData.layout || {};
-                
-                // Salva os dados para uso global
-                categoryData = data;
-                
-                // Renderiza o gráfico
-                Plotly.newPlot('category-chart', data, layout, { responsive: true });
-            }
-            
-            // Função para atualizar os totais nos cards
-            function updateTotals(expenses, incomes) {
-                // Calcula o total de despesas
-                const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
-                document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
-                
-                // Calcula o total de receitas
-                const totalIncomes = incomes.reduce((sum, item) => sum + (item.amount || 0), 0);
-                document.getElementById('total-incomes').textContent = formatCurrency(totalIncomes);
-                
-                // Calcula o saldo
-                const balance = totalIncomes - totalExpenses;
-                document.getElementById('total-balance').textContent = formatCurrency(balance);
-                
-                // Calcula a porcentagem de economia
-                let economyPercent = 0;
-                if (totalIncomes > 0) {
-                    economyPercent = ((totalIncomes - totalExpenses) / totalIncomes) * 100;
-                }
-                document.getElementById('economy-percent').textContent = `${economyPercent.toFixed(1)}%`;
-            }
-            
-            // Função para agrupar transações por data
-            function groupTransactionsByDate(transactions) {
-                const groups = {};
-                
-                transactions.forEach(transaction => {
-                    const date = transaction.date;
-                    if (!groups[date]) {
-                        groups[date] = [];
-                    }
-                    groups[date].push(transaction);
-                });
-                
-                return groups;
-            }
-            
-            // Função para criar o HTML de uma transação
-            function createTransactionHTML(transaction, isIncome = false) {
-                const date = new Date(transaction.date);
-                const hours = transaction.created_at ? new Date(transaction.created_at).getHours() : 12;
-                const minutes = transaction.created_at ? new Date(transaction.created_at).getMinutes() : 0;
-                
-                // Determina o emoji e a cor com base na categoria
-                let emoji = '📦';
-                let categoryClass = 'category-outros';
-                
-                if (isIncome) {
-                    emoji = '💰';
-                    categoryClass = 'bg-success';
-                } else {
-                    // Mapeia categorias para emojis
-                    const categoryEmojis = {
-                        'alimentação': '🍽️',
-                        'transporte': '🚗',
-                        'moradia': '🏠',
-                        'saúde': '⚕️',
-                        'educação': '📚',
-                        'lazer': '🎭',
-                        'vestuário': '👕',
-                        'outros': '📦'
-                    };
-                    
-                    emoji = categoryEmojis[transaction.category] || '📦';
-                    categoryClass = `category-${transaction.category}`;
-                }
-                
-                return `
-                <div class="expense-item d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <div class="category-pill me-3 ${categoryClass} text-white">${emoji}</div>
-                        <div>
-                            <h6 class="expense-item-title">${transaction.description}</h6>
-                            <p class="expense-item-subtitle">${hours}:${minutes.toString().padStart(2, '0')} • ${isIncome ? 'Receita' : transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1)}</p>
-                        </div>
-                    </div>
-                    <div class="expense-item-amount" style="color: ${isIncome ? '#28a745' : '#e74c3c'}">${isIncome ? '+' : '-'} ${formatCurrency(transaction.amount)}</div>
-                </div>
-                `;
-            }
-            
-            // Função para atualizar as listas de transações
-            function updateTransactionLists(expenses, incomes) {
-                // Agrupa transações por data
-                const groupedExpenses = groupTransactionsByDate(expenses);
-                const groupedIncomes = groupTransactionsByDate(incomes);
-                
-                // Combina todas as transações
-                const allDates = [...new Set([...Object.keys(groupedExpenses), ...Object.keys(groupedIncomes)])].sort().reverse();
-                
-                // Containers para as listas
-                const allContainer = document.getElementById('all-transactions-container');
-                const expenseContainer = document.getElementById('expense-transactions-container');
-                const incomeContainer = document.getElementById('income-transactions-container');
-                
-                // Limpa os containers
-                allContainer.innerHTML = '';
-                expenseContainer.innerHTML = '';
-                incomeContainer.innerHTML = '';
-                
-                // Se não há transações
-                if (allDates.length === 0) {
-                    const emptyMessage = `
-                    <div class="text-center py-5">
-                        <i class="bi bi-receipt text-muted" style="font-size: 48px;"></i>
-                        <p class="mt-3 text-muted">Nenhuma transação encontrada neste período.</p>
-                    </div>
-                    `;
-                    allContainer.innerHTML = emptyMessage;
-                    expenseContainer.innerHTML = emptyMessage;
-                    incomeContainer.innerHTML = emptyMessage;
-                    return;
-                }
-                
-                // Preenche as listas
-                allDates.forEach(date => {
-                    const dateObj = new Date(date);
-                    const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-                    
-                    // Para todas as transações
-                    if (groupedExpenses[date] || groupedIncomes[date]) {
-                        allContainer.innerHTML += `<div class="transaction-date ps-3">${formattedDate}</div>`;
-                        
-                        // Adiciona despesas
-                        if (groupedExpenses[date]) {
-                            groupedExpenses[date].forEach(expense => {
-                                allContainer.innerHTML += createTransactionHTML(expense, false);
-                            });
-                        }
-                        
-                        // Adiciona receitas
-                        if (groupedIncomes[date]) {
-                            groupedIncomes[date].forEach(income => {
-                                allContainer.innerHTML += createTransactionHTML(income, true);
-                            });
-                        }
-                    }
-                    
-                    // Para despesas
-                    if (groupedExpenses[date]) {
-                        expenseContainer.innerHTML += `<div class="transaction-date ps-3">${formattedDate}</div>`;
-                        groupedExpenses[date].forEach(expense => {
-                            expenseContainer.innerHTML += createTransactionHTML(expense, false);
-                        });
-                    }
-                    
-                    // Para receitas
-                    if (groupedIncomes[date]) {
-                        incomeContainer.innerHTML += `<div class="transaction-date ps-3">${formattedDate}</div>`;
-                        groupedIncomes[date].forEach(income => {
-                            incomeContainer.innerHTML += createTransactionHTML(income, true);
-                        });
-                    }
-                });
-            }
-            
-            // Função para adicionar uma nova despesa
-            async function addExpense(event) {
-                event.preventDefault();
-                const form = document.getElementById('expense-form');
-                const formData = new FormData(form);
-                
-                try {
-                    const response = await fetch('/api/expenses', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(Object.fromEntries(formData)),
-                    });
-                    
-                    if (response.ok) {
-                        // Fecha o modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('addExpenseModal'));
-                        modal.hide();
-                        
-                        // Limpa o formulário
-                        form.reset();
-                        
-                        // Recarrega os dados
-                        loadData(currentPeriod);
-                        
-                        // Exibe mensagem de sucesso
-                        alert('Despesa adicionada com sucesso!');
-                    } else {
-                        alert('Erro ao adicionar despesa. Por favor, tente novamente.');
-                    }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    alert('Erro ao adicionar despesa. Por favor, tente novamente.');
-                }
-            }
-            
-            // Função para adicionar uma nova receita
-            async function addIncome(event) {
-                event.preventDefault();
-                const form = document.getElementById('income-form');
-                const formData = new FormData(form);
-                
-                try {
-                    const response = await fetch('/api/incomes', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(Object.fromEntries(formData)),
-                    });
-                    
-                    if (response.ok) {
-                        // Fecha o modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('addExpenseModal'));
-                        modal.hide();
-                        
-                        // Limpa o formulário
-                        form.reset();
-                        
-                        // Recarrega os dados
-                        loadData(currentPeriod);
-                        
-                        // Exibe mensagem de sucesso
-                        alert('Receita adicionada com sucesso!');
-                    } else {
-                        alert('Erro ao adicionar receita. Por favor, tente novamente.');
-                    }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    alert('Erro ao adicionar receita. Por favor, tente novamente.');
-                }
-            }
-            
-            // Inicialização
-            document.addEventListener('DOMContentLoaded', function() {
-                // Define a data atual como padrão para os campos de data
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('expense-date').value = today;
-                document.getElementById('income-date').value = today;
-                
-                // Event listeners para os formulários
-                document.getElementById('expense-form').addEventListener('submit', addExpense);
-                document.getElementById('income-form').addEventListener('submit', addIncome);
-                
-                // Event listeners para os botões de período
-                document.querySelectorAll('.period-btn').forEach(button => {
-                    button.addEventListener('click', function() {
-                        // Remove a classe ativa de todos os botões
-                        document.querySelectorAll('.period-btn').forEach(btn => {
-                            btn.classList.remove('btn-success');
-                            btn.classList.add('btn-outline-success');
-                        });
-                        
-                        // Adiciona a classe ativa ao botão clicado
-                        this.classList.remove('btn-outline-success');
-                        this.classList.add('btn-success');
-                        
-                        // Carrega os dados do período selecionado
-                        loadData(this.dataset.period);
-                    });
-                });
-                
-                // Carrega os dados iniciais
-                loadData(currentPeriod);
-                
-                // Ajusta o tamanho do gráfico ao redimensionar a janela
-                window.addEventListener('resize', function() {
-                    if (categoryData.length > 0) {
-                        Plotly.relayout('category-chart', {
-                            width: document.getElementById('category-chart').offsetWidth
-                        });
-                    }
-                });
-            });
-        </script>
-    </body>
-    </html>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Variáveis globais
+    let periodoAtual = 'semana';
+    let dadosGrafico = [];
     
+    // Funções de formatação
+    function formatarData(dataStr) {
+        const data = new Date(dataStr);
+        return data.toLocaleDateString('pt-BR');
+    }
+    
+    function formatarValor(valor) {
+        return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+    }
+    
+    // Carrega os dados com base no período selecionado
+    async function carregarDados(periodo = 'semana') {
+        periodoAtual = periodo;
+        
+        // Atualiza os subtítulos com o período selecionado
+        let textoPeríodo = 'nesta semana';
+        if (periodo === 'dia') textoPeríodo = 'hoje';
+        if (periodo === 'mes') textoPeríodo = 'neste mês';
+        if (periodo === 'ano') textoPeríodo = 'neste ano';
+        
+        document.getElementById('period-subtitle').textContent = textoPeríodo;
+        document.getElementById('period-subtitle-receitas').textContent = textoPeríodo;
+        document.getElementById('period-subtitle-saldo').textContent = textoPeríodo;
+        document.getElementById('period-subtitle-economia').textContent = textoPeríodo;
+        
+        try {
+            // Carrega o resumo
+            const resumoResponse = await fetch(`/api/resumo?periodo=${periodo}`);
+            const resumo = await resumoResponse.json();
+            
+            // Atualiza os totais
+            document.getElementById('total-despesas').textContent = formatarValor(resumo.total_despesas);
+            document.getElementById('total-receitas').textContent = formatarValor(resumo.total_receitas);
+            document.getElementById('total-saldo').textContent = formatarValor(resumo.saldo);
+            document.getElementById('percentual-economia').textContent = `${resumo.economia_percentual}%`;
+            
+            // Carrega o gráfico por categoria
+            const graficoResponse = await fetch(`/api/grafico/por_categoria?periodo=${periodo}`);
+            const dadosGrafico = await graficoResponse.json();
+            
+            // Atualiza o gráfico
+            atualizarGrafico(dadosGrafico);
+            
+            // Carrega as despesas
+            const despesasResponse = await fetch(`/api/despesas?periodo=${periodo}`);
+            const despesas = await despesasResponse.json();
+            
+            // Carrega as receitas
+            const receitasResponse = await fetch(`/api/receitas?periodo=${periodo}`);
+            const receitas = await receitasResponse.json();
+            
+            // Atualiza as listas de transações
+            atualizarListaTransacoes(despesas, receitas);
+            
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            // Mostra mensagem de erro
+            alert('Ocorreu um erro ao carregar os dados. Por favor, tente novamente.');
+        }
+    }
+    
+    // Atualiza o gráfico de categorias
+    function atualizarGrafico(dados) {
+        if (!dados || !dados.data) {
+            console.error('Dados do gráfico inválidos');
+            return;
+        }
+        
+        // Renderiza o gráfico com Plotly
+        Plotly.newPlot('grafico-categoria', dados.data, dados.layout, {responsive: true});
+        
+        // Armazena os dados para uso posterior
+        dadosGrafico = dados;
+    }
+    
+    // Função para agrupar transações por data
+    function agruparTransacoesPorData(transacoes) {
+        const grupos = {};
+        
+        transacoes.forEach(transacao => {
+            const data = transacao.data;
+            if (!grupos[data]) {
+                grupos[data] = [];
+            }
+            grupos[data].push(transacao);
+        });
+        
+        return grupos;
+    }
+    
+    // Função para criar HTML de uma transação
+    function criarHTMLTransacao(transacao, isReceita = false) {
+        // Determina o emoji/ícone baseado na categoria
+        let emoji = '📦'; // Padrão
+        let categoriaClass = 'category-outros';
+        
+        if (isReceita) {
+            emoji = '💰';
+            categoriaClass = 'bg-success';
+            
+            // Ícones específicos para categorias de receita
+            if (transacao.categoria === 'salario') emoji = '💵';
+            if (transacao.categoria === 'freelance') emoji = '💼';
+            if (transacao.categoria === 'investimento') emoji = '📈';
+            if (transacao.categoria === 'presente') emoji = '🎁';
+        } else {
+            // Mapa de categorias para emojis
+            const emojisCategoria = {
+                'alimentação': '🍽️',
+                'transporte': '🚗',
+                'moradia': '🏠',
+                'saúde': '⚕️',
+                'educação': '📚',
+                'lazer': '🎭',
+                'vestuário': '👕',
+                'outros': '📦'
+            };
+            
+            emoji = emojisCategoria[transacao.categoria] || '📦';
+            categoriaClass = `category-${transacao.categoria}`;
+        }
+        
+        // Formata data e hora
+        const dataObj = new Date(transacao.data + 'T00:00:00');
+        const dataFormatada = dataObj.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
+        
+        // Formata o valor com sinal + ou -
+        const valorFormatado = formatarValor(transacao.valor);
+        
+        return `
+        <div class="expense-item d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="category-pill me-3 ${categoriaClass} text-white">${emoji}</div>
+                <div>
+                    <h6 class="expense-item-title">${transacao.descricao}</h6>
+                    <p class="expense-item-subtitle">${dataFormatada} • ${isReceita ? 'Receita' : transacao.categoria.charAt(0).toUpperCase() + transacao.categoria.slice(1)}</p>
+                </div>
+            </div>
+            <div class="expense-item-amount" style="color: ${isReceita ? '#28a745' : '#e74c3c'}">${isReceita ? '+' : '-'} ${valorFormatado}</div>
+        </div>
+        `;
+    }
+    
+    // Atualiza a lista de transações
+    function atualizarListaTransacoes(despesas, receitas) {
+        // Agrupa transações por data
+        const despesasPorData = agruparTransacoesPorData(despesas);
+        const receitasPorData = agruparTransacoesPorData(receitas);
+        
+        // Combina todas as datas únicas
+        const todasDatas = [...new Set([...Object.keys(despesasPorData), ...Object.keys(receitasPorData)])].sort().reverse();
+        
+        // Containers para as listas
+        const todasTransacoesContainer = document.getElementById('todas-transacoes');
+        const despesasContainer = document.getElementById('despesas-container');
+        const receitasContainer = document.getElementById('receitas-container');
+        
+        // Limpa os containers
+        todasTransacoesContainer.innerHTML = '';
+        despesasContainer.innerHTML = '';
+        receitasContainer.innerHTML = '';
+        
+        // Se não há transações
+        if (todasDatas.length === 0) {
+            const mensagemVazia = `
+            <div class="text-center py-5">
+                <i class="bi bi-receipt text-muted" style="font-size: 48px;"></i>
+                <p class="mt-3 text-muted">Nenhuma transação encontrada neste período.</p>
+            </div>
+            `;
+            todasTransacoesContainer.innerHTML = mensagemVazia;
+            despesasContainer.innerHTML = mensagemVazia;
+            receitasContainer.innerHTML = mensagemVazia;
+            return;
+        }
+        
+        // Preenche as listas
+        todasDatas.forEach(data => {
+            const dataObj = new Date(data + 'T00:00:00');
+            const dataFormatada = dataObj.toLocaleDateString('pt-BR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+            
+            // Para todas as transações
+            if (despesasPorData[data] || receitasPorData[data]) {
+                todasTransacoesContainer.innerHTML += `<div class="transaction-date ps-3">${dataFormatada}</div>`;
+                
+                // Adiciona despesas
+                if (despesasPorData[data]) {
+                    despesasPorData[data].forEach(despesa => {
+                        todasTransacoesContainer.innerHTML += criarHTMLTransacao(despesa, false);
+                    });
+                }
+                
+                // Adiciona receitas
+                if (receitasPorData[data]) {
+                    receitasPorData[data].forEach(receita => {
+                        todasTransacoesContainer.innerHTML += criarHTMLTransacao(receita, true);
+                    });
+                }
+            }
+            
+            // Para despesas
+            if (despesasPorData[data]) {
+                despesasContainer.innerHTML += `<div class="transaction-date ps-3">${dataFormatada}</div>`;
+                despesasPorData[data].forEach(despesa => {
+                    despesasContainer.innerHTML += criarHTMLTransacao(despesa, false);
+                });
+            }
+            
+            // Para receitas
+            if (receitasPorData[data]) {
+                receitasContainer.innerHTML += `<div class="transaction-date ps-3">${dataFormatada}</div>`;
+                receitasPorData[data].forEach(receita => {
+                    receitasContainer.innerHTML += criarHTMLTransacao(receita, true);
+                });
+            }
+        });
+    }
+    
+    // Event listener para os botões de período
+    document.querySelectorAll('.period-btn').forEach(botao => {
+        botao.addEventListener('click', function() {
+            // Remove a classe ativa de todos os botões
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-success');
+            });
+            
+            // Adiciona a classe ativa ao botão clicado
+            this.classList.remove('btn-outline-success');
+            this.classList.add('btn-success');
+            
+            // Carrega os dados para o período selecionado
+            carregarDados(this.dataset.period);
+        });
+    });
+    
+    // Event listener para o formulário de despesa
+    document.getElementById('form-despesa').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        // Cria um objeto FormData com os dados do formulário
+        const formData = new FormData(this);
+        
+        // Converte FormData para objeto JSON
+        const dadosDespesa = {};
+        formData.forEach((valor, chave) => {
+            // Converte checkboxes para 0 ou 1
+            if (chave === 'parcelado') {
+                dadosDespesa[chave] = valor === 'on' ? 1 : 0;
+            } else {
+                dadosDespesa[chave] = valor;
+            }
+        });
+        
+        try {
+            // Envia os dados para a API
+            const response = await fetch('/api/despesas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dadosDespesa)
+            });
+            
+            if (response.ok) {
+                // Fecha o modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalAddTransacao'));
+                modal.hide();
+                
+                // Recarrega os dados
+                carregarDados(periodoAtual);
+                
+                // Limpa o formulário
+                this.reset();
+                
+                // Define a data para hoje
+                document.getElementById('despesa-data').valueAsDate = new Date();
+                
+                // Mostra mensagem de sucesso
+                alert('Despesa adicionada com sucesso!');
+            } else {
+                const erro = await response.json();
+                alert(`Erro: ${erro.error || 'Ocorreu um erro ao adicionar a despesa.'}`);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Ocorreu um erro ao adicionar a despesa. Por favor, tente novamente.');
+        }
+    });
+    
+    // Event listener para o formulário de receita
+    document.getElementById('form-receita').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        // Cria um objeto FormData com os dados do formulário
+        const formData = new FormData(this);
+        
+        // Converte FormData para objeto JSON
+        const dadosReceita = {};
+        formData.forEach((valor, chave) => {
+            // Converte checkboxes para 0 ou 1
+            if (chave === 'recorrente') {
+                dadosReceita[chave] = valor === 'on' ? 1 : 0;
+            } else {
+                dadosReceita[chave] = valor;
+            }
+        });
+        
+        try {
+            // Envia os dados para a API
+            const response = await fetch('/api/receitas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dadosReceita)
+            });
+            
+            if (response.ok) {
+                // Fecha o modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalAddTransacao'));
+                modal.hide();
+                
+                // Recarrega os dados
+                carregarDados(periodoAtual);
+                
+                // Limpa o formulário
+                this.reset();
+                
+                // Define a data para hoje
+                document.getElementById('receita-data').valueAsDate = new Date();
+                
+                // Mostra mensagem de sucesso
+                alert('Receita adicionada com sucesso!');
+            } else {
+                const erro = await response.json();
+                alert(`Erro: ${erro.error || 'Ocorreu um erro ao adicionar a receita.'}`);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Ocorreu um erro ao adicionar a receita. Por favor, tente novamente.');
+        }
+    });
+    
+    // Event listener para mostrar/esconder campos adicionais
+    document.getElementById('despesa-parcelada').addEventListener('change', function() {
+        document.getElementById('div-parcelas').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    document.getElementById('receita-recorrente').addEventListener('change', function() {
+        document.getElementById('div-periodicidade').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    // Botão para compartilhar gráfico via WhatsApp
+    document.getElementById('btn-share-chart').addEventListener('click', function() {
+        // Obtém a URL da imagem do gráfico
+        const urlGrafico = `/api/grafico/imagem?tipo=categoria&periodo=${periodoAtual}`;
+        
+        // Cria a URL do WhatsApp
+        const textoCompartilhamento = `Veja meu resumo financeiro ${periodoAtual === 'dia' ? 'de hoje' : 
+                                      periodoAtual === 'semana' ? 'desta semana' : 
+                                      periodoAtual === 'mes' ? 'deste mês' : 'deste ano'}:`;
+        const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(textoCompartilhamento + "\n" + urlGrafico)}`;
+        
+        // Abre a URL
+        window.open(urlWhatsApp, '_blank');
+    });
+    
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+        // Define a data atual como padrão para os campos de data
+        const hoje = new Date();
+        document.getElementById('despesa-data').valueAsDate = hoje;
+        document.getElementById('receita-data').valueAsDate = hoje;
+        
+        // Carrega os dados iniciais
+        carregarDados(periodoAtual);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+DespeZap/
+│
+├── app.py                       # Arquivo principal (ponto de entrada)
+├── config.py                    # Configurações do aplicativo
+├── requirements.txt             # Dependências
+│
+├── database/
+│   ├── __init__.py
+│   ├── models.py                # Modelos/classes do banco de dados
+│   └── database.db              # Banco de dados SQLite
+│
+├── templates/
+│   ├── base.html                # Template base (layout comum)
+│   ├── index.html               # Página inicial
+│   ├── dashboard.html           # Painel de controle
+│   ├── login.html               # Página de login
+│   └── cadastro.html            # Página de cadastro
+│
+├── static/
+│   ├── img/
+│   │   ├── logo.png             # Logo do DespeZap
+│   │   └── favicon.ico          # Ícone da aplicação
+│   └── js/
+│       └── scripts.js           # Scripts JavaScript específicos (se necessário)
+│
+└── rotas/
+    ├── __init__.py
+    ├── web_rotas.py             # Rotas para páginas web
+    ├── api_rotas.py             # Rotas para API (endpoints JSON)
+    └── webhook_rotas.py         # Rota para o webhook do WhatsApp

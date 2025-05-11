@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+body {
+    background: linear-gradient(135deg, #28a745, #218838);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 20px;
+    text-align: center;
+}
+
+.card-header h1 {
+    color: #28a745;
+    font-size: 24px;
+    margin-bottom: 0;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.form-control {
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.btn-success {
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.text-separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #6c757d;
+}
+
+.text-separator::before,
+.text-separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.text-separator span {
+    padding: 0 10px;
+}
+
+.navbar {
+    display: none;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.intl-tel-input {
+    width: 100%;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h1>{{ app_name }}</h1>
+                </div>
+                <div class="card-body">
+                    <!-- Mensagens de erro/sucesso -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <h2 class="text-center mb-4">Criar uma Conta</h2>
+                    
+                    <form method="POST" action="{{ url_for('web.cadastro') }}">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome completo</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="celular" class="form-label">Celular (WhatsApp)</label>
+                            <input type="tel" class="form-control" id="celular" name="celular" required>
+                            <div class="form-text">Este deve ser o mesmo número que você usará no WhatsApp.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="senha" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="senha" name="senha" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirma_senha" class="form-label">Confirme a senha</label>
+                            <input type="password" class="form-control" id="confirma_senha" name="confirma_senha" required minlength="6">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="termos" name="termos" required>
+                            <label class="form-check-label" for="termos">
+                                Concordo com os <a href="#" data-bs-toggle="modal" data-bs-target="#modalTermos">Termos de Uso</a> e <a href="#" data-bs-toggle="modal" data-bs-target="#modalPrivacidade">Política de Privacidade</a>
+                            </label>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Criar Conta</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-separator">
+                        <span>ou</span>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('web.login') }}" class="btn btn-outline-success">Já tenho uma conta</a>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('web.index') }}" class="text-decoration-none">Voltar à página inicial</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Termos de Uso -->
+<div class="modal fade" id="modalTermos" tabindex="-1" aria-labelledby="modalTermosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTermosLabel">Termos de Uso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Termos de Uso do {{ app_name }}</h6>
+                
+                <p>Ao utilizar o {{ app_name }}, você concorda com estes termos. Por favor, leia-os cuidadosamente.</p>
+                
+                <h6>1. Aceitação dos Termos</h6>
+                <p>Ao acessar ou usar o {{ app_name }}, você concorda em cumprir estes Termos de Uso e todas as leis e regulamentos aplicáveis. Se você não concordar com algum destes termos, você está proibido de usar o serviço.</p>
+                
+                <h6>2. Uso do Serviço</h6>
+                <p>O {{ app_name }} é um serviço de controle financeiro que permite o registro e análise de despesas e receitas através do WhatsApp e interface web.</p>
+                
+                <h6>3. Contas de Usuário</h6>
+                <p>Para utilizar alguns recursos do {{ app_name }}, você precisa criar uma conta. Você é responsável por manter a confidencialidade da sua conta e senha.</p>
+                
+                <h6>4. Privacidade</h6>
+                <p>O uso do {{ app_name }} está sujeito à nossa Política de Privacidade, que descreve como coletamos, usamos e compartilhamos suas informações pessoais.</p>
+                
+                <h6>5. Conteúdo do Usuário</h6>
+                <p>Você mantém todos os direitos sobre os dados que você envia, publica ou exibe no ou através do {{ app_name }}.</p>
+                
+                <h6>6. Modificações do Serviço</h6>
+                <p>Reservamo-nos o direito de modificar ou descontinuar o serviço a qualquer momento.</p>
+                
+                <h6>7. Limitação de Responsabilidade</h6>
+                <p>O {{ app_name }} não será responsável por quaisquer perdas ou danos resultantes do uso do serviço.</p>
+                
+                <h6>8. Lei Aplicável</h6>
+                <p>Estes termos serão regidos e interpretados de acordo com as leis do Brasil.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Entendi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Política de Privacidade -->
+<div class="modal fade" id="modalPrivacidade" tabindex="-1" aria-labelledby="modalPrivacidadeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPrivacidadeLabel">Política de Privacidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Política de Privacidade do {{ app_name }}</h6>
+                
+                <p>Esta Política de Privacidade descreve como suas informações pessoais são coletadas, usadas e compartilhadas quando você utiliza o {{ app_name }}.</p>
+                
+                <h6>1. Informações que coletamos</h6>
+                <p>Coletamos informações que você nos fornece, como nome, endereço de e-mail e número de telefone. Também coletamos informações sobre suas transações financeiras registradas através do serviço.</p>
+                
+                <h6>2. Como usamos suas informações</h6>
+                <p>Usamos as informações para fornecer, manter e melhorar nossos serviços, comunicar-nos com você e personalizar sua experiência.</p>
+                
+                <h6>3. Compartilhamento de informações</h6>
+                <p>Não vendemos ou compartilhamos suas informações pessoais com terceiros para fins de marketing. Podemos compartilhar com prestadores de serviços que nos ajudam a operar o {{ app_name }}.</p>
+                
+                <h6>4. Segurança</h6>
+                <p>Adotamos medidas razoáveis para proteger suas informações contra acesso não autorizado, alteração, divulgação ou destruição.</p>
+                
+                <h6>5. Seus direitos</h6>
+                <p>Você tem o direito de acessar, corrigir ou excluir suas informações pessoais a qualquer momento.</p>
+                
+                <h6>6. Alterações a esta política</h6>
+                <p>Podemos atualizar esta política de privacidade periodicamente. Notificaremos você sobre alterações significativas.</p>
+                
+                <h6>7. Contato</h6>
+                <p>Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Entendi</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Script para validar o formulário e formatar o número de telefone -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css">
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa o campo de telefone internacional
+        const input = document.querySelector("#celular");
+        const iti = window.intlTelInput(input, {
+            initialCountry: "br",
+            preferredCountries: ["br", "us", "pt"],
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js"
+        });
+        
+        // Validação do formulário
+        const form = document.querySelector("form");
+        form.addEventListener("submit", function(event) {
+            // Verifica se as senhas coincidem
+            const senha = document.getElementById("senha").value;
+            const confirmaSenha = document.getElementById("confirma_senha").value;
+            
+            if (senha !== confirmaSenha) {
+                event.preventDefault();
+                alert("As senhas não coincidem.");
+                return;
+            }
+            
+            // Verifica se o número de telefone é válido
+            if (!iti.isValidNumber()) {
+                event.preventDefault();
+                alert("Por favor, insira um número de telefone válido.");
+                return;
+            }
+            
+            // Formata o número para o formato E.164 (padrão internacional)
+            const numeroFormatado = iti.getNumber();
+            document.getElementById("celular").value = numeroFormatado;
+        });
+    });
+</script>
+{% endblock %}

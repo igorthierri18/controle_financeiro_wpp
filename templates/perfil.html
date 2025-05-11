@@ -1,0 +1,838 @@
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.profile-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 40px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.profile-header h1 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.profile-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.profile-card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.profile-card .card-header {
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-card .card-body {
+    padding: 30px;
+}
+
+.nav-pills .nav-link {
+    border-radius: 10px;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: #f8f9fa;
+}
+
+.tab-content {
+    padding: 20px 0;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.plan-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.plan-badge.gratuito {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.plan-badge.premium {
+    background-color: #c6f6d5;
+    color: #22543d;
+}
+
+.plan-badge.profissional {
+    background-color: #b9f5ef;
+    color: #234e52;
+}
+
+.plan-details {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.plan-details h5 {
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.plan-features {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.plan-features li {
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+}
+
+.plan-features i {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.usage-stat {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.usage-stat h5 {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.usage-stat p {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.usage-bar {
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    margin: 10px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.usage-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #28a745;
+    border-radius: 5px;
+}
+
+.plan-card {
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    padding: 20px;
+    text-align: center;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.plan-card h4 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.plan-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: #28a745;
+    margin-bottom: 15px;
+}
+
+.plan-action {
+    margin-top: 15px;
+}
+
+.plan-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.plan-status.active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.plan-status.available {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.security-item {
+    margin-bottom: 20px;
+}
+
+.security-item h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.activity-icon i {
+    font-size: 18px;
+    color: #6c757d;
+}
+
+.activity-details {
+    flex-grow: 1;
+}
+
+.activity-details h6 {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.activity-details p {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.activity-time {
+    color: #6c757d;
+    font-size: 12px;
+    white-space: nowrap;
+    margin-left: 15px;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho do Perfil -->
+<div class="profile-header">
+    <div class="container">
+        <h1>Olá, {{ usuario.nome }}</h1>
+        <p>Gerencie seu perfil, assinatura e preferências</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Navegação lateral -->
+        <div class="col-md-3">
+            <div class="nav flex-column nav-pills" id="profile-tabs" role="tablist">
+                <button class="nav-link active" id="account-tab" data-bs-toggle="pill" data-bs-target="#account" type="button" role="tab">
+                    <i class="bi bi-person me-2"></i> Minha Conta
+                </button>
+                <button class="nav-link" id="subscription-tab" data-bs-toggle="pill" data-bs-target="#subscription" type="button" role="tab">
+                    <i class="bi bi-credit-card me-2"></i> Assinatura
+                </button>
+                <button class="nav-link" id="security-tab" data-bs-toggle="pill" data-bs-target="#security" type="button" role="tab">
+                    <i class="bi bi-shield-lock me-2"></i> Segurança
+                </button>
+                <button class="nav-link" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity" type="button" role="tab">
+                    <i class="bi bi-clock-history me-2"></i> Atividade Recente
+                </button>
+            </div>
+        </div>
+        
+        <!-- Conteúdo das abas -->
+        <div class="col-md-9">
+            <div class="tab-content" id="profile-tabsContent">
+                <!-- Aba Minha Conta -->
+                <div class="tab-pane fade show active" id="account" role="tabpanel" aria-labelledby="account-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <span>Informações Pessoais</span>
+                            <a href="#" class="text-decoration-none" id="btn-editar-perfil">Editar</a>
+                        </div>
+                        <div class="card-body">
+                            <!-- Formulário não editável -->
+                            <div id="perfil-info">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <p class="form-label">Nome completo</p>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p>{{ usuario.nome }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <p class="form-label">E-mail</p>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p>{{ usuario.email }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <p class="form-label">Celular (WhatsApp)</p>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p>{{ usuario.celular }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <p class="form-label">Data de cadastro</p>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p>{{ usuario.data_criacao | default('01/01/2023') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Formulário editável (inicialmente oculto) -->
+                            <form id="perfil-form" style="display: none;" method="POST" action="{{ url_for('web.atualizar_perfil') }}">
+                                <div class="mb-3">
+                                    <label for="nome" class="form-label">Nome completo</label>
+                                    <input type="text" class="form-control" id="nome" name="nome" value="{{ usuario.nome }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">E-mail</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="celular" class="form-label">Celular (WhatsApp)</label>
+                                    <input type="tel" class="form-control" id="celular" name="celular" value="{{ usuario.celular }}" readonly>
+                                    <div class="form-text">O número de WhatsApp não pode ser alterado. Entre em contato com o suporte se precisar mudar.</div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-outline-secondary me-2" id="btn-cancelar-edicao">Cancelar</button>
+                                    <button type="submit" class="btn btn-success">Salvar alterações</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <span>Preferências</span>
+                            <a href="#" class="text-decoration-none">Personalizar</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Notificações no WhatsApp</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notificacao-relatorio" checked>
+                                    <label class="form-check-label" for="notificacao-relatorio">Relatório semanal</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notificacao-limite" checked>
+                                    <label class="form-check-label" for="notificacao-limite">Alertas de limite de gastos</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notificacao-dicas">
+                                    <label class="form-check-label" for="notificacao-dicas">Dicas de economia</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Tema do Dashboard</label>
+                                <select class="form-select">
+                                    <option selected>Automático (segue o sistema)</option>
+                                    <option>Claro</option>
+                                    <option>Escuro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Aba Assinatura -->
+                <div class="tab-pane fade" id="subscription" role="tabpanel" aria-labelledby="subscription-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <span>Plano Atual</span>
+                            <a href="{{ url_for('web.planos') }}" class="text-decoration-none">Mudar plano</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <span class="plan-badge {{ usuario.plano }}">{{ usuario.plano | capitalize }}</span>
+                                    {% if usuario.plano != 'gratuito' %}
+                                    <p class="text-muted mt-2 mb-0">Próxima cobrança em 22/05/2023</p>
+                                    {% endif %}
+                                </div>
+                                {% if usuario.plano != 'gratuito' %}
+                                <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelarAssinaturaModal">Cancelar assinatura</button>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Estatísticas de uso -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="usage-stat">
+                                        <h5>Transações</h5>
+                                        {% if usuario.plano == 'gratuito' %}
+                                        <p>1.523 / 3.000</p>
+                                        <div class="usage-bar">
+                                            <div class="usage-progress" style="width: 50.7%"></div>
+                                        </div>
+                                        {% elif usuario.plano == 'premium' %}
+                                        <p>3.241 / 20.000</p>
+                                        <div class="usage-bar">
+                                            <div class="usage-progress" style="width: 16.2%"></div>
+                                        </div>
+                                        {% else %}
+                                        <p>5.782 / Ilimitado</p>
+                                        <div class="usage-bar">
+                                            <div class="usage-progress" style="width: 5%"></div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="usage-stat">
+                                        <h5>Usuários</h5>
+                                        {% if usuario.plano == 'gratuito' %}
+                                        <p>1 / 1</p>
+                                        <div class="usage-bar">
+                                            <div class="usage-progress" style="width: 100%"></div>
+                                        </div>
+                                        {% elif usuario.plano == 'premium' %}
+                                        <p>1 / 2</p>
+                                        <div class="usage-bar">
+                                            <div class="usage-progress" style="width: 50%"></div>
+                                        </div>
+                                        {% else %}
+                                        <p>3 / 5</p>
+                                        <div class="usage-bar">
+                                            <div class="usage-progress" style="width: 60%"></div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="usage-stat">
+                                        <h5>Armazenamento</h5>
+                                        <p>14.3 MB / 100 MB</p>
+                                        <div class="usage-bar">
+                                            <div class="usage-progress" style="width: 14.3%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Detalhes do plano -->
+                            <div class="plan-details">
+                                <h5>Detalhes do plano {{ usuario.plano | capitalize }}</h5>
+                                <ul class="plan-features">
+                                    {% if usuario.plano == 'gratuito' %}
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Até 3.000 transações por mês</li>
+                                    <li><i class="bi bi-x-circle-fill text-danger"></i> Relatórios detalhados</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Dashboard interativo</li>
+                                    <li><i class="bi bi-x-circle-fill text-danger"></i> Exportação de dados</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Suporte por e-mail</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> 1 usuário</li>
+                                    {% elif usuario.plano == 'premium' %}
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Até 20.000 transações por mês</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Relatórios detalhados</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Dashboard interativo</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Exportação de dados</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Suporte por chat e e-mail</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> 2 usuários</li>
+                                    {% else %}
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Transações ilimitadas</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Relatórios detalhados</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Dashboard interativo</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Exportação de dados</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Suporte prioritário</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> 5 usuários</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            
+                            {% if usuario.plano != 'gratuito' %}
+                            <div class="mt-4">
+                                <h5>Métodos de pagamento</h5>
+                                <div class="d-flex align-items-center p-3 bg-light rounded mb-3">
+                                    <i class="bi bi-credit-card me-3 fs-4"></i>
+                                    <div>
+                                        <p class="mb-0 fw-bold">Cartão de crédito terminando em 1234</p>
+                                        <p class="mb-0 text-muted small">Expira em 12/2025</p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <button class="btn btn-sm btn-outline-secondary">Alterar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h5>Histórico de pagamento</h5>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Valor</th>
+                                                <th>Status</th>
+                                                <th>Fatura</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>22/04/2023</td>
+                                                <td>R$ 29,90</td>
+                                                <td><span class="badge bg-success">Pago</span></td>
+                                                <td><a href="#" class="text-decoration-none">Ver fatura</a></td>
+                                            </tr>
+                                            <tr>
+                                                <td>22/03/2023</td>
+                                                <td>R$ 29,90</td>
+                                                <td><span class="badge bg-success">Pago</span></td>
+                                                <td><a href="#" class="text-decoration-none">Ver fatura</a></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Outros planos disponíveis -->
+                    {% if usuario.plano != 'premium' and usuario.plano != 'profissional' %}
+                    <h5 class="mt-4 mb-3">Planos disponíveis para upgrade</h5>
+                    <div class="row">
+                        {% if usuario.plano != 'premium' %}
+                        <div class="col-md-6 mb-3">
+                            <div class="plan-card">
+                                <span class="plan-status available">Disponível</span>
+                                <h4>Premium</h4>
+                                <div class="plan-price">R$ 29,90 /mês</div>
+                                <p>Ideal para controle financeiro avançado com recursos de relatórios detalhados e exportação de dados.</p>
+                                <div class="plan-action">
+                                    <a href="{{ url_for('web.assinatura', plano='premium') }}" class="btn btn-outline-success">Fazer upgrade</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if usuario.plano != 'profissional' %}
+                        <div class="col-md-6 mb-3">
+                            <div class="plan-card">
+                                <span class="plan-status available">Disponível</span>
+                                <h4>Profissional</h4>
+                                <div class="plan-price">R$ 59,90 /mês</div>
+                                <p>Solução completa para gerenciar finanças de equipes com transações ilimitadas e suporte prioritário.</p>
+                                <div class="plan-action">
+                                    <a href="{{ url_for('web.assinatura', plano='profissional') }}" class="btn btn-outline-success">Fazer upgrade</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Aba Segurança -->
+                <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <span>Segurança da Conta</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="security-item">
+                                <h5>Alterar senha</h5>
+                                <form id="form-alterar-senha" method="POST" action="{{ url_for('web.alterar_senha') }}">
+                                    <div class="mb-3">
+                                        <label for="senha_atual" class="form-label">Senha atual</label>
+                                        <input type="password" class="form-control" id="senha_atual" name="senha_atual" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="nova_senha" class="form-label">Nova senha</label>
+                                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+                                        <div class="form-text">Use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="confirma_senha" class="form-label">Confirme a nova senha</label>
+                                        <input type="password" class="form-control" id="confirma_senha" name="confirma_senha" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Atualizar senha</button>
+                                </form>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="security-item">
+                                <h5>Sessões ativas</h5>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Dispositivo</th>
+                                                <th>Local</th>
+                                                <th>Último acesso</th>
+                                                <th>Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <i class="bi bi-laptop me-2"></i>
+                                                    Chrome em Windows
+                                                </td>
+                                                <td>São Paulo, Brasil</td>
+                                                <td>Agora</td>
+                                                <td><span class="badge bg-success">Atual</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <i class="bi bi-phone me-2"></i>
+                                                    Safari em iPhone
+                                                </td>
+                                                <td>São Paulo, Brasil</td>
+                                                <td>Ontem, 19:42</td>
+                                                <td><button class="btn btn-sm btn-outline-danger">Encerrar</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="security-item">
+                                <h5>Excluir conta</h5>
+                                <p class="text-muted">Ao excluir sua conta, todos os seus dados serão permanentemente removidos e não poderão ser recuperados.</p>
+                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#excluirContaModal">Excluir minha conta</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Aba Atividade Recente -->
+                <div class="tab-pane fade" id="activity" role="tabpanel" aria-labelledby="activity-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <span>Atividades Recentes</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="bi bi-cash"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <h6>Despesa registrada</h6>
+                                    <p>Você registrou uma despesa de R$ 35,90 na categoria Alimentação</p>
+                                </div>
+                                <span class="activity-time">Hoje, 14:32</span>
+                            </div>
+                            
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="bi bi-pie-chart"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <h6>Relatório gerado</h6>
+                                    <p>Você gerou um relatório mensal de despesas</p>
+                                </div>
+                                <span class="activity-time">Ontem, 10:15</span>
+                            </div>
+                            
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <h6>Login realizado</h6>
+                                    <p>Você fez login no sistema usando Chrome em Windows</p>
+                                </div>
+                                <span class="activity-time">Ontem, 09:47</span>
+                            </div>
+                            
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="bi bi-wallet2"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <h6>Receita registrada</h6>
+                                    <p>Você registrou uma receita de R$ 2.500,00 na categoria Salário</p>
+                                </div>
+                                <span class="activity-time">22/04/2023, 17:01</span>
+                            </div>
+                            
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="bi bi-tags"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <h6>Categoria criada</h6>
+                                    <p>Você criou uma nova categoria: "Investimentos"</p>
+                                </div>
+                                <span class="activity-time">20/04/2023, 11:23</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelar Assinatura -->
+<div class="modal fade" id="cancelarAssinaturaModal" tabindex="-1" aria-labelledby="cancelarAssinaturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelarAssinaturaModalLabel">Cancelar assinatura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja cancelar sua assinatura?</p>
+                <p>Ao cancelar:</p>
+                <ul>
+                    <li>Você continuará com acesso ao plano atual até o final do período já pago.</li>
+                    <li>Após este período, sua conta será convertida para o plano Gratuito.</li>
+                    <li>Você perderá acesso a recursos premium como relatórios detalhados, exportação de dados e outros.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                <form method="POST" action="{{ url_for('web.cancelar_assinatura') }}">
+                    <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Excluir Conta -->
+<div class="modal fade" id="excluirContaModal" tabindex="-1" aria-labelledby="excluirContaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="excluirContaModalLabel">Excluir conta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Atenção!</strong> Esta ação é irreversível.
+                </div>
+                <p>Ao excluir sua conta:</p>
+                <ul>
+                    <li>Todos os seus dados serão permanentemente removidos.</li>
+                    <li>Você perderá acesso a todas as suas transações, relatórios e configurações.</li>
+                    <li>Não será possível recuperar esses dados no futuro.</li>
+                </ul>
+                <p>Para confirmar a exclusão, digite <strong>excluir minha conta</strong> abaixo:</p>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="confirmacaoExclusao" placeholder="excluir minha conta">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('web.excluir_conta') }}">
+                    <button type="submit" class="btn btn-danger" id="btnExcluirConta" disabled>Excluir permanentemente</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Controle de edição do perfil
+        const btnEditarPerfil = document.getElementById('btn-editar-perfil');
+        const btnCancelarEdicao = document.getElementById('btn-cancelar-edicao');
+        const perfilInfo = document.getElementById('perfil-info');
+        const perfilForm = document.getElementById('perfil-form');
+        
+        btnEditarPerfil.addEventListener('click', function(e) {
+            e.preventDefault();
+            perfilInfo.style.display = 'none';
+            perfilForm.style.display = 'block';
+        });
+        
+        btnCancelarEdicao.addEventListener('click', function() {
+            perfilInfo.style.display = 'block';
+            perfilForm.style.display = 'none';
+        });
+        
+        // Validação para excluir conta
+        const confirmacaoExclusao = document.getElementById('confirmacaoExclusao');
+        const btnExcluirConta = document.getElementById('btnExcluirConta');
+        
+        confirmacaoExclusao.addEventListener('input', function() {
+            if (this.value === 'excluir minha conta') {
+                btnExcluirConta.disabled = false;
+            } else {
+                btnExcluirConta.disabled = true;
+            }
+        });
+        
+        // Validação de senha
+        const formAlterarSenha = document.getElementById('form-alterar-senha');
+        const novaSenha = document.getElementById('nova_senha');
+        const confirmaSenha = document.getElementById('confirma_senha');
+        
+        formAlterarSenha.addEventListener('submit', function(e) {
+            if (novaSenha.value !== confirmaSenha.value) {
+                e.preventDefault();
+                alert('As senhas não coincidem!');
+                return false;
+            }
+            
+            // Verificar força da senha
+            const senhaPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!senhaPattern.test(novaSenha.value)) {
+                e.preventDefault();
+                alert('A nova senha não atende aos requisitos mínimos de segurança!');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

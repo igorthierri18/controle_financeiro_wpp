@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: DespeZap
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: FLASK_DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEBHOOK_BASE_URL
+        fromService:
+          name: DespeZap
+          type: web
+          property: url
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: DATABASE_PATH
+        value: database/financas.db
+      - key: WHATSAPP_JOIN_CODE
+        value: join successful-angle
+      - key: WHATSAPP_NUMBER
+        value: +1 415 523 8886

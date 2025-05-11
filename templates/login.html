@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+body {
+    background: linear-gradient(135deg, #28a745, #218838);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 20px;
+    text-align: center;
+}
+
+.card-header h1 {
+    color: #28a745;
+    font-size: 24px;
+    margin-bottom: 0;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.form-control {
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.btn-success {
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.text-separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #6c757d;
+}
+
+.text-separator::before,
+.text-separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.text-separator span {
+    padding: 0 10px;
+}
+
+.navbar {
+    display: none;
+}
+
+.alert {
+    border-radius: 10px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <h1>{{ app_name }}</h1>
+                </div>
+                <div class="card-body">
+                    <!-- Mensagens de erro/sucesso -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <h2 class="text-center mb-4">Entrar</h2>
+                    
+                    <form method="POST" action="{{ url_for('web.login') }}">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="senha" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="senha" name="senha" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="lembrar" name="lembrar">
+                            <label class="form-check-label" for="lembrar">Lembrar de mim</label>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Entrar</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('web.recuperar_senha') if 'web.recuperar_senha' in url_for else '#' }}" class="text-decoration-none">Esqueceu a senha?</a>
+                    </div>
+                    
+                    <div class="text-separator">
+                        <span>ou</span>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('web.cadastro') }}" class="btn btn-outline-success">Criar uma conta</a>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('web.index') }}" class="text-decoration-none">Voltar à página inicial</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+
+{% block title %}Planos - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.pricing-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 80px 0;
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.pricing-header h1 {
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.pricing-header p {
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.pricing-card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card .card-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: none;
+}
+
+.pricing-card .card-body {
+    padding: 30px;
+    flex-grow: 1;
+}
+
+.price {
+    font-size: 42px;
+    font-weight: 700;
+    color: #28a745;
+    margin-bottom: 0;
+}
+
+.price-period {
+    color: #6c757d;
+    margin-bottom: 25px;
+}
+
+.feature-list {
+    margin-bottom: 30px;
+    padding-left: 0;
+    list-style-type: none;
+}
+
+.feature-list li {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.feature-list li i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.feature-available {
+    color: #28a745;
+}
+
+.feature-unavailable {
+    color: #dc3545;
+}
+
+.feature-text {
+    flex-grow: 1;
+}
+
+.card-footer {
+    background-color: transparent;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 20px 30px;
+}
+
+.btn-select-plan {
+    border-radius: 30px;
+    padding: 10px 30px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.current-plan-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #28a745;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.plan-card-gratuito .card-header {
+    background-color: #f8f9fa;
+}
+
+.plan-card-premium .card-header {
+    background-color: #c6f6d5;
+}
+
+.plan-card-profissional .card-header {
+    background-color: #b9f5ef;
+}
+
+.plan-comparison {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.comparison-table {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-table th, .comparison-table td {
+    padding: 15px;
+    text-align: center;
+}
+
+.comparison-table thead th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.comparison-table th:first-child, .comparison-table td:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+.comparison-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.faq-section {
+    margin-top: 80px;
+    margin-bottom: 50px;
+}
+
+.faq-item {
+    margin-bottom: 15px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.faq-header {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.faq-body {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="pricing-header">
+    <div class="container">
+        <h1>Escolha o plano perfeito para você</h1>
+        <p>Seja controlar seus gastos pessoais ou gerenciar as finanças da sua equipe, temos um plano ideal para cada necessidade.</p>
+    </div>
+</div>
+
+<!-- Cards de Planos -->
+<div class="container">
+    <div class="row">
+        <!-- Plano Gratuito -->
+        <div class="col-md-4 mb-4">
+            <div class="pricing-card plan-card-gratuito">
+                {% if plano_atual == 'gratuito' %}
+                <div class="current-plan-badge">Seu plano atual</div>
+                {% endif %}
+                <div class="card-header">
+                    <h3>Gratuito</h3>
+                </div>
+                <div class="card-body">
+                    <h2 class="price">R$ 0</h2>
+                    <p class="price-period">para sempre</p>
+                    
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Até 3.000 transações/mês</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-x-circle-fill feature-unavailable"></i>
+                            <span class="feature-text">Relatórios detalhados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Dashboard interativo</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-x-circle-fill feature-unavailable"></i>
+                            <span class="feature-text">Exportação de dados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Suporte por e-mail</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">1 usuário</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    {% if plano_atual == 'gratuito' %}
+                    <button class="btn btn-outline-success btn-lg btn-block btn-select-plan disabled">Plano Atual</button>
+                    {% else %}
+                    <a href="{{ url_for('web.assinatura', plano='gratuito') }}" class="btn btn-outline-success btn-lg btn-block btn-select-plan">Selecionar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Plano Premium -->
+        <div class="col-md-4 mb-4">
+            <div class="pricing-card plan-card-premium">
+                {% if plano_atual == 'premium' %}
+                <div class="current-plan-badge">Seu plano atual</div>
+                {% endif %}
+                <div class="card-header">
+                    <h3>Premium</h3>
+                </div>
+                <div class="card-body">
+                    <h2 class="price">R$ 29,90</h2>
+                    <p class="price-period">por mês</p>
+                    
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Até 20.000 transações/mês</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Relatórios detalhados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Dashboard interativo</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Exportação de dados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Suporte por chat e e-mail</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">2 usuários</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    {% if plano_atual == 'premium' %}
+                    <button class="btn btn-success btn-lg btn-block btn-select-plan disabled">Plano Atual</button>
+                    {% else %}
+                    <a href="{{ url_for('web.assinatura', plano='premium') }}" class="btn btn-success btn-lg btn-block btn-select-plan">Selecionar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Plano Profissional -->
+        <div class="col-md-4 mb-4">
+            <div class="pricing-card plan-card-profissional">
+                {% if plano_atual == 'profissional' %}
+                <div class="current-plan-badge">Seu plano atual</div>
+                {% endif %}
+                <div class="card-header">
+                    <h3>Profissional</h3>
+                </div>
+                <div class="card-body">
+                    <h2 class="price">R$ 59,90</h2>
+                    <p class="price-period">por mês</p>
+                    
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Transações ilimitadas</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Relatórios detalhados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Dashboard interativo</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Exportação de dados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Suporte prioritário</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">5 usuários</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    {% if plano_atual == 'profissional' %}
+                    <button class="btn btn-success btn-lg btn-block btn-select-plan disabled">Plano Atual</button>
+                    {% else %}
+                    <a href="{{ url_for('web.assinatura', plano='profissional') }}" class="btn btn-success btn-lg btn-block btn-select-plan">Selecionar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabela de Comparação -->
+    <div class="plan-comparison">
+        <h2 class="text-center mb-4">Comparação Detalhada de Planos</h2>
+        
+        <div class="table-responsive">
+            <table class="table comparison-table">
+                <thead>
+                    <tr>
+                        <th>Recurso</th>
+                        <th>Gratuito</th>
+                        <th>Premium</th>
+                        <th>Profissional</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Transações por mês</td>
+                        <td>3.000</td>
+                        <td>20.000</td>
+                        <td>Ilimitado</td>
+                    </tr>
+                    <tr>
+                        <td>Relatórios detalhados</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td>Dashboard interativo</td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td>Exportação de dados</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td>Reconhecimento de imagens de notas fiscais</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td>Integração com bancos</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td>Categorização automática avançada</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td>Suporte</td>
+                        <td>E-mail</td>
+                        <td>Chat/E-mail</td>
+                        <td>Prioritário</td>
+                    </tr>
+                    <tr>
+                        <td>Usuários por conta</td>
+                        <td>1</td>
+                        <td>2</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>Preço mensal</td>
+                        <td>R$ 0</td>
+                        <td>R$ 29,90</td>
+                        <td>R$ 59,90</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Perguntas Frequentes -->
+    <div class="faq-section">
+        <h2 class="text-center mb-4">Perguntas Frequentes</h2>
+        
+        <div class="accordion" id="accordionFAQ">
+            <div class="faq-item">
+                <div class="faq-header" id="headingOne" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                    <i class="bi bi-question-circle-fill me-2"></i> Posso mudar de plano a qualquer momento?
+                </div>
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFAQ">
+                    <div class="faq-body">
+                        Sim, você pode fazer upgrade ou downgrade do seu plano a qualquer momento. A cobrança será ajustada proporcionalmente ao tempo restante do seu ciclo de faturamento atual.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-header" id="headingTwo" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                    <i class="bi bi-question-circle-fill me-2"></i> Como são contadas as transações?
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionFAQ">
+                    <div class="faq-body">
+                        Cada registro de receita ou despesa conta como uma transação. Transações recorrentes ou parcelas são contadas individualmente a cada ocorrência.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-header" id="headingThree" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                    <i class="bi bi-question-circle-fill me-2"></i> Posso cancelar minha assinatura?
+                </div>
+                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-bs-parent="#accordionFAQ">
+                    <div class="faq-body">
+                        Sim, você pode cancelar sua assinatura a qualquer momento. Após o cancelamento, você continuará com acesso ao plano contratado até o final do período já pago. Depois disso, sua conta será automaticamente convertida para o plano Gratuito.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-header" id="headingFour" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                    <i class="bi bi-question-circle-fill me-2"></i> Como adicionar mais usuários à minha conta?
+                </div>
+                <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-bs-parent="#accordionFAQ">
+                    <div class="faq-body">
+                        Você pode adicionar novos usuários diretamente na página do seu perfil, na seção "Gerenciar Usuários". Lembre-se que o número máximo de usuários depende do seu plano.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
