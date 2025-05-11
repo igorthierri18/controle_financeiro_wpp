@@ -1,10 +1,12 @@
 from flask import Blueprint, request, url_for
 from twilio.twiml.messaging_response import MessagingResponse
+from twilio.request_validator import RequestValidator
 from database.models import Usuario, Despesa, Receita, TextProcessor
 from config import Config
 from datetime import datetime, timedelta
 import re
 import requests
+import traceback
 
 # Criação do blueprint
 webhook_bp = Blueprint('webhook', __name__)
@@ -18,20 +20,33 @@ def webhook():
     print("Form data:", dict(request.form))
     print("============================\n")
     
+    # Validação da assinatura da Twilio (segurança adicional)
+    validator = RequestValidator(Config.TWILIO_AUTH_TOKEN)
+    request_valid = validator.validate(
+        request.url,
+        request.form,
+        request.headers.get('X-Twilio-Signature', '')
+    )
+    
+    # Em ambiente de desenvolvimento, você pode desativar essa validação
+    if not Config.DEBUG and not request_valid:
+        print("ERRO: Assinatura Twilio inválida!")
+        return "Assinatura inválida", 403
+    
     # Extrai informações da requisição
     mensagem = request.values.get('Body', '').strip()
     remetente = request.values.get('From', '')
+    profile_name = request.values.get('ProfileName', '')
     
     # Inicializa a resposta
     resposta = MessagingResponse()
     
     try:
         # Processa a mensagem
-        resposta_texto = processar_mensagem(mensagem, remetente)
+        resposta_texto = processar_mensagem(mensagem, remetente, profile_name)
         resposta.message(resposta_texto)
     except Exception as e:
         # Log do erro para debug
-        import traceback
         print(f"ERRO: {e}")
         traceback.print_exc()
         
@@ -43,7 +58,7 @@ def webhook():
     
     return str(resposta)
 
-def processar_mensagem(mensagem, remetente):
+def processar_mensagem(mensagem, remetente, profile_name=None):
     """Processa a mensagem recebida e retorna uma resposta"""
     # Remove o prefixo 'whatsapp:' do número do remetente
     if remetente.startswith('whatsapp:'):
@@ -54,9 +69,14 @@ def processar_mensagem(mensagem, remetente):
     usuario = usuario_model.buscar_por_celular(remetente)
     
     if not usuario:
-        usuario_id = usuario_model.criar(celular=remetente)
+        nome = profile_name if profile_name else None
+        usuario_id = usuario_model.criar(celular=remetente, nome=nome)
     else:
         usuario_id = usuario['id']
+        
+        # Atualiza o nome se necessário
+        if profile_name and (usuario.get('nome') is None or usuario.get('nome') == ''):
+            usuario_model.atualizar(usuario_id, nome=profile_name)
     
     # Mensagem em minúsculas para facilitar a comparação
     mensagem_lower = mensagem.lower()
@@ -86,8 +106,12 @@ def processar_mensagem(mensagem, remetente):
     elif 'resumo' in mensagem_lower and ('gráfico' in mensagem_lower or 'grafico' in mensagem_lower):
         return get_relatorio_grafico(usuario_id, mensagem_lower)
     
-    elif "planos" in mensagem_lower or "assinatura" in mensagem_lower or "premium" in mensagem_lower:
+    elif mensagem_lower == "planos" or mensagem_lower == "mudar plano" or mensagem_lower == "info planos" or mensagem_lower == "ver planos":
         return get_info_planos()
+    
+    elif mensagem_lower.startswith("corrigir categoria para "):
+        nova_categoria = mensagem_lower.replace("corrigir categoria para ", "").strip()
+        return corrigir_ultima_categoria(usuario_id, nova_categoria)
     
     else:
         # Processa como uma despesa
@@ -132,6 +156,7 @@ def get_mensagem_ajuda():
         "- \"ano\": Relatório do ano atual\n"
         "- \"resumo gráfico semana\": Envia imagem do gráfico\n"
         "- \"planos\": Informações sobre planos disponíveis\n"
+        "- \"corrigir categoria para [categoria]\": Corrige a categoria da última despesa\n"
         "- \"ajuda\": Mostra esta mensagem\n\n"
         f"Acesse também: {Config.WEBHOOK_BASE_URL}/"
     )
@@ -235,28 +260,156 @@ def get_relatorio_grafico(usuario_id, mensagem):
 def get_info_planos():
     """Retorna informações sobre os planos disponíveis"""
     app_name = Config.APP_NAME
-    plano_gratuito = Config.PLANO_GRATUITO
-    plano_premium = Config.PLANO_PREMIUM
+    
+    # Obtém informações dos planos da Config
+    # Usa get() com valores padrão para evitar KeyError
+    plano_gratuito = getattr(Config, 'PLANO_GRATUITO', {})
+    plano_premium = getattr(Config, 'PLANO_PREMIUM', {})
+    plano_profissional = getattr(Config, 'PLANO_PROFISSIONAL', {})
+    
+    # Valores padrão se as chaves não existirem
+    limite_transacoes_gratuito = plano_gratuito.get('limite_transacoes', 3000)
+    limite_usuarios_gratuito = plano_gratuito.get('limite_usuarios', 1)
+    exportacao_gratuito = plano_gratuito.get('exportacao_dados', False)
+    
+    limite_transacoes_premium = plano_premium.get('limite_transacoes', 20000)
+    limite_usuarios_premium = plano_premium.get('limite_usuarios', 2)
+    exportacao_premium = plano_premium.get('exportacao_dados', True)
+    preco_premium = plano_premium.get('preco', 29.90)
+    
+    limite_transacoes_prof = "Ilimitado"
+    if plano_profissional:
+        limite_usuarios_prof = plano_profissional.get('limite_usuarios', 5)
+        exportacao_prof = plano_profissional.get('exportacao_dados', True)
+        preco_prof = plano_profissional.get('preco', 59.90)
+    else:
+        limite_usuarios_prof = 5
+        exportacao_prof = True
+        preco_prof = 59.90
     
     return (
         f"💳 *Planos {app_name}*\n\n"
         f"*Plano Gratuito*\n"
         f"- Preço: Grátis\n"
-        f"- {plano_gratuito['limite_categorias']} categorias personalizáveis\n"
-        f"- {plano_gratuito['limite_relatorios']} tipos de relatórios\n"
-        f"- Exportação CSV: {'✓' if plano_gratuito['exportacao_csv'] else '✗'}\n"
-        f"- Reconhecimento de imagens: {'✓' if plano_gratuito['reconhecimento_imagem'] else '✗'}\n\n"
+        f"- Até {limite_transacoes_gratuito} transações/mês\n"
+        f"- Dashboard interativo: ✓\n"
+        f"- Relatórios detalhados: ✗\n"
+        f"- Exportação CSV: {'✓' if exportacao_gratuito else '✗'}\n"
+        f"- Usuários por conta: {limite_usuarios_gratuito}\n\n"
         
         f"*Plano Premium*\n"
-        f"- Preço: R$ {plano_premium['preco']:.2f}/mês\n"
-        f"- {plano_premium['limite_categorias']} categorias personalizáveis\n"
-        f"- {plano_premium['limite_relatorios']} tipos de relatórios\n"
-        f"- Exportação CSV: {'✓' if plano_premium['exportacao_csv'] else '✗'}\n"
-        f"- Reconhecimento de imagens: {'✓' if plano_premium['reconhecimento_imagem'] else '✗'}\n"
-        f"- Até {plano_premium['limite_usuarios']} usuários\n\n"
+        f"- Preço: R$ {preco_premium:.2f}/mês\n"
+        f"- Até {limite_transacoes_premium} transações/mês\n"
+        f"- Dashboard interativo: ✓\n"
+        f"- Relatórios detalhados: ✓\n"
+        f"- Exportação CSV: {'✓' if exportacao_premium else '✗'}\n"
+        f"- Usuários por conta: {limite_usuarios_premium}\n\n"
+        
+        f"*Plano Profissional*\n"
+        f"- Preço: R$ {preco_prof:.2f}/mês\n"
+        f"- Transações: {limite_transacoes_prof}\n"
+        f"- Dashboard interativo: ✓\n"
+        f"- Relatórios detalhados: ✓\n"
+        f"- Exportação CSV: {'✓' if exportacao_prof else '✗'}\n"
+        f"- Usuários por conta: {limite_usuarios_prof}\n\n"
         
         f"Para assinar, acesse:\n"
         f"{Config.WEBHOOK_BASE_URL}/planos"
+    )
+
+def corrigir_ultima_categoria(usuario_id, nova_categoria):
+    """Corrige a categoria da última despesa registrada pelo usuário"""
+    despesa_model = Despesa(Config.DATABASE)
+    
+    # Busca a última despesa do usuário
+    despesas = despesa_model.buscar(usuario_id, limit=1)
+    
+    if not despesas:
+        return "Não encontrei nenhuma despesa recente para corrigir."
+    
+    ultima_despesa = despesas[0]
+    categoria_antiga = ultima_despesa['categoria']
+    
+    # Valida a nova categoria
+    categorias_validas = ["alimentação", "transporte", "moradia", "lazer", "saúde", "educação", "vestuário", "outros"]
+    
+    # Normaliza a categoria (remove acentos, converte para minúsculas)
+    import unidecode
+    nova_categoria_normalizada = unidecode.unidecode(nova_categoria.lower())
+    
+    # Verifica se a categoria é válida ou encontra a mais próxima
+    if nova_categoria_normalizada not in categorias_validas:
+        # Mapeia categorias comuns escritas de forma diferente
+        mapeamento_categorias = {
+            "alimentacao": "alimentação",
+            "comida": "alimentação",
+            "refeicao": "alimentação",
+            "refeição": "alimentação",
+            "transporte": "transporte",
+            "uber": "transporte",
+            "taxi": "transporte",
+            "onibus": "transporte",
+            "mobilidade": "transporte",
+            "moradia": "moradia",
+            "casa": "moradia",
+            "aluguel": "moradia",
+            "apartamento": "moradia",
+            "lazer": "lazer",
+            "diversao": "lazer",
+            "diversão": "lazer",
+            "entretenimento": "lazer",
+            "saude": "saúde",
+            "medico": "saúde",
+            "remedio": "saúde",
+            "remédio": "saúde",
+            "educacao": "educação",
+            "escola": "educação",
+            "estudos": "educação",
+            "curso": "educação",
+            "vestuario": "vestuário",
+            "roupa": "vestuário",
+            "calcado": "vestuário",
+            "sapato": "vestuário",
+            "tenis": "vestuário"
+        }
+        
+        if nova_categoria_normalizada in mapeamento_categorias:
+            nova_categoria = mapeamento_categorias[nova_categoria_normalizada]
+        else:
+            # Verifica similaridade para encontrar a categoria mais próxima
+            categoria_mais_proxima = None
+            maior_similaridade = 0
+            
+            for cat in categorias_validas:
+                cat_normalizada = unidecode.unidecode(cat)
+                # Cálculo de similaridade simples
+                similaridade = sum(1 for a, b in zip(nova_categoria_normalizada, cat_normalizada) if a == b) / max(len(nova_categoria_normalizada), len(cat_normalizada))
+                if similaridade > maior_similaridade and similaridade > 0.6:  # 60% de similaridade
+                    maior_similaridade = similaridade
+                    categoria_mais_proxima = cat
+            
+            if categoria_mais_proxima:
+                nova_categoria = categoria_mais_proxima
+            else:
+                return (
+                    f"Categoria '{nova_categoria}' não reconhecida.\n\n"
+                    f"Categorias válidas: {', '.join(categorias_validas)}.\n\n"
+                    f"Por favor, tente novamente com uma das categorias válidas."
+                )
+    
+    # Atualiza a categoria da despesa
+    despesa_model.atualizar(ultima_despesa['id'], categoria=nova_categoria)
+    
+    # Obtém emoji para a nova categoria
+    processador = TextProcessor()
+    emoji = processador.get_categoria_emoji(nova_categoria)
+    
+    return (
+        f"✅ Categoria atualizada com sucesso!\n\n"
+        f"Despesa: {ultima_despesa['descricao']}\n"
+        f"Valor: R$ {ultima_despesa['valor']:.2f}\n"
+        f"Categoria antiga: {categoria_antiga.capitalize()}\n"
+        f"Nova categoria: {emoji} {nova_categoria.capitalize()}"
     )
 
 def processar_despesa(mensagem, usuario_id):
@@ -302,7 +455,9 @@ def processar_despesa(mensagem, usuario_id):
         if dados_despesa.get("forma_pagamento"):
             resposta += f"💳 Forma de pagamento: {dados_despesa['forma_pagamento']}\n"
         
-        resposta += f"\nAcesse {Config.WEBHOOK_BASE_URL}/dashboard para visualizar seus gastos detalhados!"
+        # Adiciona instruções para corrigir a categoria se necessário
+        resposta += f"\nSe a categoria estiver incorreta, envie:\n\"corrigir categoria para [categoria]\"\n\n"
+        resposta += f"Acesse {Config.WEBHOOK_BASE_URL}/dashboard para visualizar seus gastos detalhados!"
         
         return resposta
         

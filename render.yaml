@@ -2,7 +2,13 @@ services:
   - type: web
     name: DespeZap
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand:|
+      python -m venv .venv
+      . .venv/bin/activate
+      pip install --upgrade pip
+      pip install numpy
+      pip install pandas
+      pip install -r requirements.txt
     startCommand: gunicorn app:app
     plan: free
     envVars:

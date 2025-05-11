@@ -858,3 +858,196 @@ def obter_assinatura_ativa(self, usuario_id):
     conn.close()
     
     return dict(assinatura) if assinatura else None
+
+class TextProcessor:
+    """Classe para processamento de texto e extração de informações de despesas"""
+    def __init__(self):
+        # Categorias e palavras-chave
+        self.categorias = {
+            "alimentação": ["comida", "almoço", "jantar", "lanche", "restaurante", "mercado", "supermercado", "ifood", "refeição", "café", "padaria"],
+            "transporte": ["uber", "99", "táxi", "taxi", "ônibus", "onibus", "metrô", "metro", "combustível", "combustivel", "gasolina", "alcool", "estacionamento", "pedágio", "pedágio", "passagem"],
+            "moradia": ["aluguel", "condomínio", "condominio", "luz", "água", "agua", "gás", "gas", "internet", "iptu", "conta de luz", "conta de água", "conta de gás", "wifi"],
+            "lazer": ["cinema", "teatro", "show", "netflix", "spotify", "disney", "disney+", "hbo", "prime", "streaming", "viagem", "passeio", "bar", "balada", "festa", "ingresso"],
+            "saúde": ["remédio", "remedio", "consulta", "médico", "medico", "hospital", "farmácia", "farmacia", "exame", "plano de saúde", "dentista", "psicólogo", "terapia", "academia"],
+            "educação": ["curso", "livro", "escola", "faculdade", "mensalidade", "material escolar", "universidade", "apostila", "matrícula", "pós-graduação", "mestrado", "doutorado"],
+            "vestuário": ["roupa", "calçado", "calcado", "sapato", "tênis", "tenis", "camisa", "calça", "vestido", "bermuda", "meia", "cueca", "sutiã", "jaqueta", "casaco"],
+            "outros": ["diversos", "geral", "variados", "miscelânea"]
+        }
+        
+        # Lista de serviços de streaming
+        self.servicos_streaming = [
+            "netflix", "spotify", "youtube premium", "youtube music", 
+            "disney", "disney+", "amazon prime", "prime video", 
+            "hbo", "hbo max", "deezer", "tidal", "apple music", 
+            "apple tv", "paramount+", "globoplay", "crunchyroll", 
+            "mubi", "telecine", "star+", "discovery+", "max", 
+            "play", "watch", "hulu", "starz", "showtime"
+        ]
+    
+    def detectar_servico_streaming(self, texto):
+        """Detecta se o texto contém referência a serviços de streaming"""
+        texto_lower = texto.lower()
+        
+        for servico in self.servicos_streaming:
+            if servico in texto_lower:
+                return True
+                
+        # Verifica padrões comuns de serviços de streaming
+        if "assinatura" in texto_lower and any(palavra in texto_lower for palavra in ["filme", "séries", "series", "assistir", "video", "vídeo", "stream"]):
+            return True
+            
+        return False
+    
+    def extrair_informacoes_despesa(self, texto):
+        """Extrai informações de despesa a partir de um texto"""
+        from datetime import datetime, timedelta
+        
+        # Inicializa os dados da despesa
+        dados_despesa = {
+            "valor": None,
+            "categoria": None,
+            "descricao": texto,
+            "data": datetime.now().strftime("%Y-%m-%d"),
+            "forma_pagamento": None
+        }
+        
+        # Converte para minúsculas
+        texto_lower = texto.lower()
+        
+        # Verifica se é um serviço de streaming
+        is_streaming = self.detectar_servico_streaming(texto_lower)
+        if is_streaming:
+            dados_despesa["categoria"] = "lazer"
+        
+        # Extrai o valor monetário
+        padroes_valor = [
+            r'r\$\s*(\d+[.,]?\d*)',                    # R$ 50 ou R$50 ou R$ 50,90
+            r'(\d+[.,]?\d*)\s*(?:reais|real)',         # 50 reais ou 50,90 reais
+            r'(\d+[.,]?\d*)\s*(?:rs|r\$)',             # 50 rs ou 50,90 r$
+            r'(?:valor|custo|preço|preco|paguei|gastei)\s*(?:de|:)?\s*(?:r\$)?\s*(\d+[.,]?\d*)', # valor de 50, paguei 50
+            r'(\d+[.,]?\d*)',                          # Só um número (50 ou 50,90)
+        ]
+        
+        for padrao in padroes_valor:
+            matches = re.findall(padrao, texto_lower)
+            if matches:
+                try:
+                    valor_str = matches[0].replace(',', '.')
+                    dados_despesa["valor"] = float(valor_str)
+                    break
+                except (ValueError, IndexError):
+                    continue
+        
+        # Se não encontrou valor, retorna None
+        if dados_despesa["valor"] is None:
+            return None
+        
+        # Se ainda não definiu categoria e não é streaming, extrai categoria baseada em palavras-chave
+        if not dados_despesa["categoria"]:
+            for categoria, palavras_chave in self.categorias.items():
+                for palavra in palavras_chave:
+                    if palavra in texto_lower:
+                        dados_despesa["categoria"] = categoria
+                        break
+                if dados_despesa["categoria"]:
+                    break
+        
+        # Se ainda não encontrou categoria, verifica padrões específicos
+        if not dados_despesa["categoria"]:
+            # Assinaturas (não streaming) geralmente são recorrentes (mensalidade, anuidade)
+            if "assinatura" in texto_lower or "mensalidade" in texto_lower or "anuidade" in texto_lower:
+                if "academia" in texto_lower or "gym" in texto_lower:
+                    dados_despesa["categoria"] = "saúde"
+                elif "escola" in texto_lower or "faculdade" in texto_lower or "curso" in texto_lower:
+                    dados_despesa["categoria"] = "educação"
+                elif "internet" in texto_lower or "celular" in texto_lower or "telefone" in texto_lower:
+                    dados_despesa["categoria"] = "moradia"
+                else:
+                    dados_despesa["categoria"] = "outros"
+        
+        # Se não encontrou categoria, usa "outros"
+        if not dados_despesa["categoria"]:
+            dados_despesa["categoria"] = "outros"
+        
+        # Extrai data
+        padroes_data = [
+            r'(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?',  # 10/05 ou 10/05/2023
+            r'(?:hoje|ontem|amanhã|amanha)'              # hoje, ontem, amanhã
+        ]
+        
+        for padrao in padroes_data:
+            matches = re.findall(padrao, texto_lower)
+            if matches:
+                if isinstance(matches[0], tuple) and len(matches[0]) >= 2:
+                    try:
+                        dia, mes, ano = matches[0]
+                        if not ano:
+                            ano = datetime.now().year
+                        elif len(ano) == 2:
+                            ano = f"20{ano}"
+                        
+                        data_obj = datetime(int(ano), int(mes), int(dia))
+                        dados_despesa["data"] = data_obj.strftime("%Y-%m-%d")
+                        break
+                    except (ValueError, IndexError):
+                        continue
+                elif isinstance(matches[0], str) or (isinstance(matches[0], tuple) and len(matches[0]) == 1):
+                    data_palavra = matches[0] if isinstance(matches[0], str) else matches[0][0]
+                    if data_palavra in ['hoje', 'today']:
+                        dados_despesa["data"] = datetime.now().strftime("%Y-%m-%d")
+                    elif data_palavra in ['ontem', 'yesterday']:
+                        ontem = datetime.now() - timedelta(days=1)
+                        dados_despesa["data"] = ontem.strftime("%Y-%m-%d")
+                    elif data_palavra in ['amanhã', 'amanha', 'tomorrow']:
+                        amanha = datetime.now() + timedelta(days=1)
+                        dados_despesa["data"] = amanha.strftime("%Y-%m-%d")
+                    break
+        
+        # Se "hoje" estiver no texto, define a data como hoje
+        if "hoje" in texto_lower:
+            dados_despesa["data"] = datetime.now().strftime("%Y-%m-%d")
+        
+        # Extrai forma de pagamento
+        padroes_pagamento = [
+            r'(?:pag(?:amento|uei|ar|o)|comprei)(?:\s+(?:com|no|usando|via|por|pelo))?\s+(cartão|cartao|crédito|credito|débito|debito|dinheiro|pix|boleto)',
+            r'(?:no|com|usando|via|por|pelo)\s+(cartão|cartao|crédito|credito|débito|debito|dinheiro|pix|boleto)'
+        ]
+        
+        for padrao in padroes_pagamento:
+            matches = re.findall(padrao, texto_lower)
+            if matches:
+                forma = matches[0].lower()
+                if forma in ['cartão', 'cartao']:
+                    dados_despesa["forma_pagamento"] = "Cartão"
+                elif forma in ['crédito', 'credito']:
+                    dados_despesa["forma_pagamento"] = "Crédito"
+                elif forma in ['débito', 'debito']:
+                    dados_despesa["forma_pagamento"] = "Débito"
+                elif forma == 'dinheiro':
+                    dados_despesa["forma_pagamento"] = "Dinheiro"
+                elif forma == 'pix':
+                    dados_despesa["forma_pagamento"] = "PIX"
+                elif forma == 'boleto':
+                    dados_despesa["forma_pagamento"] = "Boleto"
+                break
+        
+        return dados_despesa
+    
+    def get_categoria_emoji(self, categoria):
+        """Retorna um emoji para cada categoria"""
+        emojis = {
+            "alimentação": "🍽️",
+            "transporte": "🚗",
+            "moradia": "🏠",
+            "saúde": "⚕️",
+            "educação": "📚",
+            "lazer": "🎭",
+            "vestuário": "👕",
+            "salario": "💰",
+            "freelance": "💼",
+            "investimento": "📈",
+            "presente": "🎁",
+            "outros": "📦"
+        }
+        
+        return emojis.get(categoria, "📦")

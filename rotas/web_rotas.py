@@ -372,12 +372,13 @@ def cancelar_assinatura():
     
     usuario_id = session.get('usuario_id')
     
-    # Muda o plano para gratuito
+    # Cancela a assinatura
     usuario_model = Usuario(Config.DATABASE)
-    usuario_model.atualizar(usuario_id, plano='gratuito')
+    sucesso = usuario_model.cancelar_assinatura(usuario_id)
     
-    # Aqui você registraria o cancelamento da assinatura atual no sistema
-    # Exemplo: assinatura_model.cancelar(usuario_id)
+    if sucesso:
+        flash('Sua assinatura foi cancelada com sucesso. Seu plano será alterado para Gratuito no próximo ciclo de faturamento.', 'success')
+    else:
+        flash('Não foi possível cancelar sua assinatura. Talvez você não tenha uma assinatura ativa.', 'error')
     
-    flash('Sua assinatura foi cancelada com sucesso. Seu plano será alterado para Gratuito no próximo ciclo de faturamento.', 'success')
     return redirect(url_for('web.perfil'))
