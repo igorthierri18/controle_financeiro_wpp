@@ -1,0 +1,15 @@
+flask==2.2.3
+twilio==7.17.0
+pandas==2.0.1
+plotly==5.15.0
+requests==2.29.0
+numpy==1.24.3
+
+# Para reconhecimento de imagens (opcional, mas recomendado)
+opencv-python==4.8.0.76
+pytesseract==0.3.10
+pillow==9.5.0
+
+# Para reconhecimento de voz (opcional)
+vosk==0.3.45
+pydub==0.25.1
