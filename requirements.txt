@@ -5,6 +5,19 @@ pandas
 twilio
 unidecode
 python-dotenv
+Pillow  # Em vez de PIL
+pytesseract
+requests
+werkzeug
+flask-wtf
+xlsxwriter
+openpyxl
+jsonify
+pydub
+pymupdf
+matplotlib
+plotly
+
 
 # flask==2.0.1
 # gunicorn==20.1.0

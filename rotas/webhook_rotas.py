@@ -7,6 +7,13 @@ from datetime import datetime, timedelta
 import re
 import requests
 import traceback
+import os
+import requests
+from datetime import datetime, timedelta
+import json
+from io import BytesIO
+from PIL import Image
+import tempfile
 
 # Criação do blueprint
 webhook_bp = Blueprint('webhook', __name__)

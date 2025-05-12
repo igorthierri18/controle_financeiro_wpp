@@ -1,0 +1,809 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorias - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.categorias-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 40px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.categorias-header h1 {
+    font-weight: 600;
+}
+
+.categorias-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.nav-pills .nav-link {
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    color: #495057;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.nav-pills .nav-link.active {
+    background-color: #28a745;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-pills .nav-link i {
+    font-size: 24px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.categoria-card {
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.categoria-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.categoria-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.categoria-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 15px;
+    background-color: #f8f9fa;
+}
+
+.categoria-title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 0;
+    flex-grow: 1;
+}
+
+.categoria-stats {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+}
+
+.categoria-stat {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+}
+
+.categoria-stat-value {
+    font-weight: 700;
+    font-size: 18px;
+    color: #28a745;
+}
+
+.categoria-stat-label {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.categoria-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 20px;
+}
+
+.categoria-footer .btn {
+    margin-left: 5px;
+}
+
+.color-dot {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.color-selector {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    gap: 10px;
+}
+
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.color-option:hover, .color-option.selected {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #28a745;
+}
+
+.emoji-picker {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    gap: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.emoji-option {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.emoji-option:hover, .emoji-option.selected {
+    background-color: #e8f5e9;
+    transform: scale(1.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.fab-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    text-decoration: none;
+}
+
+.fab-button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+    color: white;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-box input[type="text"] {
+    padding-left: 40px;
+    border-radius: 20px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .categorias-header {
+        padding: 30px 0;
+        text-align: center;
+    }
+    
+    .nav-pills .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+    }
+    
+    .nav-pills .nav-link i {
+        margin-bottom: 0;
+        margin-right: 10px;
+        font-size: 18px;
+    }
+    
+    .fab-button {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="categorias-header">
+    <div class="container">
+        <h1>Categorias Personalizadas</h1>
+        <p>Personalize suas categorias de despesas e receitas para melhor organização financeira.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Menu de navegação -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="nav flex-column nav-pills mb-4" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <button class="nav-link active" id="v-pills-despesas-pessoais-tab" data-bs-toggle="pill" data-bs-target="#v-pills-despesas-pessoais" type="button" role="tab">
+                    <i class="bi bi-cash"></i>
+                    Despesas Pessoais
+                </button>
+                <button class="nav-link" id="v-pills-receitas-pessoais-tab" data-bs-toggle="pill" data-bs-target="#v-pills-receitas-pessoais" type="button" role="tab">
+                    <i class="bi bi-wallet2"></i>
+                    Receitas Pessoais
+                </button>
+                <button class="nav-link" id="v-pills-despesas-empresariais-tab" data-bs-toggle="pill" data-bs-target="#v-pills-despesas-empresariais" type="button" role="tab">
+                    <i class="bi bi-building"></i>
+                    Despesas Empresariais
+                </button>
+                <button class="nav-link" id="v-pills-receitas-empresariais-tab" data-bs-toggle="pill" data-bs-target="#v-pills-receitas-empresariais" type="button" role="tab">
+                    <i class="bi bi-graph-up"></i>
+                    Receitas Empresariais
+                </button>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Dicas</h5>
+                    <p class="card-text">Crie categorias personalizadas para ter um controle financeiro mais detalhado.</p>
+                    <ul class="mb-0">
+                        <li>Use cores distintas para identificar visualmente cada categoria</li>
+                        <li>Escolha ícones intuitivos para reconhecer rapidamente suas categorias</li>
+                        <li>Divida grandes categorias em subcategorias mais específicas</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="search-categorias" class="form-control" placeholder="Buscar categorias...">
+            </div>
+            
+            <div class="tab-content" id="v-pills-tabContent">
+                <!-- Despesas Pessoais -->
+                <div class="tab-pane fade show active" id="v-pills-despesas-pessoais" role="tabpanel">
+                    <h3 class="mb-3">Categorias de Despesas Pessoais</h3>
+                    
+                    <div class="row" id="lista-despesas-pessoais">
+                        {% if categorias_despesa_pessoais %}
+                            {% for categoria in categorias_despesa_pessoais %}
+                            <div class="col-lg-6 categoria-item">
+                                <div class="categoria-card">
+                                    <div class="categoria-header">
+                                        <div class="categoria-icon" style="background-color: {{ categoria.cor }}; color: white;">
+                                            {{ categoria.icone }}
+                                        </div>
+                                        <h5 class="categoria-title">{{ categoria.nome }}</h5>
+                                    </div>
+                                    <div class="categoria-stats">
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="total-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Total Gasto</div>
+                                        </div>
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="media-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Média Mensal</div>
+                                        </div>
+                                    </div>
+                                    <div class="categoria-footer">
+                                        <button class="btn btn-sm btn-outline-primary btn-editar-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-excluir-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-tag"></i>
+                                <h3>Nenhuma categoria personalizada</h3>
+                                <p>Adicione categorias personalizadas para organizar suas despesas pessoais.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Receitas Pessoais -->
+                <div class="tab-pane fade" id="v-pills-receitas-pessoais" role="tabpanel">
+                    <h3 class="mb-3">Categorias de Receitas Pessoais</h3>
+                    
+                    <div class="row" id="lista-receitas-pessoais">
+                        {% if categorias_receita_pessoais %}
+                            {% for categoria in categorias_receita_pessoais %}
+                            <div class="col-lg-6 categoria-item">
+                                <div class="categoria-card">
+                                    <div class="categoria-header">
+                                        <div class="categoria-icon" style="background-color: {{ categoria.cor }}; color: white;">
+                                            {{ categoria.icone }}
+                                        </div>
+                                        <h5 class="categoria-title">{{ categoria.nome }}</h5>
+                                    </div>
+                                    <div class="categoria-stats">
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="total-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Total Recebido</div>
+                                        </div>
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="media-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Média Mensal</div>
+                                        </div>
+                                    </div>
+                                    <div class="categoria-footer">
+                                        <button class="btn btn-sm btn-outline-primary btn-editar-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-excluir-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-tag"></i>
+                                <h3>Nenhuma categoria personalizada</h3>
+                                <p>Adicione categorias personalizadas para organizar suas receitas pessoais.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Despesas Empresariais -->
+                <div class="tab-pane fade" id="v-pills-despesas-empresariais" role="tabpanel">
+                    <h3 class="mb-3">Categorias de Despesas Empresariais</h3>
+                    
+                    <div class="row" id="lista-despesas-empresariais">
+                        {% if categorias_despesa_empresariais %}
+                            {% for categoria in categorias_despesa_empresariais %}
+                            <div class="col-lg-6 categoria-item">
+                                <div class="categoria-card">
+                                    <div class="categoria-header">
+                                        <div class="categoria-icon" style="background-color: {{ categoria.cor }}; color: white;">
+                                            {{ categoria.icone }}
+                                        </div>
+                                        <h5 class="categoria-title">{{ categoria.nome }}</h5>
+                                    </div>
+                                    <div class="categoria-stats">
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="total-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Total Gasto</div>
+                                        </div>
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="media-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Média Mensal</div>
+                                        </div>
+                                    </div>
+                                    <div class="categoria-footer">
+                                        <button class="btn btn-sm btn-outline-primary btn-editar-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-excluir-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-tag"></i>
+                                <h3>Nenhuma categoria personalizada</h3>
+                                <p>Adicione categorias personalizadas para organizar suas despesas empresariais.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Receitas Empresariais -->
+                <div class="tab-pane fade" id="v-pills-receitas-empresariais" role="tabpanel">
+                    <h3 class="mb-3">Categorias de Receitas Empresariais</h3>
+                    
+                    <div class="row" id="lista-receitas-empresariais">
+                        {% if categorias_receita_empresariais %}
+                            {% for categoria in categorias_receita_empresariais %}
+                            <div class="col-lg-6 categoria-item">
+                                <div class="categoria-card">
+                                    <div class="categoria-header">
+                                        <div class="categoria-icon" style="background-color: {{ categoria.cor }}; color: white;">
+                                            {{ categoria.icone }}
+                                        </div>
+                                        <h5 class="categoria-title">{{ categoria.nome }}</h5>
+                                    </div>
+                                    <div class="categoria-stats">
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="total-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Total Recebido</div>
+                                        </div>
+                                        <div class="categoria-stat">
+                                            <div class="categoria-stat-value" id="media-{{ categoria.id }}">--</div>
+                                            <div class="categoria-stat-label">Média Mensal</div>
+                                        </div>
+                                    </div>
+                                    <div class="categoria-footer">
+                                        <button class="btn btn-sm btn-outline-primary btn-editar-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-excluir-categoria" data-id="{{ categoria.id }}">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-tag"></i>
+                                <h3>Nenhuma categoria personalizada</h3>
+                                <p>Adicione categorias personalizadas para organizar suas receitas empresariais.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botão Flutuante para Adicionar -->
+    <a href="#" class="fab-button" data-bs-toggle="modal" data-bs-target="#modalAddCategoria">
+        <i class="bi bi-plus"></i>
+    </a>
+</div>
+
+<!-- Modal para adicionar/editar categoria -->
+<div class="modal fade" id="modalAddCategoria" tabindex="-1" aria-labelledby="modalAddCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAddCategoriaLabel">Adicionar Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-categoria" method="POST" action="{{ url_for('web.adicionar_categoria') }}">
+                    <input type="hidden" id="categoria-id" name="id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Categoria</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="tipo" id="tipo_despesa" autocomplete="off" checked value="despesa">
+                            <label class="btn btn-outline-danger" for="tipo_despesa">
+                                <i class="bi bi-cash me-1"></i> Despesa
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="tipo" id="tipo_receita" autocomplete="off" value="receita">
+                            <label class="btn btn-outline-success" for="tipo_receita">
+                                <i class="bi bi-wallet2 me-1"></i> Receita
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Perfil</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="tipo_perfil" id="tipo_perfil_pessoal" autocomplete="off" checked value="pessoal">
+                            <label class="btn btn-outline-primary" for="tipo_perfil_pessoal">
+                                <i class="bi bi-person me-1"></i> Pessoal
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="tipo_perfil" id="tipo_perfil_empresarial" autocomplete="off" value="empresarial">
+                            <label class="btn btn-outline-primary" for="tipo_perfil_empresarial">
+                                <i class="bi bi-building me-1"></i> Empresarial
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoria-nome" class="form-label">Nome da Categoria*</label>
+                        <input type="text" class="form-control" id="categoria-nome" name="nome" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoria-icone" class="form-label">Ícone</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="icone-selecionado">📦</span>
+                            <input type="text" class="form-control" id="categoria-icone" name="icone" value="📦" readonly>
+                        </div>
+                        
+                        <div class="emoji-picker">
+                            <div class="emoji-option selected" data-emoji="📦">📦</div>
+                            <div class="emoji-option" data-emoji="🍽️">🍽️</div>
+                            <div class="emoji-option" data-emoji="🚗">🚗</div>
+                            <div class="emoji-option" data-emoji="🏠">🏠</div>
+                            <div class="emoji-option" data-emoji="⚕️">⚕️</div>
+                            <div class="emoji-option" data-emoji="📚">📚</div>
+                            <div class="emoji-option" data-emoji="🎭">🎭</div>
+                            <div class="emoji-option" data-emoji="👕">👕</div>
+                            <div class="emoji-option" data-emoji="💰">💰</div>
+                            <div class="emoji-option" data-emoji="💼">💼</div>
+                            <div class="emoji-option" data-emoji="📈">📈</div>
+                            <div class="emoji-option" data-emoji="🎁">🎁</div>
+                            <div class="emoji-option" data-emoji="🛒">🛒</div>
+                            <div class="emoji-option" data-emoji="🔧">🔧</div>
+                            <div class="emoji-option" data-emoji="📅">📅</div>
+                            <div class="emoji-option" data-emoji="📊">📊</div>
+                            <div class="emoji-option" data-emoji="🏭">🏭</div>
+                            <div class="emoji-option" data-emoji="👥">👥</div>
+                            <div class="emoji-option" data-emoji="📑">📑</div>
+                            <div class="emoji-option" data-emoji="🏢">🏢</div>
+                            <div class="emoji-option" data-emoji="⚙️">⚙️</div>
+                            <div class="emoji-option" data-emoji="📢">📢</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoria-cor" class="form-label">Cor</label>
+                        <div class="d-flex align-items-center">
+                            <input type="color" class="form-control form-control-color" id="categoria-cor" name="cor" value="#28a745">
+                            <span class="ms-3" id="cor-preview">#28a745</span>
+                        </div>
+                        
+                        <div class="color-selector">
+                            <div class="color-option" style="background-color: #28a745;" data-color="#28a745"></div>
+                            <div class="color-option" style="background-color: #dc3545;" data-color="#dc3545"></div>
+                            <div class="color-option" style="background-color: #007bff;" data-color="#007bff"></div>
+                            <div class="color-option" style="background-color: #6f42c1;" data-color="#6f42c1"></div>
+                            <div class="color-option" style="background-color: #fd7e14;" data-color="#fd7e14"></div>
+                            <div class="color-option" style="background-color: #6c757d;" data-color="#6c757d"></div>
+                            <div class="color-option" style="background-color: #20c997;" data-color="#20c997"></div>
+                            <div class="color-option" style="background-color: #e83e8c;" data-color="#e83e8c"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="form-categoria" class="btn btn-success">Salvar Categoria</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para excluir -->
+<div class="modal fade" id="modalConfirmExcluir" tabindex="-1" aria-labelledby="modalConfirmExcluirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmExcluirLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir esta categoria? Esta ação não poderá ser desfeita.</p>
+                <p class="text-warning"><i class="bi bi-exclamation-triangle"></i> Se houver transações usando esta categoria, ela não poderá ser excluída.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="form-excluir-categoria" method="POST">
+                    <button type="submit" class="btn btn-danger">Excluir Categoria</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar os componentes
+        
+        // Atualizar as estatísticas das categorias
+        carregarEstatisticasCategorias();
+        
+        // Controle do seletor de cores
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                const color = this.dataset.color;
+                document.getElementById('categoria-cor').value = color;
+                document.getElementById('cor-preview').textContent = color;
+            });
+        });
+        
+        // Atualizar preview quando mudar o input de cor diretamente
+        document.getElementById('categoria-cor').addEventListener('input', function() {
+            document.getElementById('cor-preview').textContent = this.value;
+            
+            // Atualiza a seleção nas opções predefinidas
+            document.querySelectorAll('.color-option').forEach(o => {
+                o.classList.toggle('selected', o.dataset.color === this.value);
+            });
+        });
+        
+        // Controle do seletor de emojis
+        document.querySelectorAll('.emoji-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.emoji-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                const emoji = this.dataset.emoji;
+                document.getElementById('categoria-icone').value = emoji;
+                document.getElementById('icone-selecionado').textContent = emoji;
+            });
+        });
+        
+        // Busca de categorias
+        document.getElementById('search-categorias').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            document.querySelectorAll('.categoria-item').forEach(item => {
+                const categoriaTitle = item.querySelector('.categoria-title').textContent.toLowerCase();
+                
+                if (categoriaTitle.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Botões para editar categorias
+        document.querySelectorAll('.btn-editar-categoria').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const categoriaId = this.dataset.id;
+                
+                // Em uma implementação real, buscaria os dados da categoria via API
+                // e preencheria o formulário para edição
+                
+                // Exemplo fictício:
+                document.getElementById('modalAddCategoriaLabel').textContent = 'Editar Categoria';
+                document.getElementById('categoria-id').value = categoriaId;
+                
+                // Buscar os dados da categoria
+                fetch(`/api/categorias/${categoriaId}`)
+                    .then(response => response.json())
+                    .then(categoria => {
+                        // Preencher o formulário
+                        document.getElementById('categoria-nome').value = categoria.nome;
+                        document.getElementById('categoria-icone').value = categoria.icone;
+                        document.getElementById('icone-selecionado').textContent = categoria.icone;
+                        document.getElementById('categoria-cor').value = categoria.cor;
+                        document.getElementById('cor-preview').textContent = categoria.cor;
+                        
+                        // Selecionar o tipo correto
+                        if (categoria.tipo === 'despesa') {
+                            document.getElementById('tipo_despesa').checked = true;
+                        } else {
+                            document.getElementById('tipo_receita').checked = true;
+                        }
+                        
+                        // Selecionar o perfil correto
+                        if (categoria.tipo_perfil === 'pessoal') {
+                            document.getElementById('tipo_perfil_pessoal').checked = true;
+                        } else {
+                            document.getElementById('tipo_perfil_empresarial').checked = true;
+                        }
+                        
+                        // Atualizar o action do formulário
+                        document.getElementById('form-categoria').action = `/categorias/editar/${categoriaId}`;
+                        
+                        // Abrir o modal
+                        const modalAddCategoria = new bootstrap.Modal(document.getElementById('modalAddCategoria'));
+                        modalAddCategoria.show();
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar a categoria:', error);
+                        alert('Erro ao carregar os dados da categoria. Por favor, tente novamente.');
+                    });
+            });
+        });
+        
+        // Botões para excluir categorias
+        document.querySelectorAll('.btn-excluir-categoria').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const categoriaId = this.dataset.id;
+                
+                // Define o action do formulário de exclusão
+                document.getElementById('form-excluir-categoria').action = `/categorias/excluir/${categoriaId}`;
+                
+                // Abre o modal de confirmação
+                const modalConfirmExcluir = new bootstrap.Modal(document.getElementById('modalConfirmExcluir'));
+                modalConfirmExcluir.show();
+            });
+        });
+        
+        // Reset do formulário ao abrir o modal para adicionar
+        document.querySelector('[data-bs-target="#modalAddCategoria"]').addEventListener('click', function() {
+            document.getElementById('modalAddCategoriaLabel').textContent = 'Adicionar Categoria';
+            document.getElementById('form-categoria').reset();
+            document.getElementById('categoria-id').value = '';
+            document.getElementById('form-categoria').action = "{{ url_for('web.adicionar_categoria') }}";
+            
+            // Reset dos seletores visuais
+            document.querySelectorAll('.emoji-option').forEach(o => o.classList.toggle('selected', o.dataset.emoji === '📦'));
+            document.querySelectorAll('.color-option').forEach(o => o.classList.toggle('selected', o.dataset.color === '#28a745'));
+            
+            document.getElementById('icone-selecionado').textContent = '📦';
+            document.getElementById('cor-preview').textContent = '#28a745';
+        });
+    });
+    
+    // Função para carregar estatísticas das categorias
+    function carregarEstatisticasCategorias() {
+        // Em uma implementação real, buscaria os dados via API
+        // Para este exemplo, usamos dados fictícios
+        
+        document.querySelectorAll('.categoria-card').forEach(card => {
+            const categoriaId = card.querySelector('.btn-editar-categoria').dataset.id;
+            
+            // Gerar valores aleatórios para demonstração
+            const totalGasto = Math.floor(Math.random() * 1000) + 100;
+            const mediaGasto = Math.floor(totalGasto / (Math.random() * 5 + 1));
+            
+            // Atualizar os valores na tela
+            const totalEl = card.querySelector(`#total-${categoriaId}`);
+            const mediaEl = card.querySelector(`#media-${categoriaId}`);
+            
+            if (totalEl) totalEl.textContent = `R$ ${totalGasto.toFixed(2)}`;
+            if (mediaEl) mediaEl.textContent = `R$ ${mediaGasto.toFixed(2)}`;
+        });
+    }
+</script>
+{% endblock %}

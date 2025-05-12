@@ -1,0 +1,1257 @@
+{% extends 'base.html' %}
+
+{% block title %}Lembretes - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.lembretes-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 40px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.lembretes-header h1 {
+    font-weight: 600;
+}
+
+.lembretes-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.lembrete-card {
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.lembrete-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.lembrete-status-bar {
+    height: 8px;
+    width: 100%;
+}
+
+.lembrete-status-normal {
+    background-color: #28a745;
+}
+
+.lembrete-status-warning {
+    background-color: #ffc107;
+}
+
+.lembrete-status-danger {
+    background-color: #dc3545;
+}
+
+.lembrete-status-info {
+    background-color: #17a2b8;
+}
+
+.lembrete-body {
+    padding: 20px;
+}
+
+.lembrete-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.lembrete-date {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.lembrete-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #28a745;
+    margin-bottom: 15px;
+}
+
+.lembrete-description {
+    color: #495057;
+    margin-bottom: 20px;
+}
+
+.lembrete-tags {
+    margin-bottom: 15px;
+}
+
+.lembrete-tag {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.lembrete-tag-personal {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.lembrete-tag-business {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.lembrete-tag-recurrent {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.lembrete-countdown {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.lembrete-countdown-normal {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.lembrete-countdown-warning {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.lembrete-countdown-danger {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.lembrete-countdown-today {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.lembrete-footer {
+    border-top: 1px solid #f5f5f5;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.fab-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    text-decoration: none;
+}
+
+.fab-button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+    color: white;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .lembretes-header {
+        padding: 30px 0;
+        text-align: center;
+    }
+    
+    .fab-button {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+}
+
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-bar .btn {
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-size: 14px;
+}
+
+.filter-dropdown {
+    position: relative;
+}
+
+.filter-dropdown .dropdown-menu {
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+.calendar-view {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.calendar-title {
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.calendar-nav .btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 500;
+    color: #6c757d;
+    padding: 10px 0;
+}
+
+.calendar-day {
+    aspect-ratio: 1/1;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    padding: 5px;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+    background-color: #f8f9fa;
+}
+
+.calendar-day.other-month {
+    background-color: #f8f9fa;
+    border-color: #f1f1f1;
+    color: #adb5bd;
+}
+
+.calendar-day.today {
+    border-color: #28a745;
+    background-color: #e8f5e9;
+}
+
+.calendar-day-number {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.calendar-day-events {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.calendar-day-event {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #28a745;
+}
+
+.calendar-day-event.personal {
+    background-color: #28a745;
+}
+
+.calendar-day-event.business {
+    background-color: #007bff;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="lembretes-header">
+    <div class="container">
+        <h1>Meus Lembretes</h1>
+        <p>Gerencie seus lembretes financeiros e receba notificações para não perder nenhuma data importante.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Barra de filtros -->
+    <div class="filter-bar">
+        <button class="btn btn-success active" id="btn-todos-lembretes">Todos os lembretes</button>
+        <button class="btn btn-outline-success" id="btn-proximos-lembretes">Próximos 7 dias</button>
+        <button class="btn btn-outline-success" id="btn-lembretes-vencidos">Vencidos</button>
+        
+        <div class="filter-dropdown ms-auto">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-filter"></i> Filtrar
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+                <h6 class="dropdown-header">Tipo de Perfil</h6>
+                <div class="dropdown-item">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filtro-pessoal" checked>
+                        <label class="form-check-label" for="filtro-pessoal">
+                            Pessoal
+                        </label>
+                    </div>
+                </div>
+                <div class="dropdown-item">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filtro-empresarial" checked>
+                        <label class="form-check-label" for="filtro-empresarial">
+                            Empresarial
+                        </label>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <h6 class="dropdown-header">Tipo de Lembrete</h6>
+                <div class="dropdown-item">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filtro-recorrentes" checked>
+                        <label class="form-check-label" for="filtro-recorrentes">
+                            Recorrentes
+                        </label>
+                    </div>
+                </div>
+                <div class="dropdown-item">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filtro-unicos" checked>
+                        <label class="form-check-label" for="filtro-unicos">
+                            Únicos
+                        </label>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item text-center">
+                    <button class="btn btn-sm btn-success" id="btn-aplicar-filtros">Aplicar Filtros</button>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-outline-success" id="btn-calendario">
+            <i class="bi bi-calendar-week"></i> Calendário
+        </button>
+    </div>
+    
+    <!-- Vista de lista (padrão) -->
+    <div id="lista-lembretes">
+        <div class="row">
+            <!-- Lembretes Pessoais -->
+            <div class="col-lg-6">
+                <h3 class="mb-3">Lembretes Pessoais</h3>
+                
+                {% if lembretes_pessoais %}
+                    {% for lembrete in lembretes_pessoais %}
+                    <div class="lembrete-card">
+                        <div class="lembrete-status-bar 
+                            {% if (lembrete.data|to_date - today).days < 0 %}
+                                lembrete-status-danger
+                            {% elif (lembrete.data|to_date - today).days <= 3 %}
+                                lembrete-status-warning
+                            {% elif (lembrete.data|to_date - today).days <= 7 %}
+                                lembrete-status-info
+                            {% else %}
+                                lembrete-status-normal
+                            {% endif %}
+                        "></div>
+                        <div class="lembrete-body">
+                            <h4 class="lembrete-title">{{ lembrete.titulo }}</h4>
+                            <div class="lembrete-date">
+                                <i class="bi bi-calendar-event"></i> 
+                                {{ lembrete.data|to_date|format_date }}
+                            </div>
+                            
+                            {% if lembrete.valor %}
+                            <div class="lembrete-value">R$ {{ lembrete.valor|format_currency }}</div>
+                            {% endif %}
+                            
+                            {% if lembrete.descricao %}
+                            <div class="lembrete-description">{{ lembrete.descricao }}</div>
+                            {% endif %}
+                            
+                            <div class="lembrete-tags">
+                                <span class="lembrete-tag lembrete-tag-personal">Pessoal</span>
+                                {% if lembrete.recorrente %}
+                                <span class="lembrete-tag lembrete-tag-recurrent">
+                                    <i class="bi bi-arrow-repeat"></i> 
+                                    {% if lembrete.periodicidade == 'mensal' %}
+                                        Mensal
+                                    {% elif lembrete.periodicidade == 'quinzenal' %}
+                                        Quinzenal
+                                    {% elif lembrete.periodicidade == 'semanal' %}
+                                        Semanal
+                                    {% else %}
+                                        Recorrente
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="lembrete-countdown 
+                                {% if (lembrete.data|to_date - today).days < 0 %}
+                                    lembrete-countdown-danger
+                                {% elif (lembrete.data|to_date - today).days == 0 %}
+                                    lembrete-countdown-today
+                                {% elif (lembrete.data|to_date - today).days <= 3 %}
+                                    lembrete-countdown-warning
+                                {% else %}
+                                    lembrete-countdown-normal
+                                {% endif %}
+                            ">
+                                {% if (lembrete.data|to_date - today).days < 0 %}
+                                    <i class="bi bi-exclamation-triangle"></i> Vencido há {{ (today - lembrete.data|to_date).days }} dias
+                                {% elif (lembrete.data|to_date - today).days == 0 %}
+                                    <i class="bi bi-calendar-check"></i> Hoje!
+                                {% elif (lembrete.data|to_date - today).days == 1 %}
+                                    <i class="bi bi-calendar-date"></i> Amanhã
+                                {% else %}
+                                    <i class="bi bi-calendar"></i> Em {{ (lembrete.data|to_date - today).days }} dias
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="lembrete-footer">
+                            <div>
+                                <button class="btn btn-sm btn-success btn-concluir-lembrete" data-id="{{ lembrete.id }}">
+                                    <i class="bi bi-check-circle"></i> Concluir
+                                </button>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary btn-editar-lembrete" data-id="{{ lembrete.id }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-excluir-lembrete" data-id="{{ lembrete.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-bell"></i>
+                        <h3>Nenhum lembrete pessoal</h3>
+                        <p>Adicione lembretes para não esquecer datas importantes.</p>
+                        <button class="btn btn-success btn-adicionar-lembrete" data-tipo-perfil="pessoal">
+                            <i class="bi bi-plus-circle"></i> Adicionar Lembrete Pessoal
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Lembretes Empresariais -->
+            <div class="col-lg-6">
+                <h3 class="mb-3">Lembretes Empresariais</h3>
+                
+                {% if lembretes_empresariais %}
+                    {% for lembrete in lembretes_empresariais %}
+                    <div class="lembrete-card">
+                        <div class="lembrete-status-bar 
+                            {% if (lembrete.data|to_date - today).days < 0 %}
+                                lembrete-status-danger
+                            {% elif (lembrete.data|to_date - today).days <= 3 %}
+                                lembrete-status-warning
+                            {% elif (lembrete.data|to_date - today).days <= 7 %}
+                                lembrete-status-info
+                            {% else %}
+                                lembrete-status-normal
+                            {% endif %}
+                        "></div>
+                        <div class="lembrete-body">
+                            <h4 class="lembrete-title">{{ lembrete.titulo }}</h4>
+                            <div class="lembrete-date">
+                                <i class="bi bi-calendar-event"></i> 
+                                {{ lembrete.data|to_date|format_date }}
+                            </div>
+                            
+                            {% if lembrete.valor %}
+                            <div class="lembrete-value">R$ {{ lembrete.valor|format_currency }}</div>
+                            {% endif %}
+                            
+                            {% if lembrete.descricao %}
+                            <div class="lembrete-description">{{ lembrete.descricao }}</div>
+                            {% endif %}
+                            
+                            <div class="lembrete-tags">
+                                <span class="lembrete-tag lembrete-tag-business">Empresarial</span>
+                                {% if lembrete.recorrente %}
+                                <span class="lembrete-tag lembrete-tag-recurrent">
+                                    <i class="bi bi-arrow-repeat"></i> 
+                                    {% if lembrete.periodicidade == 'mensal' %}
+                                        Mensal
+                                    {% elif lembrete.periodicidade == 'quinzenal' %}
+                                        Quinzenal
+                                    {% elif lembrete.periodicidade == 'semanal' %}
+                                        Semanal
+                                    {% else %}
+                                        Recorrente
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="lembrete-countdown 
+                                {% if (lembrete.data|to_date - today).days < 0 %}
+                                    lembrete-countdown-danger
+                                {% elif (lembrete.data|to_date - today).days == 0 %}
+                                    lembrete-countdown-today
+                                {% elif (lembrete.data|to_date - today).days <= 3 %}
+                                    lembrete-countdown-warning
+                                {% else %}
+                                    lembrete-countdown-normal
+                                {% endif %}
+                            ">
+                                {% if (lembrete.data|to_date - today).days < 0 %}
+                                    <i class="bi bi-exclamation-triangle"></i> Vencido há {{ (today - lembrete.data|to_date).days }} dias
+                                {% elif (lembrete.data|to_date - today).days == 0 %}
+                                    <i class="bi bi-calendar-check"></i> Hoje!
+                                {% elif (lembrete.data|to_date - today).days == 1 %}
+                                    <i class="bi bi-calendar-date"></i> Amanhã
+                                {% else %}
+                                    <i class="bi bi-calendar"></i> Em {{ (lembrete.data|to_date - today).days }} dias
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="lembrete-footer">
+                            <div>
+                                <button class="btn btn-sm btn-success btn-concluir-lembrete" data-id="{{ lembrete.id }}">
+                                    <i class="bi bi-check-circle"></i> Concluir
+                                </button>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary btn-editar-lembrete" data-id="{{ lembrete.id }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-excluir-lembrete" data-id="{{ lembrete.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-bell"></i>
+                        <h3>Nenhum lembrete empresarial</h3>
+                        <p>Adicione lembretes para controlar seus compromissos financeiros empresariais.</p>
+                        <button class="btn btn-success btn-adicionar-lembrete" data-tipo-perfil="empresarial">
+                            <i class="bi bi-plus-circle"></i> Adicionar Lembrete Empresarial
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vista de calendário (inicialmente oculta) -->
+    <div id="calendario-lembretes" style="display: none;">
+        <div class="calendar-view">
+            <div class="calendar-header">
+                <div class="calendar-title" id="calendar-month-year">Maio 2025</div>
+                <div class="calendar-nav">
+                    <button class="btn btn-outline-secondary" id="btn-prev-month">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-outline-success" id="btn-today">Hoje</button>
+                    <button class="btn btn-outline-secondary" id="btn-next-month">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="calendar-grid">
+                <!-- Dias da semana -->
+                <div class="calendar-weekday">Dom</div>
+                <div class="calendar-weekday">Seg</div>
+                <div class="calendar-weekday">Ter</div>
+                <div class="calendar-weekday">Qua</div>
+                <div class="calendar-weekday">Qui</div>
+                <div class="calendar-weekday">Sex</div>
+                <div class="calendar-weekday">Sáb</div>
+                
+                <!-- Os dias do mês serão inseridos aqui via JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botão Flutuante para Adicionar -->
+    <a href="#" class="fab-button" data-bs-toggle="modal" data-bs-target="#modalAddLembrete">
+        <i class="bi bi-plus"></i>
+    </a>
+</div>
+
+<!-- Modal para adicionar/editar lembrete -->
+<div class="modal fade" id="modalAddLembrete" tabindex="-1" aria-labelledby="modalAddLembreteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAddLembreteLabel">Adicionar Lembrete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-lembrete" method="POST" action="{{ url_for('web.adicionar_lembrete') }}">
+                    <input type="hidden" id="lembrete-id" name="id">
+                
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Perfil</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="tipo_perfil" id="tipo_perfil_pessoal" autocomplete="off" checked value="pessoal">
+                            <label class="btn btn-outline-primary" for="tipo_perfil_pessoal">
+                                <i class="bi bi-person me-1"></i> Pessoal
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="tipo_perfil" id="tipo_perfil_empresarial" autocomplete="off" value="empresarial">
+                            <label class="btn btn-outline-primary" for="tipo_perfil_empresarial">
+                                <i class="bi bi-building me-1"></i> Empresarial
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="lembrete-titulo" class="form-label">Título*</label>
+                        <input type="text" class="form-control" id="lembrete-titulo" name="titulo" required placeholder="Ex: Pagar aluguel">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="lembrete-data" class="form-label">Data*</label>
+                        <input type="date" class="form-control" id="lembrete-data" name="data" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="lembrete-valor" class="form-label">Valor (opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" id="lembrete-valor" name="valor" placeholder="0,00">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="lembrete-descricao" class="form-label">Descrição (opcional)</label>
+                        <textarea class="form-control" id="lembrete-descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="lembrete-notificacao" class="form-label">Notificação</label>
+                        <select class="form-select" id="lembrete-notificacao" name="notificacao">
+                            <option value="0">No dia</option>
+                            <option value="1" selected>1 dia antes</option>
+                            <option value="2">2 dias antes</option>
+                            <option value="3">3 dias antes</option>
+                            <option value="7">7 dias antes</option>
+                            <option value="14">14 dias antes</option>
+                            <option value="30">30 dias antes</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="lembrete-recorrente" name="recorrente">
+                        <label class="form-check-label" for="lembrete-recorrente">
+                            Lembrete recorrente
+                        </label>
+                    </div>
+                    
+                    <div class="mb-3" id="div-lembrete-periodicidade" style="display: none;">
+                        <label for="lembrete-periodicidade" class="form-label">Periodicidade</label>
+                        <select class="form-select" id="lembrete-periodicidade" name="periodicidade">
+                            <option value="mensal">Mensal</option>
+                            <option value="quinzenal">Quinzenal</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Opções de integração com Google Calendar (Planos Família+) -->
+                    <div class="mb-3 form-check" id="google-calendar-integration" style="display: none;">
+                        <input class="form-check-input" type="checkbox" id="lembrete-google-calendar" name="google_calendar">
+                        <label class="form-check-label" for="lembrete-google-calendar">
+                            Adicionar ao Google Calendar
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="form-lembrete" class="btn btn-success">Salvar Lembrete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para excluir -->
+<div class="modal fade" id="modalConfirmExcluir" tabindex="-1" aria-labelledby="modalConfirmExcluirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmExcluirLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este lembrete? Esta ação não poderá ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="form-excluir-lembrete" method="POST">
+                    <button type="submit" class="btn btn-danger">Excluir Lembrete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de detalhes do lembrete (ao clicar no calendário) -->
+<div class="modal fade" id="modalDetalhesLembrete" tabindex="-1" aria-labelledby="modalDetalhesLembreteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetalhesLembreteLabel">Detalhes do Lembrete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detalhe-lembrete-content">
+                    <!-- Conteúdo será preenchido via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de sincronização com Google Calendar -->
+<div class="modal fade" id="modalSincGoogleCalendar" tabindex="-1" aria-labelledby="modalSincGoogleCalendarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSincGoogleCalendarLabel">Sincronizar com Google Calendar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="bi bi-calendar-check" style="font-size: 48px; color: #28a745;"></i>
+                </div>
+                <h5>Sincronizar seus lembretes com o Google Calendar?</h5>
+                <p class="text-muted">Isso permitirá que seus lembretes apareçam no seu Google Calendar e você receba notificações direto no seu celular.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('web.sincronizar_agenda') }}">
+                    <button type="submit" class="btn btn-success">Sincronizar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Funções auxiliares
+    function formatarData(data) {
+        if (!data) return '';
+        
+        const partes = data.split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    
+    function diferencaDias(data) {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        
+        const dataLembrete = new Date(data);
+        dataLembrete.setHours(0, 0, 0, 0);
+        
+        const diffTime = dataLembrete - hoje;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+    
+    function formatarValor(valor) {
+        if (!valor) return '';
+        
+        return parseFloat(valor).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    function getStatusClass(diasRestantes) {
+        if (diasRestantes < 0) return 'danger';
+        if (diasRestantes === 0) return 'today';
+        if (diasRestantes <= 3) return 'warning';
+        return 'normal';
+    }
+    
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+        // Define a data atual como padrão para campo de data
+        const hoje = new Date();
+        document.getElementById('lembrete-data').valueAsDate = hoje;
+        
+        // Evento para mostrar/esconder o campo de periodicidade
+        document.getElementById('lembrete-recorrente').addEventListener('change', function() {
+            document.getElementById('div-lembrete-periodicidade').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+        
+        // Eventos para os botões de filtro
+        document.getElementById('btn-todos-lembretes').addEventListener('click', function() {
+            document.querySelectorAll('.filter-bar .btn').forEach(btn => 
+                btn.classList.remove('active', 'btn-success', 'btn-outline-success')
+            );
+            this.classList.add('active', 'btn-success');
+            document.querySelectorAll('.btn-outline-success').forEach(btn => 
+                btn.classList.add('btn-outline-success')
+            );
+            
+            // Mostrar todos os lembretes
+            document.querySelectorAll('.lembrete-card').forEach(card => 
+                card.style.display = 'block'
+            );
+        });
+        
+        document.getElementById('btn-proximos-lembretes').addEventListener('click', function() {
+            document.querySelectorAll('.filter-bar .btn').forEach(btn => 
+                btn.classList.remove('active', 'btn-success', 'btn-outline-success')
+            );
+            this.classList.add('active', 'btn-success');
+            document.querySelectorAll('.btn').forEach(btn => {
+                if (btn !== this && !btn.classList.contains('btn-secondary')) {
+                    btn.classList.add('btn-outline-success');
+                }
+            });
+            
+            // Filtrar para mostrar apenas próximos 7 dias
+            document.querySelectorAll('.lembrete-card').forEach(card => {
+                const countdownEl = card.querySelector('.lembrete-countdown');
+                if (countdownEl) {
+                    const texto = countdownEl.textContent.trim();
+                    // Verifica se o texto contém informações sobre dias restantes
+                    if (texto.includes('Vencido') || 
+                        texto.includes('Hoje') || 
+                        texto.includes('Amanhã') ||
+                        (texto.includes('Em') && parseInt(texto.match(/\d+/)[0]) <= 7)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        });
+        
+        document.getElementById('btn-lembretes-vencidos').addEventListener('click', function() {
+            document.querySelectorAll('.filter-bar .btn').forEach(btn => 
+                btn.classList.remove('active', 'btn-success', 'btn-outline-success')
+            );
+            this.classList.add('active', 'btn-success');
+            document.querySelectorAll('.btn').forEach(btn => {
+                if (btn !== this && !btn.classList.contains('btn-secondary')) {
+                    btn.classList.add('btn-outline-success');
+                }
+            });
+            
+            // Filtrar para mostrar apenas vencidos
+            document.querySelectorAll('.lembrete-card').forEach(card => {
+                const countdownEl = card.querySelector('.lembrete-countdown');
+                if (countdownEl && countdownEl.textContent.trim().includes('Vencido')) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Alternância entre vista de lista e calendário
+        document.getElementById('btn-calendario').addEventListener('click', function() {
+            const listaLembretes = document.getElementById('lista-lembretes');
+            const calendarioLembretes = document.getElementById('calendario-lembretes');
+            
+            if (listaLembretes.style.display !== 'none') {
+                listaLembretes.style.display = 'none';
+                calendarioLembretes.style.display = 'block';
+                this.innerHTML = '<i class="bi bi-list"></i> Lista';
+                
+                // Inicializa o calendário
+                inicializarCalendario();
+            } else {
+                listaLembretes.style.display = 'block';
+                calendarioLembretes.style.display = 'none';
+                this.innerHTML = '<i class="bi bi-calendar-week"></i> Calendário';
+            }
+        });
+        
+        // Botão para aplicar filtros
+        document.getElementById('btn-aplicar-filtros').addEventListener('click', function() {
+            const filtroPessoal = document.getElementById('filtro-pessoal').checked;
+            const filtroEmpresarial = document.getElementById('filtro-empresarial').checked;
+            const filtroRecorrentes = document.getElementById('filtro-recorrentes').checked;
+            const filtroUnicos = document.getElementById('filtro-unicos').checked;
+            
+            document.querySelectorAll('.lembrete-card').forEach(card => {
+                // Verificar tipo de perfil
+                const isPessoal = card.querySelector('.lembrete-tag-personal') !== null;
+                const isEmpresarial = card.querySelector('.lembrete-tag-business') !== null;
+                
+                // Verificar se é recorrente
+                const isRecorrente = card.querySelector('.lembrete-tag-recurrent') !== null;
+                
+                // Aplicar filtros
+                if (
+                    (isPessoal && filtroPessoal || isEmpresarial && filtroEmpresarial) &&
+                    (isRecorrente && filtroRecorrentes || !isRecorrente && filtroUnicos)
+                ) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Botões para adicionar lembretes
+        document.querySelectorAll('.btn-adicionar-lembrete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Define o tipo de perfil no modal
+                const tipoPerfil = this.dataset.tipoPerfil;
+                
+                if (tipoPerfil === 'pessoal') {
+                    document.getElementById('tipo_perfil_pessoal').checked = true;
+                } else if (tipoPerfil === 'empresarial') {
+                    document.getElementById('tipo_perfil_empresarial').checked = true;
+                }
+                
+                // Abre o modal
+                const modalAddLembrete = new bootstrap.Modal(document.getElementById('modalAddLembrete'));
+                modalAddLembrete.show();
+            });
+        });
+        
+        // Botões para concluir lembretes
+        document.querySelectorAll('.btn-concluir-lembrete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const lembreteId = this.dataset.id;
+                
+                // Faz uma requisição POST para concluir o lembrete
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/lembretes/concluir/${lembreteId}`;
+                document.body.appendChild(form);
+                form.submit();
+            });
+        });
+        
+        // Botões para excluir lembretes
+        document.querySelectorAll('.btn-excluir-lembrete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const lembreteId = this.dataset.id;
+                
+                // Define o action do formulário de exclusão
+                document.getElementById('form-excluir-lembrete').action = `/lembretes/excluir/${lembreteId}`;
+                
+                // Abre o modal de confirmação
+                const modalConfirmExcluir = new bootstrap.Modal(document.getElementById('modalConfirmExcluir'));
+                modalConfirmExcluir.show();
+            });
+        });
+        
+        // Botões para editar lembretes
+        document.querySelectorAll('.btn-editar-lembrete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Em uma implementação real, buscaria os dados do lembrete via API
+                // e preencheria o formulário para edição
+                alert('Função em implementação. Em breve você poderá editar seus lembretes.');
+            });
+        });
+        
+        // Verificar se o plano permite integração com Google Calendar
+        const planoAtual = '{{ plano }}'; // Isso seria fornecido pelo backend
+        if (planoAtual === 'familia' || planoAtual === 'empresarial') {
+            document.getElementById('google-calendar-integration').style.display = 'block';
+            
+            // Botão de sincronização
+            const btnSincronizar = document.createElement('button');
+            btnSincronizar.className = 'btn btn-outline-primary ms-2';
+            btnSincronizar.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Sincronizar Tudo';
+            btnSincronizar.addEventListener('click', function() {
+                const modalSincGoogleCalendar = new bootstrap.Modal(document.getElementById('modalSincGoogleCalendar'));
+                modalSincGoogleCalendar.show();
+            });
+            
+            document.querySelector('.calendar-nav').appendChild(btnSincronizar);
+        }
+    });
+    
+    // Funções para o calendário
+    function inicializarCalendario() {
+        // Data atual
+        const hoje = new Date();
+        let mesAtual = hoje.getMonth();
+        let anoAtual = hoje.getFullYear();
+        
+        // Atualiza o título do calendário
+        atualizarTituloCalendario(mesAtual, anoAtual);
+        
+        // Gera os dias do mês
+        gerarDiasCalendario(mesAtual, anoAtual);
+        
+        // Botões de navegação
+        document.getElementById('btn-prev-month').addEventListener('click', function() {
+            mesAtual--;
+            if (mesAtual < 0) {
+                mesAtual = 11;
+                anoAtual--;
+            }
+            atualizarTituloCalendario(mesAtual, anoAtual);
+            gerarDiasCalendario(mesAtual, anoAtual);
+        });
+        
+        document.getElementById('btn-next-month').addEventListener('click', function() {
+            mesAtual++;
+            if (mesAtual > 11) {
+                mesAtual = 0;
+                anoAtual++;
+            }
+            atualizarTituloCalendario(mesAtual, anoAtual);
+            gerarDiasCalendario(mesAtual, anoAtual);
+        });
+        
+        document.getElementById('btn-today').addEventListener('click', function() {
+            mesAtual = hoje.getMonth();
+            anoAtual = hoje.getFullYear();
+            atualizarTituloCalendario(mesAtual, anoAtual);
+            gerarDiasCalendario(mesAtual, anoAtual);
+        });
+    }
+    
+    function atualizarTituloCalendario(mes, ano) {
+        const meses = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 
+            'Maio', 'Junho', 'Julho', 'Agosto', 
+            'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+        
+        document.getElementById('calendar-month-year').textContent = `${meses[mes]} ${ano}`;
+    }
+    
+    function gerarDiasCalendario(mes, ano) {
+        // Obter o grid do calendário e limpar dias anteriores
+        const gridCalendario = document.querySelector('.calendar-grid');
+        
+        // Manter apenas os cabeçalhos dos dias da semana
+        while (gridCalendario.children.length > 7) {
+            gridCalendario.removeChild(gridCalendario.lastChild);
+        }
+        
+        // Primeiro dia do mês (0 = Domingo, 1 = Segunda, etc.)
+        const primeiroDia = new Date(ano, mes, 1).getDay();
+        
+        // Último dia do mês
+        const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+        
+        // Último dia do mês anterior
+        const ultimoDiaMesAnterior = new Date(ano, mes, 0).getDate();
+        
+        // Data de hoje para comparação
+        const hoje = new Date();
+        const diaHoje = hoje.getDate();
+        const mesHoje = hoje.getMonth();
+        const anoHoje = hoje.getFullYear();
+        
+        // Adiciona dias do mês anterior
+        for (let i = 0; i < primeiroDia; i++) {
+            const dia = ultimoDiaMesAnterior - primeiroDia + i + 1;
+            
+            const diaElement = document.createElement('div');
+            diaElement.className = 'calendar-day other-month';
+            diaElement.innerHTML = `
+                <div class="calendar-day-number">${dia}</div>
+                <div class="calendar-day-events"></div>
+            `;
+            
+            gridCalendario.appendChild(diaElement);
+        }
+        
+        // Adiciona dias do mês atual
+        for (let i = 1; i <= ultimoDia; i++) {
+            const diaElement = document.createElement('div');
+            diaElement.className = 'calendar-day';
+            
+            // Marca o dia de hoje
+            if (i === diaHoje && mes === mesHoje && ano === anoHoje) {
+                diaElement.classList.add('today');
+            }
+            
+            diaElement.innerHTML = `
+                <div class="calendar-day-number">${i}</div>
+                <div class="calendar-day-events"></div>
+            `;
+            
+            // Adiciona eventos deste dia (lembretes)
+            const dataString = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const lembretesDoDia = getLembretesPorData(dataString);
+            
+            if (lembretesDoDia.length > 0) {
+                const eventsContainer = diaElement.querySelector('.calendar-day-events');
+                
+                lembretesDoDia.forEach(lembrete => {
+                    const eventDot = document.createElement('div');
+                    eventDot.className = `calendar-day-event ${lembrete.tipo_perfil}`;
+                    eventsContainer.appendChild(eventDot);
+                });
+                
+                // Adiciona evento de clique para mostrar detalhes dos lembretes
+                diaElement.addEventListener('click', function() {
+                    mostrarDetalhesLembretes(lembretesDoDia, `${i}/${mes+1}/${ano}`);
+                });
+            }
+            
+            gridCalendario.appendChild(diaElement);
+        }
+        
+        // Adiciona dias do próximo mês para preencher a grade (até 42 células = 6 semanas)
+        const celulasRestantes = 42 - (primeiroDia + ultimoDia);
+        for (let i = 1; i <= celulasRestantes; i++) {
+            const diaElement = document.createElement('div');
+            diaElement.className = 'calendar-day other-month';
+            diaElement.innerHTML = `
+                <div class="calendar-day-number">${i}</div>
+                <div class="calendar-day-events"></div>
+            `;
+            
+            gridCalendario.appendChild(diaElement);
+        }
+    }
+    
+    function getLembretesPorData(data) {
+        // Em uma aplicação real, você buscaria esses dados do back-end
+        // Para este exemplo, vamos filtrar os lembretes do lado do cliente
+        
+        // Obter os lembretes da página
+        const lembretes = [];
+        
+        document.querySelectorAll('.lembrete-card').forEach(card => {
+            const titulo = card.querySelector('.lembrete-title').textContent;
+            const dataElement = card.querySelector('.lembrete-date');
+            
+            if (dataElement) {
+                // Extrai a data do formato "DD/MM/YYYY"
+                const dataTexto = dataElement.textContent.trim();
+                const match = dataTexto.match(/\d{2}\/\d{2}\/\d{4}/);
+                
+                if (match) {
+                    const dataFormatada = match[0];
+                    const partes = dataFormatada.split('/');
+                    const dataLembrete = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                    
+                    if (dataLembrete === data) {
+                        // Determina o tipo de perfil
+                        const isPessoal = card.querySelector('.lembrete-tag-personal') !== null;
+                        const isEmpresarial = card.querySelector('.lembrete-tag-business') !== null;
+                        
+                        lembretes.push({
+                            titulo: titulo,
+                            data: dataLembrete,
+                            tipo_perfil: isPessoal ? 'personal' : (isEmpresarial ? 'business' : 'personal')
+                        });
+                    }
+                }
+            }
+        });
+        
+        return lembretes;
+    }
+    
+    function mostrarDetalhesLembretes(lembretes, dataFormatada) {
+        // Preenche o modal com os detalhes dos lembretes
+        const container = document.getElementById('detalhe-lembrete-content');
+        container.innerHTML = `<h5 class="mb-3">Lembretes para ${dataFormatada}</h5>`;
+        
+        if (lembretes.length === 0) {
+            container.innerHTML += '<p class="text-muted">Nenhum lembrete para esta data.</p>';
+        } else {
+            lembretes.forEach(lembrete => {
+                const tipoTag = lembrete.tipo_perfil === 'personal' ? 
+                    '<span class="lembrete-tag lembrete-tag-personal">Pessoal</span>' : 
+                    '<span class="lembrete-tag lembrete-tag-business">Empresarial</span>';
+                
+                container.innerHTML += `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h6 class="card-title">${lembrete.titulo}</h6>
+                        <div>${tipoTag}</div>
+                    </div>
+                </div>
+                `;
+            });
+        }
+        
+        // Abre o modal
+        const modalDetalhesLembrete = new bootstrap.Modal(document.getElementById('modalDetalhesLembrete'));
+        modalDetalhesLembrete.show();
+    }
+</script>
+{% endblock %}

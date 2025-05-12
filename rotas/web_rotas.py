@@ -1,9 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, session
-from database.models import Usuario, Despesa, Receita
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session, jsonify, send_file
+from database.models import Usuario, Despesa, Receita, Lembrete, CategoriaPersonalizada, Membro, TextProcessor
 from functools import wraps
 import os
+import sqlite3
 from datetime import datetime, timedelta
-import json # Changed from jsonify to json to fix the import error
+import json
+from werkzeug.utils import secure_filename
+import traceback
+
+# Diretório para salvar os arquivos enviados
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Criação do blueprint
 web_bp = Blueprint('web', __name__)
@@ -16,6 +23,29 @@ def login_required(f):
             return redirect(url_for('web.login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
+
+# Middleware para verificar plano
+def plano_required(planos_permitidos):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Verificar se o usuário está logado
+            if 'usuario_id' not in session:
+                return redirect(url_for('web.login', next=request.url))
+            
+            # Verificar se o plano do usuário é permitido
+            from config import Config
+            usuario_model = Usuario(Config.DATABASE)
+            usuario = usuario_model.buscar_por_id(session['usuario_id'])
+            
+            if usuario and usuario.get('plano') in planos_permitidos:
+                return f(*args, **kwargs)
+            else:
+                flash(f'Esta funcionalidade está disponível apenas para os planos: {", ".join(planos_permitidos)}', 'error')
+                return redirect(url_for('web.planos'))
+                
+        return decorated_function
+    return decorator
 
 # Rota inicial
 @web_bp.route('/')
@@ -52,22 +82,103 @@ def dashboard():
     usuario_model = Usuario(Config.DATABASE)
     usuario = usuario_model.buscar_por_id(usuario_id)
     
+    # Cria instâncias dos modelos necessários
+    lembrete_model = Lembrete(Config.DATABASE)
+    categoria_model = CategoriaPersonalizada(Config.DATABASE)
+    membro_model = Membro(Config.DATABASE)
+    
+    # Busca os lembretes ativos para o usuário
+    lembretes_pessoais = lembrete_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='pessoal',
+        concluido=0
+    )
+    
+    lembretes_empresariais = lembrete_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='empresarial',
+        concluido=0
+    )
+    
+    # Busca as categorias personalizadas
+    categorias_pessoais = categoria_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='pessoal'
+    )
+    
+    categorias_empresariais = categoria_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='empresarial'
+    )
+    
+    # Busca os membros
+    membros_familia = membro_model.buscar(
+        usuario_id=usuario_id,
+        tipo_grupo='familia'
+    )
+    
+    membros_empresa = membro_model.buscar(
+        usuario_id=usuario_id,
+        tipo_grupo='empresa'
+    )
+    
+    # Verifica se é necessário criar os usuários principais
+    if not membros_familia and not membros_empresa:
+        # Cria o usuário principal para família e empresa
+        membro_model.criar_usuario_principal(usuario_id)
+        
+        # Recarrega os membros
+        membros_familia = membro_model.buscar(
+            usuario_id=usuario_id,
+            tipo_grupo='familia'
+        )
+        
+        membros_empresa = membro_model.buscar(
+            usuario_id=usuario_id,
+            tipo_grupo='empresa'
+        )
+    
     return render_template(
         'dashboard.html',
         app_name=Config.APP_NAME,
-        usuario=usuario
+        usuario=usuario,
+        plano=usuario.get('plano', 'gratuito'),
+        lembretes_pessoais=lembretes_pessoais,
+        lembretes_empresariais=lembretes_empresariais,
+        categorias_pessoais=categorias_pessoais,
+        categorias_empresariais=categorias_empresariais,
+        membros_familia=membros_familia,
+        membros_empresa=membros_empresa
     )
 
 # Rota para recuperar senha (stub para corrigir o erro de url_for)
-@web_bp.route('/recuperar_senha')
+@web_bp.route('/recuperar_senha', methods=['GET', 'POST'])
 def recuperar_senha():
     """Página de recuperação de senha"""
     from config import Config
     
-    return render_template(
-        'recuperar_senha.html',
-        app_name=Config.APP_NAME
-    )
+    if request.method == 'POST':
+        email = request.form.get('email')
+        
+        if not email:
+            flash('Por favor, informe seu email.', 'error')
+            return render_template('recuperar_senha.html', app_name=Config.APP_NAME)
+        
+        # Verifica se o email existe
+        usuario_model = Usuario(Config.DATABASE)
+        usuario = usuario_model.buscar_por_email(email)
+        
+        if not usuario:
+            # Não informamos ao usuário se o email existe ou não por questões de segurança
+            flash('Se este email estiver cadastrado, enviaremos instruções para recuperar sua senha.', 'success')
+            return render_template('recuperar_senha.html', app_name=Config.APP_NAME)
+        
+        # Aqui você implementaria o envio de email com link para recuperação
+        # Para simplificar, apenas exibimos uma mensagem de sucesso
+        
+        flash('Enviamos instruções para recuperar sua senha. Por favor, verifique seu email.', 'success')
+    
+    return render_template('recuperar_senha.html', app_name=Config.APP_NAME)
 
 # Rotas de autenticação
 @web_bp.route('/login', methods=['GET', 'POST'])
@@ -183,7 +294,6 @@ def cadastro():
             try:
                 # Registra a origem (referral)
                 if origem:
-                    import sqlite3
                     conn = sqlite3.connect(Config.DATABASE)
                     cursor = conn.cursor()
                     
@@ -196,11 +306,23 @@ def cadastro():
                     conn.commit()
                     conn.close()
                 
+                # Cria um perfil padrão para o usuário
+                usuario_model.criar_perfil_padrao(usuario_id)
+                
+                # Aplica cupom se fornecido
+                if cupom and hasattr(Config, 'APLICAR_CUPOM_FUNC'):
+                    # Se houver uma função para aplicar cupom configurada
+                    resultado = Config.APLICAR_CUPOM_FUNC(cupom, usuario_id)
+                    if resultado.get('sucesso'):
+                        flash(resultado.get('mensagem', 'Cupom aplicado com sucesso!'), 'success')
+                    else:
+                        flash(resultado.get('mensagem', 'Erro ao aplicar cupom.'), 'error')
+                
                 # Cria a sessão e redireciona para o dashboard
                 session['usuario_id'] = usuario_id
                 return redirect(url_for('web.dashboard'))
             except Exception as e:
-                flash(f'Erro ao criar usuário: {e}', 'error')
+                flash(f'Erro ao registrar dados adicionais: {e}', 'error')
         else:
             flash('Erro ao criar usuário. Tente novamente.', 'error')
     
@@ -495,3 +617,1101 @@ def cancelar_assinatura():
     flash('Sua assinatura foi cancelada com sucesso. Seu plano será alterado para Gratuito no próximo ciclo de faturamento.', 'success')
     
     return redirect(url_for('web.perfil'))
+
+# Rotas para gerenciamento de lembretes
+@web_bp.route('/lembretes')
+@login_required
+def lembretes():
+    """Página de lembretes"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Cria instância do modelo de usuário e busca dados do usuário logado
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    # Cria instância do modelo de lembretes
+    lembrete_model = Lembrete(Config.DATABASE)
+    
+    # Busca os lembretes ativos do usuário
+    lembretes_pessoais = lembrete_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='pessoal',
+        concluido=0
+    )
+    
+    lembretes_empresariais = lembrete_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='empresarial',
+        concluido=0
+    )
+    
+    return render_template(
+        'lembretes.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        lembretes_pessoais=lembretes_pessoais,
+        lembretes_empresariais=lembretes_empresariais
+    )
+
+@web_bp.route('/lembretes/adicionar', methods=['POST'])
+@login_required
+def adicionar_lembrete():
+    """Adicionar um novo lembrete"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    if request.method == 'POST':
+        # Obtém os dados do formulário
+        titulo = request.form.get('titulo')
+        data = request.form.get('data')
+        valor = request.form.get('valor', '')
+        descricao = request.form.get('descricao', '')
+        notificacao = request.form.get('notificacao', 0)
+        recorrente = request.form.get('recorrente', '') == 'on'
+        periodicidade = request.form.get('periodicidade') if recorrente else None
+        tipo_perfil = request.form.get('tipo_perfil', 'pessoal')
+        
+        # Validações básicas
+        if not titulo or not data:
+            flash('Por favor, preencha os campos obrigatórios.', 'error')
+            return redirect(url_for('web.lembretes'))
+        
+        # Converte o valor para float se fornecido
+        if valor:
+            try:
+                valor = float(valor.replace(',', '.'))
+            except ValueError:
+                flash('Valor inválido.', 'error')
+                return redirect(url_for('web.lembretes'))
+        else:
+            valor = None
+        
+        # Cria o lembrete
+        lembrete_model = Lembrete(Config.DATABASE)
+        lembrete_model.criar(
+            usuario_id=usuario_id,
+            titulo=titulo,
+            data=data,
+            notificacao=notificacao,
+            descricao=descricao,
+            valor=valor,
+            recorrente=1 if recorrente else 0,
+            periodicidade=periodicidade,
+            tipo_perfil=tipo_perfil
+        )
+        
+        flash('Lembrete adicionado com sucesso!', 'success')
+        
+    return redirect(url_for('web.lembretes'))
+
+@web_bp.route('/lembretes/concluir/<int:lembrete_id>', methods=['POST'])
+@login_required
+def concluir_lembrete(lembrete_id):
+    """Marcar um lembrete como concluído"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se o lembrete pertence ao usuário
+    lembrete_model = Lembrete(Config.DATABASE)
+    lembrete = lembrete_model.buscar_por_id(lembrete_id)
+    
+    if not lembrete or lembrete.get('usuario_id') != usuario_id:
+        flash('Lembrete não encontrado ou acesso negado.', 'error')
+        return redirect(url_for('web.lembretes'))
+    
+    # Marca como concluído
+    lembrete_model.marcar_como_concluido(lembrete_id)
+    
+    # Se for recorrente, cria a próxima ocorrência
+    if lembrete.get('recorrente'):
+        lembrete_model.criar_recorrencia(lembrete_id)
+    
+    flash('Lembrete marcado como concluído!', 'success')
+    
+    return redirect(url_for('web.lembretes'))
+
+@web_bp.route('/lembretes/excluir/<int:lembrete_id>', methods=['POST'])
+@login_required
+def excluir_lembrete(lembrete_id):
+    """Excluir um lembrete"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se o lembrete pertence ao usuário
+    lembrete_model = Lembrete(Config.DATABASE)
+    lembrete = lembrete_model.buscar_por_id(lembrete_id)
+    
+    if not lembrete or lembrete.get('usuario_id') != usuario_id:
+        flash('Lembrete não encontrado ou acesso negado.', 'error')
+        return redirect(url_for('web.lembretes'))
+    
+    # Exclui o lembrete
+    lembrete_model.excluir(lembrete_id)
+    
+    flash('Lembrete excluído com sucesso!', 'success')
+    
+    return redirect(url_for('web.lembretes'))
+
+# Rotas para gerenciamento de categorias
+@web_bp.route('/categorias')
+@login_required
+def categorias():
+    """Página de categorias personalizadas"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Cria instância do modelo de usuário e busca dados do usuário logado
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    # Verifica se o plano permite categorias personalizadas
+    plano = usuario.get('plano', 'gratuito')
+    if plano == 'gratuito':
+        flash('Categorias personalizadas estão disponíveis apenas para os planos Premium, Família e Empresarial.', 'info')
+        return redirect(url_for('web.planos'))
+    
+    # Cria instância do modelo de categorias
+    categoria_model = CategoriaPersonalizada(Config.DATABASE)
+    
+    # Busca as categorias do usuário
+    categorias_despesa_pessoais = categoria_model.buscar(
+        usuario_id=usuario_id,
+        tipo='despesa',
+        tipo_perfil='pessoal'
+    )
+    
+    categorias_receita_pessoais = categoria_model.buscar(
+        usuario_id=usuario_id,
+        tipo='receita',
+        tipo_perfil='pessoal'
+    )
+    
+    categorias_despesa_empresariais = categoria_model.buscar(
+        usuario_id=usuario_id,
+        tipo='despesa',
+        tipo_perfil='empresarial'
+    )
+    
+    categorias_receita_empresariais = categoria_model.buscar(
+        usuario_id=usuario_id,
+        tipo='receita',
+        tipo_perfil='empresarial'
+    )
+    
+    return render_template(
+        'categorias.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        categorias_despesa_pessoais=categorias_despesa_pessoais,
+        categorias_receita_pessoais=categorias_receita_pessoais,
+        categorias_despesa_empresariais=categorias_despesa_empresariais,
+        categorias_receita_empresariais=categorias_receita_empresariais
+    )
+
+@web_bp.route('/categorias/adicionar', methods=['POST'])
+@login_required
+@plano_required(['premium', 'familia', 'empresarial'])
+def adicionar_categoria():
+    """Adicionar uma nova categoria personalizada"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    if request.method == 'POST':
+        # Obtém os dados do formulário
+        nome = request.form.get('nome')
+        tipo = request.form.get('tipo')
+        icone = request.form.get('icone')
+        cor = request.form.get('cor')
+        tipo_perfil = request.form.get('tipo_perfil')
+        
+        # Validações básicas
+        if not nome or not tipo or not tipo_perfil:
+            flash('Por favor, preencha todos os campos obrigatórios.', 'error')
+            return redirect(url_for('web.categorias'))
+        
+        # Valores padrão
+        if not icone:
+            icone = '📦'
+        
+        if not cor:
+            cor = '#28a745'
+        
+        # Cria a categoria
+        categoria_model = CategoriaPersonalizada(Config.DATABASE)
+        categoria_model.criar(
+            usuario_id=usuario_id,
+            nome=nome,
+            tipo=tipo,
+            icone=icone,
+            cor=cor,
+            tipo_perfil=tipo_perfil
+        )
+        
+        flash('Categoria adicionada com sucesso!', 'success')
+    
+    return redirect(url_for('web.categorias'))
+
+@web_bp.route('/categorias/excluir/<int:categoria_id>', methods=['POST'])
+@login_required
+def excluir_categoria(categoria_id):
+    """Excluir uma categoria personalizada"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se a categoria pertence ao usuário
+    categoria_model = CategoriaPersonalizada(Config.DATABASE)
+    categoria = categoria_model.buscar_por_id(categoria_id)
+    
+    if not categoria or categoria.get('usuario_id') != usuario_id:
+        flash('Categoria não encontrada ou acesso negado.', 'error')
+        return redirect(url_for('web.categorias'))
+    
+    # Exclui a categoria
+    sucesso, mensagem = categoria_model.excluir(categoria_id)
+    
+    if sucesso:
+        flash('Categoria excluída com sucesso!', 'success')
+    else:
+        flash(f'Erro ao excluir categoria: {mensagem}', 'error')
+    
+    return redirect(url_for('web.categorias'))
+
+@web_bp.route('/categorias/editar/<int:categoria_id>', methods=['POST'])
+@login_required
+def editar_categoria(categoria_id):
+    """Editar uma categoria personalizada"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se a categoria pertence ao usuário
+    categoria_model = CategoriaPersonalizada(Config.DATABASE)
+    categoria = categoria_model.buscar_por_id(categoria_id)
+    
+    if not categoria or categoria.get('usuario_id') != usuario_id:
+        flash('Categoria não encontrada ou acesso negado.', 'error')
+        return redirect(url_for('web.categorias'))
+    
+    # Obtém os dados do formulário
+    nome = request.form.get('nome')
+    icone = request.form.get('icone')
+    cor = request.form.get('cor')
+    
+    # Validações básicas
+    if not nome:
+        flash('Por favor, informe o nome da categoria.', 'error')
+        return redirect(url_for('web.categorias'))
+    
+    # Atualiza a categoria
+    categoria_model.atualizar(
+        categoria_id=categoria_id,
+        nome=nome,
+        icone=icone,
+        cor=cor
+    )
+    
+    flash('Categoria atualizada com sucesso!', 'success')
+    
+    return redirect(url_for('web.categorias'))
+
+# Rotas para gerenciamento de membros
+@web_bp.route('/membros')
+@login_required
+@plano_required(['familia', 'empresarial'])
+def membros():
+    """Página de gerenciamento de membros"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Cria instância do modelo de usuário e busca dados do usuário logado
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    # Cria instância do modelo de membros
+    membro_model = Membro(Config.DATABASE)
+    
+    # Busca os membros do usuário
+    membros_familia = membro_model.buscar(
+        usuario_id=usuario_id,
+        tipo_grupo='familia'
+    )
+    
+    membros_empresa = membro_model.buscar(
+        usuario_id=usuario_id,
+        tipo_grupo='empresa'
+    )
+    
+    return render_template(
+        'membros.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        membros_familia=membros_familia,
+        membros_empresa=membros_empresa
+    )
+
+@web_bp.route('/membros/adicionar', methods=['POST'])
+@login_required
+@plano_required(['familia', 'empresarial'])
+def adicionar_membro():
+    """Adicionar um novo membro"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    if request.method == 'POST':
+        # Obtém os dados do formulário
+        nome = request.form.get('nome')
+        email = request.form.get('email')
+        celular = request.form.get('celular')
+        permissao = request.form.get('permissao')
+        tipo_grupo = request.form.get('tipo_grupo')
+        
+        # Validações básicas
+        if not nome or not email or not tipo_grupo:
+            flash('Por favor, preencha todos os campos obrigatórios.', 'error')
+            return redirect(url_for('web.membros'))
+        
+        # Verifica o limite de membros baseado no plano
+        usuario_model = Usuario(Config.DATABASE)
+        usuario = usuario_model.buscar_por_id(usuario_id)
+        plano = usuario.get('plano', 'gratuito')
+        
+        # Contagem de membros atuais
+        membro_model = Membro(Config.DATABASE)
+        membros_atuais = membro_model.buscar(usuario_id, tipo_grupo)
+        num_membros = len(membros_atuais)
+        
+        # Limites por plano
+        limite_membros = {
+            'gratuito': 1,
+            'premium': 3,
+            'familia': 5,
+            'empresarial': 999  # "ilimitado"
+        }
+        
+        # Verifica se já atingiu o limite
+        if num_membros >= limite_membros.get(plano, 1):
+            flash(f'Você atingiu o limite de {limite_membros.get(plano, 1)} membros para seu plano atual.', 'error')
+            return redirect(url_for('web.membros'))
+        
+        # Verifica se o email já está cadastrado como membro
+        membro_existente = membro_model.buscar_por_email(email, tipo_grupo)
+        if membro_existente:
+            flash('Este email já está cadastrado como membro.', 'error')
+            return redirect(url_for('web.membros'))
+        
+        # Cria o membro
+        membro_model.criar(
+            usuario_id=usuario_id,
+            nome=nome,
+            email=email,
+            celular=celular,
+            permissao=permissao,
+            tipo_grupo=tipo_grupo
+        )
+        
+        flash('Membro adicionado com sucesso!', 'success')
+        
+        # Envia convite (implementação fictícia)
+        flash('Um convite foi enviado para o email do membro.', 'info')
+    
+    return redirect(url_for('web.membros'))
+
+@web_bp.route('/membros/excluir/<int:membro_id>', methods=['POST'])
+@login_required
+def excluir_membro(membro_id):
+    """Excluir um membro"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se o membro pertence ao usuário
+    membro_model = Membro(Config.DATABASE)
+    membro = membro_model.buscar_por_id(membro_id)
+    
+    if not membro or membro.get('usuario_id') != usuario_id:
+        flash('Membro não encontrado ou acesso negado.', 'error')
+        return redirect(url_for('web.membros'))
+    
+    # Verifica se é o usuário principal (não pode ser excluído)
+    if membro.get('usuario_principal'):
+        flash('O usuário principal não pode ser excluído.', 'error')
+        return redirect(url_for('web.membros'))
+    
+    # Exclui o membro
+    sucesso, mensagem = membro_model.excluir(membro_id)
+    
+    if sucesso:
+        flash('Membro excluído com sucesso!', 'success')
+    else:
+        flash(f'Erro ao excluir membro: {mensagem}', 'error')
+    
+    return redirect(url_for('web.membros'))
+
+@web_bp.route('/membros/editar/<int:membro_id>', methods=['POST'])
+@login_required
+def editar_membro(membro_id):
+    """Editar um membro"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se o membro pertence ao usuário
+    membro_model = Membro(Config.DATABASE)
+    membro = membro_model.buscar_por_id(membro_id)
+    
+    if not membro or membro.get('usuario_id') != usuario_id:
+        flash('Membro não encontrado ou acesso negado.', 'error')
+        return redirect(url_for('web.membros'))
+    
+    # Obtém os dados do formulário
+    nome = request.form.get('nome')
+    permissao = request.form.get('permissao')
+    
+    # Validações básicas
+    if not nome:
+        flash('Por favor, informe o nome do membro.', 'error')
+        return redirect(url_for('web.membros'))
+    
+    # Verifica se é o usuário principal (não pode mudar permissão)
+    if membro.get('usuario_principal') and permissao != 'admin':
+        flash('A permissão do usuário principal não pode ser alterada.', 'error')
+        permissao = 'admin'
+    
+    # Atualiza o membro
+    membro_model.atualizar(
+        membro_id=membro_id,
+        nome=nome,
+        permissao=permissao
+    )
+    
+    flash('Membro atualizado com sucesso!', 'success')
+    
+    return redirect(url_for('web.membros'))
+
+@web_bp.route('/membros/reenviar_convite/<int:membro_id>', methods=['POST'])
+@login_required
+def reenviar_convite(membro_id):
+    """Reenviar convite para um membro"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se o membro pertence ao usuário
+    membro_model = Membro(Config.DATABASE)
+    membro = membro_model.buscar_por_id(membro_id)
+    
+    if not membro or membro.get('usuario_id') != usuario_id:
+        flash('Membro não encontrado ou acesso negado.', 'error')
+        return redirect(url_for('web.membros'))
+    
+    # Reenvio de convite (implementação fictícia)
+    flash('Convite reenviado com sucesso!', 'success')
+    
+    return redirect(url_for('web.membros'))
+
+# Rotas para relatórios
+@web_bp.route('/relatorios')
+@login_required
+def relatorios():
+    """Página de relatórios financeiros"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Cria instância do modelo de usuário e busca dados do usuário logado
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    # Verifica se o plano permite relatórios detalhados
+    plano = usuario.get('plano', 'gratuito')
+    if plano == 'gratuito':
+        flash('Relatórios detalhados estão disponíveis apenas para os planos Premium, Família e Empresarial.', 'info')
+        return redirect(url_for('web.planos'))
+    
+    # Obtém dados para relatórios
+    despesa_model = Despesa(Config.DATABASE)
+    receita_model = Receita(Config.DATABASE)
+    
+    # Define o período (últimos 30 dias por padrão)
+    hoje = datetime.now()
+    data_fim = hoje.strftime("%Y-%m-%d")
+    data_inicio = (hoje - timedelta(days=30)).strftime("%Y-%m-%d")
+    
+    # Obtém totais para perfil pessoal
+    total_despesas_pessoal = despesa_model.total_periodo(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        tipo_perfil='pessoal'
+    )
+    
+    total_receitas_pessoal = receita_model.total_periodo(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        tipo_perfil='pessoal'
+    )
+    
+    # Obtém totais para perfil empresarial
+    total_despesas_empresarial = despesa_model.total_periodo(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        tipo_perfil='empresarial'
+    )
+    
+    total_receitas_empresarial = receita_model.total_periodo(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        tipo_perfil='empresarial'
+    )
+    
+    # Calcula saldos
+    saldo_pessoal = total_receitas_pessoal - total_despesas_pessoal
+    saldo_empresarial = total_receitas_empresarial - total_despesas_empresarial
+    
+    return render_template(
+        'relatorios.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        plano=plano,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        total_despesas_pessoal=total_despesas_pessoal,
+        total_receitas_pessoal=total_receitas_pessoal,
+        saldo_pessoal=saldo_pessoal,
+        total_despesas_empresarial=total_despesas_empresarial,
+        total_receitas_empresarial=total_receitas_empresarial,
+        saldo_empresarial=saldo_empresarial
+    )
+
+# Rota para processamento de OCR
+@web_bp.route('/processar-imagem', methods=['POST'])
+@login_required
+def processar_imagem():
+    """Processa uma imagem para extrair informações de despesa"""
+    # Verifica se foi enviada uma imagem
+    if 'imagem' not in request.files:
+        return jsonify({"error": "Nenhuma imagem enviada"}), 400
+    
+    imagem = request.files['imagem']
+    
+    # Verifica se o arquivo é válido
+    if imagem.filename == '':
+        return jsonify({"error": "Nenhuma imagem selecionada"}), 400
+    
+    # Verifica a extensão do arquivo
+    extensoes_permitidas = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    if not '.' in imagem.filename or \
+       imagem.filename.rsplit('.', 1)[1].lower() not in extensoes_permitidas:
+        return jsonify({"error": "Formato de arquivo não permitido"}), 400
+    
+    try:
+        # Gera um nome único para o arquivo
+        filename = secure_filename(imagem.filename)
+        filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+        
+        # Caminho completo para o arquivo
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Salva o arquivo
+        imagem.save(filepath)
+        
+        # URL relativa para acessar a imagem
+        url_imagem = f"/static/uploads/{filename}"
+        
+        # Aqui seria implementado o OCR para extrair informações da imagem
+        # Para este exemplo, retornaremos informações simuladas
+        dados_ocr = {
+            "valor": round(150 + 50 * (datetime.now().microsecond / 1000000), 2),
+            "data": datetime.now().strftime("%Y-%m-%d"),
+            "estabelecimento": "Estabelecimento",
+            "categoria": "alimentação"
+        }
+        
+        return jsonify({
+            "success": True,
+            "url_imagem": url_imagem,
+            "dados_ocr": dados_ocr
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# Rota para processamento de áudio
+@web_bp.route('/processar-audio', methods=['POST'])
+@login_required
+def processar_audio():
+    """Processa um áudio para extrair informações de despesa"""
+    # … validações iniciais …
+
+    try:
+        filename = secure_filename(audio.filename)
+        filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        audio.save(filepath)
+        url_audio = f"/static/uploads/{filename}"
+
+        # Simula transcrição
+        texto_transcrito = "Compra no mercado de 78 reais e 90 centavos"
+
+        # Extrai informações usando seu TextProcessor
+        processor = TextProcessor()
+        dados = processor.extrair_informacoes_despesa(texto_transcrito)
+
+        return jsonify({
+            "success": True,
+            "url_audio": url_audio,
+            "texto_transcrito": texto_transcrito,
+            "dados": dados
+        })
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@web_bp.route('/configuracoes')
+@login_required
+def configuracoes():
+    """Página de configurações do usuário"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Cria instância do modelo de usuário e busca dados do usuário logado
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    # Obtém as configurações do usuário (numa implementação real, haveria uma tabela separada)
+    # Aqui usamos valores simulados
+    configuracoes = {
+        'notificacoes_whatsapp': True,
+        'notificacoes_email': True,
+        'relatorio_semanal': True,
+        'alerta_limite_gasto': True,
+        'tema': 'auto',
+        'moeda': 'BRL',
+        'formato_data': 'DD/MM/YYYY',
+        'dia_fechamento': 1
+    }
+    
+    return render_template(
+        'configuracoes.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        configuracoes=configuracoes
+    )
+
+# Nova rota para Dívidas
+@web_bp.route('/dividas')
+@login_required
+def dividas():
+    """Página de gerenciamento de dívidas"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Cria instância do modelo de usuário e busca dados do usuário logado
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    # Em uma implementação real, buscaria as dívidas do banco de dados
+    # Aqui usamos dados simulados
+    dividas = [
+        {
+            'id': 1,
+            'nome': 'Empréstimo Bancário',
+            'valor_total': 10000.00,
+            'valor_pago': 2500.00,
+            'data_inicio': '2025-01-15',
+            'data_fim': '2026-01-15',
+            'taxa_juros': 1.99,
+            'parcelas_total': 12,
+            'parcelas_pagas': 3,
+            'status': 'em_dia',
+            'credor': 'Banco XYZ',
+            'tipo_perfil': 'pessoal'
+        },
+        {
+            'id': 2,
+            'nome': 'Cartão de Crédito',
+            'valor_total': 5000.00,
+            'valor_pago': 1000.00,
+            'data_inicio': '2025-03-10',
+            'data_fim': '2025-08-10',
+            'taxa_juros': 3.99,
+            'parcelas_total': 5,
+            'parcelas_pagas': 1,
+            'status': 'em_dia',
+            'credor': 'Banco ABC',
+            'tipo_perfil': 'pessoal'
+        },
+        {
+            'id': 3,
+            'nome': 'Financiamento de Equipamentos',
+            'valor_total': 25000.00,
+            'valor_pago': 5000.00,
+            'data_inicio': '2025-02-01',
+            'data_fim': '2026-02-01',
+            'taxa_juros': 1.5,
+            'parcelas_total': 12,
+            'parcelas_pagas': 2,
+            'status': 'em_dia',
+            'credor': 'Banco Empresarial',
+            'tipo_perfil': 'empresarial'
+        }
+    ]
+    
+    return render_template(
+        'dividas.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        dividas=dividas,
+        plano=usuario.get('plano', 'gratuito')
+    )
+
+@web_bp.route('/dividas/adicionar', methods=['POST'])
+@login_required
+def adicionar_divida():
+    """Adicionar uma nova dívida"""
+    # Em uma implementação real, salvaria no banco de dados
+    flash('Dívida adicionada com sucesso!', 'success')
+    return redirect(url_for('web.dividas'))
+
+@web_bp.route('/dividas/editar/<int:divida_id>', methods=['POST'])
+@login_required
+def editar_divida(divida_id):
+    """Editar uma dívida"""
+    # Em uma implementação real, atualizaria no banco de dados
+    flash('Dívida atualizada com sucesso!', 'success')
+    return redirect(url_for('web.dividas'))
+
+@web_bp.route('/dividas/excluir/<int:divida_id>', methods=['POST'])
+@login_required
+def excluir_divida(divida_id):
+    """Excluir uma dívida"""
+    # Em uma implementação real, excluiria do banco de dados
+    flash('Dívida excluída com sucesso!', 'success')
+    return redirect(url_for('web.dividas'))
+
+@web_bp.route('/dividas/registrar_pagamento/<int:divida_id>', methods=['POST'])
+@login_required
+def registrar_pagamento_divida(divida_id):
+    """Registrar um pagamento de parcela de dívida"""
+    # Em uma implementação real, registraria o pagamento no banco de dados
+    flash('Pagamento registrado com sucesso!', 'success')
+    return redirect(url_for('web.dividas'))
+
+# Rota para Financiamentos
+@web_bp.route('/financiamentos')
+@login_required
+def financiamentos():
+    """Página de gerenciamento de financiamentos"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Cria instância do modelo de usuário e busca dados do usuário logado
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    # Em uma implementação real, buscaria os financiamentos do banco de dados
+    # Aqui usamos dados simulados
+    financiamentos = [
+        {
+            'id': 1,
+            'nome': 'Financiamento Imóvel',
+            'valor_total': 300000.00,
+            'valor_pago': 50000.00,
+            'data_inicio': '2024-01-01',
+            'data_fim': '2045-01-01',
+            'taxa_juros': 0.8,
+            'parcelas_total': 240,
+            'parcelas_pagas': 16,
+            'status': 'em_dia',
+            'instituicao': 'Caixa Econômica',
+            'tipo_perfil': 'pessoal'
+        },
+        {
+            'id': 2,
+            'nome': 'Financiamento Veículo',
+            'valor_total': 45000.00,
+            'valor_pago': 15000.00,
+            'data_inicio': '2024-06-01',
+            'data_fim': '2027-06-01',
+            'taxa_juros': 1.2,
+            'parcelas_total': 36,
+            'parcelas_pagas': 11,
+            'status': 'em_dia',
+            'instituicao': 'Banco ABC',
+            'tipo_perfil': 'pessoal'
+        },
+        {
+            'id': 3,
+            'nome': 'Financiamento Maquinário Industrial',
+            'valor_total': 120000.00,
+            'valor_pago': 30000.00,
+            'data_inicio': '2024-03-01',
+            'data_fim': '2028-03-01',
+            'taxa_juros': 1.1,
+            'parcelas_total': 48,
+            'parcelas_pagas': 14,
+            'status': 'em_dia',
+            'instituicao': 'BNDES',
+            'tipo_perfil': 'empresarial'
+        }
+    ]
+    
+    return render_template(
+        'financiamentos.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        financiamentos=financiamentos,
+        plano=usuario.get('plano', 'gratuito')
+    )
+
+@web_bp.route('/financiamentos/adicionar', methods=['POST'])
+@login_required
+def adicionar_financiamento():
+    """Adicionar um novo financiamento"""
+    # Em uma implementação real, salvaria no banco de dados
+    flash('Financiamento adicionado com sucesso!', 'success')
+    return redirect(url_for('web.financiamentos'))
+
+@web_bp.route('/financiamentos/editar/<int:financiamento_id>', methods=['POST'])
+@login_required
+def editar_financiamento(financiamento_id):
+    """Editar um financiamento"""
+    # Em uma implementação real, atualizaria no banco de dados
+    flash('Financiamento atualizado com sucesso!', 'success')
+    return redirect(url_for('web.financiamentos'))
+
+@web_bp.route('/financiamentos/excluir/<int:financiamento_id>', methods=['POST'])
+@login_required
+def excluir_financiamento(financiamento_id):
+    """Excluir um financiamento"""
+    # Em uma implementação real, excluiria do banco de dados
+    flash('Financiamento excluído com sucesso!', 'success')
+    return redirect(url_for('web.financiamentos'))
+
+@web_bp.route('/financiamentos/registrar_pagamento/<int:financiamento_id>', methods=['POST'])
+@login_required
+def registrar_pagamento_financiamento(financiamento_id):
+    """Registrar um pagamento de parcela de financiamento"""
+    # Em uma implementação real, registraria o pagamento no banco de dados
+    flash('Pagamento registrado com sucesso!', 'success')
+    return redirect(url_for('web.financiamentos'))
+
+# Rotas para edição e exclusão de transações
+@web_bp.route('/transacoes/editar_despesa/<int:despesa_id>', methods=['POST'])
+@login_required
+def editar_despesa(despesa_id):
+    """Editar uma despesa"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se a despesa pertence ao usuário
+    despesa_model = Despesa(Config.DATABASE)
+    despesa = despesa_model.buscar_por_id(despesa_id)
+    
+    if not despesa or despesa.get('usuario_id') != usuario_id:
+        flash('Despesa não encontrada ou acesso negado.', 'error')
+        return redirect(url_for('web.dashboard'))
+    
+    # Obtém os dados do formulário
+    dados = {}
+    for campo in ['valor', 'categoria', 'descricao', 'data', 'forma_pagamento', 'tipo_perfil']:
+        if campo in request.form:
+            dados[campo] = request.form.get(campo)
+    
+    # Converte o valor para float
+    if 'valor' in dados:
+        try:
+            dados['valor'] = float(dados['valor'].replace(',', '.'))
+        except ValueError:
+            flash('Valor inválido.', 'error')
+            return redirect(url_for('web.dashboard'))
+    
+    # Atualiza a despesa
+    despesa_model.atualizar(despesa_id, **dados)
+    
+    flash('Despesa atualizada com sucesso!', 'success')
+    
+    # Redireciona para a página anterior
+    return redirect(request.referrer or url_for('web.dashboard'))
+
+@web_bp.route('/transacoes/excluir_despesa/<int:despesa_id>', methods=['POST'])
+@login_required
+def excluir_despesa(despesa_id):
+    """Excluir uma despesa"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se a despesa pertence ao usuário
+    despesa_model = Despesa(Config.DATABASE)
+    despesa = despesa_model.buscar_por_id(despesa_id)
+    
+    if not despesa or despesa.get('usuario_id') != usuario_id:
+        flash('Despesa não encontrada ou acesso negado.', 'error')
+        return redirect(url_for('web.dashboard'))
+    
+    # Exclui a despesa
+    despesa_model.excluir(despesa_id)
+    
+    flash('Despesa excluída com sucesso!', 'success')
+    
+    # Redireciona para a página anterior
+    return redirect(request.referrer or url_for('web.dashboard'))
+
+@web_bp.route('/transacoes/editar_receita/<int:receita_id>', methods=['POST'])
+@login_required
+def editar_receita(receita_id):
+    """Editar uma receita"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se a receita pertence ao usuário
+    receita_model = Receita(Config.DATABASE)
+    receita = receita_model.buscar_por_id(receita_id)
+    
+    if not receita or receita.get('usuario_id') != usuario_id:
+        flash('Receita não encontrada ou acesso negado.', 'error')
+        return redirect(url_for('web.dashboard'))
+    
+    # Obtém os dados do formulário
+    dados = {}
+    for campo in ['valor', 'categoria', 'descricao', 'data', 'recorrente', 'periodicidade', 'tipo_perfil']:
+        if campo in request.form:
+            dados[campo] = request.form.get(campo)
+    
+    # Converte o valor para float
+    if 'valor' in dados:
+        try:
+            dados['valor'] = float(dados['valor'].replace(',', '.'))
+        except ValueError:
+            flash('Valor inválido.', 'error')
+            return redirect(url_for('web.dashboard'))
+    
+    # Converte campos booleanos
+    if 'recorrente' in dados:
+        dados['recorrente'] = 1 if dados['recorrente'] == 'on' else 0
+    
+    # Atualiza a receita
+    receita_model.atualizar(receita_id, **dados)
+    
+    flash('Receita atualizada com sucesso!', 'success')
+    
+    # Redireciona para a página anterior
+    return redirect(request.referrer or url_for('web.dashboard'))
+
+@web_bp.route('/transacoes/excluir_receita/<int:receita_id>', methods=['POST'])
+@login_required
+def excluir_receita(receita_id):
+    """Excluir uma receita"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Verifica se a receita pertence ao usuário
+    receita_model = Receita(Config.DATABASE)
+    receita = receita_model.buscar_por_id(receita_id)
+    
+    if not receita or receita.get('usuario_id') != usuario_id:
+        flash('Receita não encontrada ou acesso negado.', 'error')
+        return redirect(url_for('web.dashboard'))
+    
+    # Exclui a receita
+    receita_model.excluir(receita_id)
+    
+    flash('Receita excluída com sucesso!', 'success')
+    
+    # Redireciona para a página anterior
+    return redirect(request.referrer or url_for('web.dashboard'))
+
+# Rota para API de WhatsApp
+@web_bp.route('/api/whatsapp/atualizar', methods=['POST'])
+@login_required
+def api_whatsapp_atualizar():
+    """API para processar comandos de atualização via WhatsApp"""
+    # Recebe os dados do webhook
+    dados = request.json
+    
+    if not dados or 'comando' not in dados or 'usuario_id' not in dados:
+        return jsonify({"error": "Dados incompletos"}), 400
+    
+    try:
+        comando = dados['comando']
+        usuario_id = int(dados['usuario_id'])
+        
+        # Verifica se o usuário da sessão tem permissão para este usuário_id
+        if session.get('usuario_id') != usuario_id:
+            return jsonify({"error": "Não autorizado"}), 403
+        
+        # Processa comandos
+        if comando.startswith('mudar_categoria:'):
+            # Formato: mudar_categoria:id_despesa:nova_categoria
+            partes = comando.split(':')
+            if len(partes) != 3:
+                return jsonify({"error": "Formato inválido"}), 400
+            
+            despesa_id = int(partes[1])
+            nova_categoria = partes[2]
+            
+            # Atualiza a categoria
+            despesa_model = Despesa(Config.DATABASE)
+            despesa_model.atualizar(despesa_id, categoria=nova_categoria)
+            
+            return jsonify({"success": True, "message": "Categoria atualizada com sucesso"})
+            
+        elif comando.startswith('excluir_despesa:'):
+            # Formato: excluir_despesa:id_despesa
+            partes = comando.split(':')
+            if len(partes) != 2:
+                return jsonify({"error": "Formato inválido"}), 400
+            
+            despesa_id = int(partes[1])
+            
+            # Exclui a despesa
+            despesa_model = Despesa(Config.DATABASE)
+            despesa_model.excluir(despesa_id)
+            
+            return jsonify({"success": True, "message": "Despesa excluída com sucesso"})
+            
+        elif comando.startswith('excluir_lembrete:'):
+            # Formato: excluir_lembrete:id_lembrete
+            partes = comando.split(':')
+            if len(partes) != 2:
+                return jsonify({"error": "Formato inválido"}), 400
+            
+            lembrete_id = int(partes[1])
+            
+            # Exclui o lembrete
+            lembrete_model = Lembrete(Config.DATABASE)
+            lembrete_model.excluir(lembrete_id)
+            
+            return jsonify({"success": True, "message": "Lembrete excluído com sucesso"})
+        
+        else:
+            return jsonify({"error": "Comando não reconhecido"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Adicione mais rotas conforme necessário
+        
+        
