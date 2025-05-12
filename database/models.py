@@ -120,6 +120,47 @@ def init_db(db_path):
         FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
     )
     ''')
+
+    # Adicione essas tabelas à função init_db em models.py
+
+    # Tabela para rastreamento de origem (referral)
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS usuario_referral (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER NOT NULL,
+        origem TEXT NOT NULL,
+        data_registro TEXT,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+    )
+    ''')
+
+    # Tabela para cupons de desconto
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS cupons (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        codigo TEXT NOT NULL UNIQUE,
+        tipo TEXT NOT NULL,
+        valor REAL NOT NULL,
+        data_inicio TEXT NOT NULL,
+        data_fim TEXT,
+        limite_usos INTEGER,
+        usos_atuais INTEGER DEFAULT 0,
+        ativo INTEGER DEFAULT 1,
+        data_criacao TEXT
+    )
+    ''')
+
+    # Tabela para uso de cupons
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS cupom_usos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cupom_id INTEGER NOT NULL,
+        usuario_id INTEGER NOT NULL,
+        data_uso TEXT NOT NULL,
+        FOREIGN KEY (cupom_id) REFERENCES cupons (id),
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+    )
+    ''')
     
     conn.commit()
     conn.close()
@@ -273,6 +314,73 @@ class Usuario:
         conn.close()
         
         return token
+    
+        # Modificação para init_db: adicione coluna admin na tabela usuarios
+        cursor.execute('ALTER TABLE usuarios ADD COLUMN admin INTEGER DEFAULT 0')
+
+    # Métodos adicionais para a classe Usuario:
+
+    def definir_admin(self, usuario_id, admin=True):
+        """
+        Define um usuário como administrador
+        
+        Args:
+            usuario_id: ID do usuário
+            admin: True para tornar admin, False para remover
+            
+        Returns:
+            bool: True se bem-sucedido
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "UPDATE usuarios SET admin = ? WHERE id = ?",
+            (1 if admin else 0, usuario_id)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        return True
+
+    def listar_admins(self):
+        """
+        Lista todos os usuários administradores
+        
+        Returns:
+            list: Lista de usuários administradores
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM usuarios WHERE admin = 1")
+        
+        admins = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return admins
+
+    def eh_admin(self, usuario_id):
+        """
+        Verifica se um usuário é administrador
+        
+        Args:
+            usuario_id: ID do usuário
+            
+        Returns:
+            bool: True se for admin, False caso contrário
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT admin FROM usuarios WHERE id = ?", (usuario_id,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        return result is not None and result[0] == 1
 
 
 class Despesa:
@@ -579,7 +687,223 @@ class Receita:
         conn.close()
         return resultado[0] if resultado and resultado[0] else 0
 
-
+class Cupom:
+    """Classe para gerenciar cupons de desconto"""
+    def __init__(self, db_path):
+        self.db_path = db_path
+    
+    def criar(self, codigo, tipo, valor, data_inicio, data_fim=None, limite_usos=None):
+        """
+        Cria um novo cupom de desconto
+        
+        Args:
+            codigo: Código do cupom (string única)
+            tipo: Tipo do cupom ('trial', 'desconto_percentual', 'desconto_fixo')
+            valor: Valor do cupom (dias para trial, porcentagem ou valor fixo para desconto)
+            data_inicio: Data de início de validade (YYYY-MM-DD)
+            data_fim: Data de fim de validade (YYYY-MM-DD), opcional
+            limite_usos: Limite de vezes que o cupom pode ser usado, opcional
+            
+        Returns:
+            int: ID do cupom criado ou None se falhar
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        data_criacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        try:
+            cursor.execute(
+                """
+                INSERT INTO cupons 
+                (codigo, tipo, valor, data_inicio, data_fim, limite_usos, data_criacao, ativo) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+                """,
+                (codigo, tipo, valor, data_inicio, data_fim, limite_usos, data_criacao)
+            )
+            
+            cupom_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+            
+            return cupom_id
+        except sqlite3.IntegrityError:
+            # O código do cupom já existe
+            conn.close()
+            return None
+    
+    def validar(self, codigo):
+        """
+        Valida se um cupom é válido para uso
+        
+        Args:
+            codigo: Código do cupom
+            
+        Returns:
+            dict: Dados do cupom se válido, None caso contrário
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        hoje = datetime.now().strftime("%Y-%m-%d")
+        
+        cursor.execute(
+            """
+            SELECT * FROM cupons 
+            WHERE codigo = ? AND ativo = 1 
+            AND (data_fim IS NULL OR data_fim >= ?) 
+            AND data_inicio <= ?
+            """,
+            (codigo, hoje, hoje)
+        )
+        
+        cupom = cursor.fetchone()
+        
+        if not cupom:
+            conn.close()
+            return None
+        
+        # Verifica se o cupom atingiu o limite de usos
+        if cupom['limite_usos'] is not None and cupom['usos_atuais'] >= cupom['limite_usos']:
+            conn.close()
+            return None
+        
+        conn.close()
+        return dict(cupom)
+    
+    def aplicar(self, cupom_id, usuario_id):
+        """
+        Aplica um cupom a um usuário
+        
+        Args:
+            cupom_id: ID do cupom
+            usuario_id: ID do usuário
+            
+        Returns:
+            bool: True se aplicado com sucesso, False caso contrário
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Verifica se o usuário já usou este cupom
+        cursor.execute(
+            "SELECT id FROM cupom_usos WHERE cupom_id = ? AND usuario_id = ?",
+            (cupom_id, usuario_id)
+        )
+        
+        if cursor.fetchone():
+            conn.close()
+            return False
+        
+        try:
+            # Registra o uso do cupom
+            data_uso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            cursor.execute(
+                "INSERT INTO cupom_usos (cupom_id, usuario_id, data_uso) VALUES (?, ?, ?)",
+                (cupom_id, usuario_id, data_uso)
+            )
+            
+            # Incrementa o contador de usos
+            cursor.execute(
+                "UPDATE cupons SET usos_atuais = usos_atuais + 1 WHERE id = ?",
+                (cupom_id,)
+            )
+            
+            # Obtém os dados do cupom
+            cursor.execute("SELECT * FROM cupons WHERE id = ?", (cupom_id,))
+            cupom = cursor.fetchone()
+            
+            # Aplica o benefício do cupom ao usuário
+            usuario_model = Usuario(self.db_path)
+            usuario = usuario_model.buscar_por_id(usuario_id)
+            
+            if cupom[2] == 'trial':  # tipo 'trial'
+                dias_trial = int(cupom[3])  # valor do cupom (dias)
+                
+                # Define o plano como premium pelo período do trial
+                plano = 'premium'
+                data_inicio = datetime.now().strftime("%Y-%m-%d")
+                data_fim = (datetime.now() + timedelta(days=dias_trial)).strftime("%Y-%m-%d")
+                
+                # Insere uma assinatura temporária na tabela de assinaturas
+                cursor.execute(
+                    """
+                    INSERT INTO assinaturas 
+                    (usuario_id, plano, data_inicio, data_fim, valor, status, forma_pagamento) 
+                    VALUES (?, ?, ?, ?, 0, 'trial', 'cupom')
+                    """,
+                    (usuario_id, plano, data_inicio, data_fim)
+                )
+                
+                # Atualiza o plano do usuário
+                usuario_model.atualizar(usuario_id, plano=plano)
+            
+            # Outros tipos de cupom podem ser processados no momento do pagamento
+                
+            conn.commit()
+            conn.close()
+            return True
+        
+        except Exception as e:
+            print(f"Erro ao aplicar cupom: {e}")
+            conn.rollback()
+            conn.close()
+            return False
+    
+    def listar_ativos(self):
+        """
+        Lista todos os cupons ativos
+        
+        Returns:
+            list: Lista de cupons ativos
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        hoje = datetime.now().strftime("%Y-%m-%d")
+        
+        cursor.execute(
+            """
+            SELECT * FROM cupons 
+            WHERE ativo = 1 
+            AND (data_fim IS NULL OR data_fim >= ?) 
+            AND data_inicio <= ?
+            ORDER BY data_criacao DESC
+            """,
+            (hoje, hoje)
+        )
+        
+        cupons = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return cupons
+    
+    def desativar(self, cupom_id):
+        """
+        Desativa um cupom
+        
+        Args:
+            cupom_id: ID do cupom
+            
+        Returns:
+            bool: True se desativado com sucesso
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "UPDATE cupons SET ativo = 0 WHERE id = ?",
+            (cupom_id,)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        return True
+    
 class TextProcessor:
     """Classe para processamento de texto e extração de informações de despesas"""
     def __init__(self):

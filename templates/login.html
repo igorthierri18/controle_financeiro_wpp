@@ -75,6 +75,69 @@ body {
 .alert {
     border-radius: 10px;
 }
+
+.card-intro {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.card-intro img {
+    max-width: 80px;
+    margin-bottom: 15px;
+}
+
+.social-login {
+    margin-bottom: 20px;
+}
+
+.social-login .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.social-login .btn i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.btn-google {
+    background-color: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+}
+
+.btn-google:hover {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.btn-facebook {
+    background-color: #3b5998;
+    color: white;
+    border: none;
+}
+
+.btn-facebook:hover {
+    background-color: #344e86;
+    color: white;
+}
+
+.btn-apple {
+    background-color: #000;
+    color: white;
+    border: none;
+}
+
+.btn-apple:hover {
+    background-color: #333;
+    color: white;
+}
 {% endblock %}
 
 {% block content %}
@@ -98,39 +161,51 @@ body {
                         {% endif %}
                     {% endwith %}
                     
-                    <h2 class="text-center mb-4">Entrar</h2>
+                    <div class="card-intro">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2037/2037710.png" alt="ícone login">
+                        <h2 class="mb-4">Bem-vindo(a) de volta!</h2>
+                        <p class="text-muted">Faça login para acessar seu controle financeiro</p>
+                    </div>
                     
                     <form method="POST" action="{{ url_for('web.login') }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="seu@email.com">
                         </div>
                         <div class="mb-3">
                             <label for="senha" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="senha" name="senha" required>
+                            <input type="password" class="form-control" id="senha" name="senha" required placeholder="••••••••">
                         </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="lembrar" name="lembrar">
-                            <label class="form-check-label" for="lembrar">Lembrar de mim</label>
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="lembrar" name="lembrar">
+                                <label class="form-check-label" for="lembrar">Lembrar de mim</label>
+                            </div>
+                            <a href="{{ url_for('web.recuperar_senha') if 'web.recuperar_senha' in url_for.__globals__ else '#' }}" class="text-decoration-none">Esqueceu a senha?</a>
                         </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success">Entrar</button>
                         </div>
                     </form>
                     
-                    <div class="text-center mt-3">
-                        <a href="{{ url_for('web.recuperar_senha') if 'web.recuperar_senha' in url_for else '#' }}" class="text-decoration-none">Esqueceu a senha?</a>
-                    </div>
-                    
                     <div class="text-separator">
                         <span>ou</span>
                     </div>
                     
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('web.cadastro') }}" class="btn btn-outline-success">Criar uma conta</a>
+                    <div class="social-login">
+                        <button type="button" class="btn btn-google">
+                            <i class="bi bi-google"></i> Entrar com Google
+                        </button>
+                        <button type="button" class="btn btn-facebook">
+                            <i class="bi bi-facebook"></i> Entrar com Facebook
+                        </button>
+                        <button type="button" class="btn btn-apple">
+                            <i class="bi bi-apple"></i> Entrar com Apple
+                        </button>
                     </div>
                     
                     <div class="text-center mt-3">
+                        <p>Ainda não tem uma conta? <a href="{{ url_for('web.cadastro') }}" class="text-decoration-none fw-bold">Criar uma conta</a></p>
                         <a href="{{ url_for('web.index') }}" class="text-decoration-none">Voltar à página inicial</a>
                     </div>
                 </div>

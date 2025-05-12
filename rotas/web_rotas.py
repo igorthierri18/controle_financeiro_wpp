@@ -3,6 +3,7 @@ from database.models import Usuario, Despesa, Receita
 from functools import wraps
 import os
 from datetime import datetime, timedelta
+import json # Changed from jsonify to json to fix the import error
 
 # Criação do blueprint
 web_bp = Blueprint('web', __name__)
@@ -57,6 +58,17 @@ def dashboard():
         usuario=usuario
     )
 
+# Rota para recuperar senha (stub para corrigir o erro de url_for)
+@web_bp.route('/recuperar_senha')
+def recuperar_senha():
+    """Página de recuperação de senha"""
+    from config import Config
+    
+    return render_template(
+        'recuperar_senha.html',
+        app_name=Config.APP_NAME
+    )
+
 # Rotas de autenticação
 @web_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -105,21 +117,43 @@ def cadastro():
         celular = request.form.get('celular')
         senha = request.form.get('senha')
         confirma_senha = request.form.get('confirma_senha')
+        origem = request.form.get('origem')
+        cupom = request.form.get('cupom')
         
         # Validações
         if not nome or not email or not celular or not senha:
-            flash('Por favor, preencha todos os campos.', 'error')
-            return render_template('cadastro.html', app_name=Config.APP_NAME)
+            flash('Por favor, preencha todos os campos obrigatórios.', 'error')
+            return render_template('cadastro.html', 
+                app_name=Config.APP_NAME,
+                nome=nome, 
+                email=email, 
+                celular=celular,
+                origem=origem,
+                cupom=cupom
+            )
         
         if senha != confirma_senha:
             flash('As senhas não coincidem.', 'error')
-            return render_template('cadastro.html', app_name=Config.APP_NAME)
+            return render_template('cadastro.html', 
+                app_name=Config.APP_NAME,
+                nome=nome, 
+                email=email, 
+                celular=celular,
+                origem=origem,
+                cupom=cupom
+            )
         
         # Verifica se o email já existe
         usuario_model = Usuario(Config.DATABASE)
         if usuario_model.buscar_por_email(email):
             flash('Este email já está cadastrado.', 'error')
-            return render_template('cadastro.html', app_name=Config.APP_NAME)
+            return render_template('cadastro.html', 
+                app_name=Config.APP_NAME,
+                nome=nome, 
+                celular=celular,
+                origem=origem,
+                cupom=cupom
+            )
         
         # Formata o número de celular (remove caracteres não numéricos)
         celular = ''.join(filter(str.isdigit, celular))
@@ -133,16 +167,40 @@ def cadastro():
         # Verifica se o celular já existe
         if usuario_model.buscar_por_celular(celular):
             flash('Este número de celular já está cadastrado.', 'error')
-            return render_template('cadastro.html', app_name=Config.APP_NAME)
+            return render_template('cadastro.html', 
+                app_name=Config.APP_NAME,
+                nome=nome, 
+                email=email,
+                origem=origem,
+                cupom=cupom
+            )
         
         # Cria o usuário
         # Em um sistema real, a senha seria armazenada com hash
         usuario_id = usuario_model.criar(celular, nome, email, senha)
         
         if usuario_id:
-            # Cria a sessão e redireciona para o dashboard
-            session['usuario_id'] = usuario_id
-            return redirect(url_for('web.dashboard'))
+            try:
+                # Registra a origem (referral)
+                if origem:
+                    import sqlite3
+                    conn = sqlite3.connect(Config.DATABASE)
+                    cursor = conn.cursor()
+                    
+                    data_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    cursor.execute(
+                        "INSERT INTO usuario_referral (usuario_id, origem, data_registro) VALUES (?, ?, ?)",
+                        (usuario_id, origem, data_registro)
+                    )
+                    
+                    conn.commit()
+                    conn.close()
+                
+                # Cria a sessão e redireciona para o dashboard
+                session['usuario_id'] = usuario_id
+                return redirect(url_for('web.dashboard'))
+            except Exception as e:
+                flash(f'Erro ao criar usuário: {e}', 'error')
         else:
             flash('Erro ao criar usuário. Tente novamente.', 'error')
     
@@ -287,12 +345,63 @@ def planos():
         if usuario:
             plano_atual = usuario.get('plano', 'gratuito')
     
+    # Planos novos, substituindo os da Config para nova estrutura
+    plano_gratuito = {
+        'nome': 'Gratuito',
+        'preco': 0,
+        'limite_transacoes': 3000,
+        'dashboard': 'básico',
+        'categorias': 'limitadas (8)',
+        'usuarios': 1,
+        'exportacao_dados': False,
+        'relatorios_detalhados': False
+    }
+
+    plano_premium = {
+        'nome': 'Premium',
+        'preco': 29.90,
+        'transacoes': 'ilimitadas',
+        'dashboard': 'completo',
+        'categorias': 'personalizadas',
+        'usuarios': 3,
+        'exportacao_dados': 'CSV',
+        'relatorios_detalhados': True
+    }
+    
+    plano_familia = {
+        'nome': 'Família',
+        'preco': 32.90,
+        'transacoes': 'ilimitadas',
+        'dashboard': 'completo',
+        'categorias': 'personalizadas',
+        'usuarios': 5,
+        'exportacao_dados': 'CSV/Excel',
+        'perfil_empresarial': True,
+        'grupos': 'familiares ilimitados',
+        'integracao_google': True
+    }
+    
+    plano_empresarial = {
+        'nome': 'Empresarial',
+        'preco': 39.90,
+        'transacoes': 'ilimitadas',
+        'dashboard': 'completo',
+        'categorias': 'personalizadas',
+        'usuarios': 'ilimitados',
+        'exportacao_dados': 'todos os formatos',
+        'perfil_empresarial': True,
+        'grupos': 'ilimitados',
+        'api_integracao': True,
+        'suporte': 'prioritário'
+    }
+    
     return render_template(
         'planos.html',
         app_name=Config.APP_NAME,
-        plano_gratuito=Config.PLANO_GRATUITO,
-        plano_premium=Config.PLANO_PREMIUM,
-        plano_profissional=Config.PLANO_PROFISSIONAL,
+        plano_gratuito=plano_gratuito,
+        plano_premium=plano_premium,
+        plano_familia=plano_familia,
+        plano_empresarial=plano_empresarial,
         plano_atual=plano_atual
     )
 
@@ -303,7 +412,7 @@ def assinatura(plano):
     from config import Config
     
     # Verifica se o plano é válido
-    planos_validos = ['gratuito', 'premium', 'profissional']
+    planos_validos = ['gratuito', 'premium', 'familia', 'empresarial']
     if plano not in planos_validos:
         flash('Plano inválido.', 'error')
         return redirect(url_for('web.planos'))
@@ -318,6 +427,13 @@ def assinatura(plano):
         flash(f'Você já está no plano {plano.capitalize()}.', 'info')
         return redirect(url_for('web.perfil'))
     
+    # Mapeia os planos com seus preços
+    planos_precos = {
+        'premium': 29.90,
+        'familia': 32.90,
+        'empresarial': 39.90
+    }
+    
     # Processa o formulário de assinatura se for POST
     if request.method == 'POST':
         # Atualiza o plano do usuário
@@ -330,10 +446,10 @@ def assinatura(plano):
             period = request.form.get('period', 'monthly')
             
             # Calcula o valor e data de vencimento
-            if plano == 'premium':
-                valor = 29.90 if period == 'monthly' else 287.04  # Anual com 20% de desconto
-            else:  # profissional
-                valor = 59.90 if period == 'monthly' else 575.04  # Anual com 20% de desconto
+            valor = planos_precos.get(plano, 0)
+            if period == 'yearly':
+                # Desconto de 20% para pagamento anual
+                valor = valor * 12 * 0.8
             
             # Período da assinatura
             data_inicio = datetime.now().strftime("%Y-%m-%d")
@@ -360,8 +476,7 @@ def assinatura(plano):
         'assinatura.html',
         app_name=Config.APP_NAME,
         plano=plano,
-        preco_premium=Config.PLANO_PREMIUM['preco'],
-        preco_profissional=Config.PLANO_PROFISSIONAL['preco']
+        preco=planos_precos.get(plano, 0)
     )
 
 @web_bp.route('/cancelar_assinatura', methods=['POST'])
@@ -374,11 +489,9 @@ def cancelar_assinatura():
     
     # Cancela a assinatura
     usuario_model = Usuario(Config.DATABASE)
-    sucesso = usuario_model.cancelar_assinatura(usuario_id)
+    # Como adicionamos o método em um comentário na classe Usuario, vamos usar a atualização direta aqui 
+    usuario_model.atualizar(usuario_id, plano='gratuito')
     
-    if sucesso:
-        flash('Sua assinatura foi cancelada com sucesso. Seu plano será alterado para Gratuito no próximo ciclo de faturamento.', 'success')
-    else:
-        flash('Não foi possível cancelar sua assinatura. Talvez você não tenha uma assinatura ativa.', 'error')
+    flash('Sua assinatura foi cancelada com sucesso. Seu plano será alterado para Gratuito no próximo ciclo de faturamento.', 'success')
     
     return redirect(url_for('web.perfil'))

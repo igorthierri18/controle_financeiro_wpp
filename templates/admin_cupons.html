@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+
+{% block title %}Administração de Cupons - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.stats-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stats-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #28a745;
+    margin-bottom: 0;
+}
+
+.cupom-card {
+    border-radius: 10px;
+    border: 1px solid #eee;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.cupom-code {
+    font-size: 18px;
+    font-weight: 700;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 5px 10px;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.cupom-value {
+    display: inline-block;
+    font-weight: 600;
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.cupom-expires {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.cupom-usage {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+.cupom-type {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.cupom-type.trial {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+
+.cupom-type.discount-percent {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+.cupom-type.discount-fixed {
+    background-color: #ede7f6;
+    color: #4527a0;
+}
+
+.cupom-actions {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.badge-limited {
+    background-color: #ff9800;
+    color: white;
+}
+
+.badge-unlimited {
+    background-color: #4caf50;
+    color: white;
+}
+
+.custom-switch label {
+    cursor: pointer;
+}
+
+#newCouponModal .form-label {
+    font-weight: 500;
+}
+
+.usage-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.usage-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.usage-item:last-child {
+    border-bottom: none;
+}
+
+.usage-user {
+    font-weight: 600;
+}
+
+.usage-date {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.usage-code {
+    background-color: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Administração de Cupons</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCouponModal">
+            <i class="bi bi-plus-circle me-2"></i> Criar Novo Cupom
+        </button>
+    </div>
+    
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h5>Total de Usos</h5>
+                <p class="stats-number">{{ total_usos }}</p>
+                <p class="text-muted">Usos de cupons até o momento</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h5>Usuários Beneficiados</h5>
+                <p class="stats-number">{{ total_usuarios }}</p>
+                <p class="text-muted">Usuários que usaram cupons</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="cupons-tab" data-bs-toggle="tab" data-bs-target="#cupons-tab-pane" type="button" role="tab" aria-controls="cupons-tab-pane" aria-selected="true">Cupons Ativos</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="usos-tab" data-bs-toggle="tab" data-bs-target="#usos-tab-pane" type="button" role="tab" aria-controls="usos-tab-pane" aria-selected="false">Histórico de Usos</button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="myTabContent">
+        <!-- Cupons Tab -->
+        <div class="tab-pane fade show active" id="cupons-tab-pane" role="tabpanel" aria-labelledby="cupons-tab" tabindex="0">
+            <div class="row">
+                {% for cupom in cupons %}
+                <div class="col-md-6" id="cupom-card-{{ cupom.id }}">
+                    <div class="cupom-card">
+                        <div class="cupom-actions">
+                            <button class="btn btn-sm btn-outline-danger desativar-cupom" data-cupom-id="{{ cupom.id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="cupom-code">{{ cupom.codigo }}</span>
+                            
+                            {% if cupom.tipo == 'trial' %}
+                            <span class="cupom-type trial">Trial {{ cupom.valor }} dias</span>
+                            {% elif cupom.tipo == 'desconto_percentual' %}
+                            <span class="cupom-type discount-percent">{{ cupom.valor }}% OFF</span>
+                            {% elif cupom.tipo == 'desconto_fixo' %}
+                            <span class="cupom-type discount-fixed">R$ {{ cupom.valor }} OFF</span>
+                            {% endif %}
+                            
+                            {% if cupom.limite_usos %}
+                            <span class="badge badge-limited rounded-pill">{{ cupom.usos_atuais }}/{{ cupom.limite_usos }} usos</span>
+                            {% else %}
+                            <span class="badge badge-unlimited rounded-pill">Usos ilimitados</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="cupom-expires">
+                            Válido de {{ cupom.data_inicio }} 
+                            {% if cupom.data_fim %}
+                            até {{ cupom.data_fim }}
+                            {% else %}
+                            sem data de expiração
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Não há cupons ativos. Crie um novo cupom para começar.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Usos Tab -->
+        <div class="tab-pane fade" id="usos-tab-pane" role="tabpanel" aria-labelledby="usos-tab" tabindex="0">
+            <div class="usage-list">
+                {% for uso in usos %}
+                <div class="usage-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="usage-user">{{ uso.nome }}</span>
+                            <span class="text-muted mx-1">-</span>
+                            <span class="text-muted">{{ uso.email }}</span>
+                        </div>
+                        <span class="usage-code">{{ uso.codigo }}</span>
+                    </div>
+                    <div class="usage-date">{{ uso.data_uso }}</div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    Nenhum cupom foi usado ainda.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para criar novo cupom -->
+<div class="modal fade" id="newCouponModal" tabindex="-1" aria-labelledby="newCouponModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newCouponModalLabel">Criar Novo Cupom</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="novoCupomForm">
+                    <div class="mb-3">
+                        <label for="codigo" class="form-label">Código do Cupom</label>
+                        <input type="text" class="form-control" id="codigo" name="codigo" required placeholder="PREMIUM30">
+                        <div class="form-text">Use letras maiúsculas e números para melhor legibilidade</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label">Tipo de Cupom</label>
+                        <select class="form-select" id="tipo" name="tipo" required>
+                            <option value="trial">Trial (Dias Grátis)</option>
+                            <option value="desconto_percentual">Desconto Percentual (%)</option>
+                            <option value="desconto_fixo">Desconto Fixo (R$)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <input type="number" class="form-control" id="valor" name="valor" required min="1" value="30">
+                        <div class="form-text" id="valorHelp">Dias para trial, porcentagem ou valor para desconto</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="data_inicio" class="form-label">Data de Início</label>
+                        <input type="date" class="form-control" id="data_inicio" name="data_inicio" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="data_fim" class="form-label">Data de Término (opcional)</label>
+                        <input type="date" class="form-control" id="data_fim" name="data_fim">
+                        <div class="form-text">Deixe em branco para cupom sem data de expiração</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="limite_usos" class="form-label">Limite de Usos (opcional)</label>
+                        <input type="number" class="form-control" id="limite_usos" name="limite_usos" min="1">
+                        <div class="form-text">Deixe em branco para usos ilimitados</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnCriarCupom">Criar Cupom</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa a data de início como hoje
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('data_inicio').value = hoje;
+        
+        // Atualiza o texto de ajuda do valor de acordo com o tipo selecionado
+        document.getElementById('tipo').addEventListener('change', function() {
+            const valorHelp = document.getElementById('valorHelp');
+            const valorInput = document.getElementById('valor');
+            
+            switch(this.value) {
+                case 'trial':
+                    valorHelp.textContent = 'Número de dias de acesso premium grátis';
+                    valorInput.setAttribute('min', '1');
+                    valorInput.setAttribute('step', '1');
+                    valorInput.value = '30';
+                    break;
+                case 'desconto_percentual':
+                    valorHelp.textContent = 'Porcentagem de desconto (%)';
+                    valorInput.setAttribute('min', '1');
+                    valorInput.setAttribute('max', '100');
+                    valorInput.setAttribute('step', '1');
+                    valorInput.value = '20';
+                    break;
+                case 'desconto_fixo':
+                    valorHelp.textContent = 'Valor do desconto em R$';
+                    valorInput.setAttribute('min', '0.01');
+                    valorInput.setAttribute('step', '0.01');
+                    valorInput.value = '29.90';
+                    break;
+            }
+        });
+        
+        // Botão para criar cupom
+        document.getElementById('btnCriarCupom').addEventListener('click', function() {
+            const form = document.getElementById('novoCupomForm');
+            const formData = new FormData(form);
+            
+            // Validação básica
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Envia os dados
+            fetch('/admin/cupom_criar', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao criar cupom. Tente novamente.');
+            });
+        });
+        
+        // Botões para desativar cupons
+        document.querySelectorAll('.desativar-cupom').forEach(button => {
+            button.addEventListener('click', function() {
+                if (!confirm('Tem certeza que deseja desativar este cupom?')) {
+                    return;
+                }
+                
+                const cupomId = this.dataset.cupomId;
+                
+                fetch(`/admin/cupom_desativar/${cupomId}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove o card do cupom
+                        document.getElementById(`cupom-card-${cupomId}`).remove();
+                        alert(data.message);
+                    } else {
+                        alert('Erro: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao desativar cupom. Tente novamente.');
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

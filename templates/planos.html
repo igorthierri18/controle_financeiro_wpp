@@ -125,7 +125,11 @@
     background-color: #c6f6d5;
 }
 
-.plan-card-profissional .card-header {
+.plan-card-familia .card-header {
+    background-color: #bee3f8;
+}
+
+.plan-card-empresarial .card-header {
     background-color: #b9f5ef;
 }
 
@@ -197,7 +201,7 @@
 <div class="container">
     <div class="row">
         <!-- Plano Gratuito -->
-        <div class="col-md-4 mb-4">
+        <div class="col-md-3 mb-4">
             <div class="pricing-card plan-card-gratuito">
                 {% if plano_atual == 'gratuito' %}
                 <div class="current-plan-badge">Seu plano atual</div>
@@ -212,27 +216,27 @@
                     <ul class="feature-list">
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Até 3.000 transações/mês</span>
-                        </li>
-                        <li>
-                            <i class="bi bi-x-circle-fill feature-unavailable"></i>
-                            <span class="feature-text">Relatórios detalhados</span>
+                            <span class="feature-text">3.000 transações/mês</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Dashboard interativo</span>
+                            <span class="feature-text">Dashboard básico</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Categorias limitadas (8)</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Usuário único</span>
                         </li>
                         <li>
                             <i class="bi bi-x-circle-fill feature-unavailable"></i>
                             <span class="feature-text">Exportação de dados</span>
                         </li>
                         <li>
-                            <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Suporte por e-mail</span>
-                        </li>
-                        <li>
-                            <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">1 usuário</span>
+                            <i class="bi bi-x-circle-fill feature-unavailable"></i>
+                            <span class="feature-text">Relatórios detalhados</span>
                         </li>
                     </ul>
                 </div>
@@ -247,7 +251,7 @@
         </div>
         
         <!-- Plano Premium -->
-        <div class="col-md-4 mb-4">
+        <div class="col-md-3 mb-4">
             <div class="pricing-card plan-card-premium">
                 {% if plano_atual == 'premium' %}
                 <div class="current-plan-badge">Seu plano atual</div>
@@ -262,27 +266,27 @@
                     <ul class="feature-list">
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Até 20.000 transações/mês</span>
+                            <span class="feature-text">Transações ilimitadas</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Relatórios detalhados</span>
+                            <span class="feature-text">Controle completo de finanças</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Dashboard interativo</span>
+                            <span class="feature-text">Dashboard completo</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Exportação de dados</span>
+                            <span class="feature-text">Categorias personalizadas</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Suporte por chat e e-mail</span>
+                            <span class="feature-text">Até 3 usuários conectados</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">2 usuários</span>
+                            <span class="feature-text">Exportação CSV</span>
                         </li>
                     </ul>
                 </div>
@@ -296,51 +300,101 @@
             </div>
         </div>
         
-        <!-- Plano Profissional -->
-        <div class="col-md-4 mb-4">
-            <div class="pricing-card plan-card-profissional">
-                {% if plano_atual == 'profissional' %}
+        <!-- Plano Família -->
+        <div class="col-md-3 mb-4">
+            <div class="pricing-card plan-card-familia">
+                {% if plano_atual == 'familia' %}
                 <div class="current-plan-badge">Seu plano atual</div>
                 {% endif %}
                 <div class="card-header">
-                    <h3>Profissional</h3>
+                    <h3>Família</h3>
                 </div>
                 <div class="card-body">
-                    <h2 class="price">R$ 59,90</h2>
+                    <h2 class="price">R$ 32,90</h2>
                     <p class="price-period">por mês</p>
                     
                     <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Perfil pessoal e empresarial</span>
+                        </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
                             <span class="feature-text">Transações ilimitadas</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Relatórios detalhados</span>
+                            <span class="feature-text">Categorias personalizadas</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Dashboard interativo</span>
+                            <span class="feature-text">Até 5 usuários conectados</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">Exportação de dados</span>
+                            <span class="feature-text">Grupos familiares ilimitados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Integração com Google Agenda</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    {% if plano_atual == 'familia' %}
+                    <button class="btn btn-success btn-lg btn-block btn-select-plan disabled">Plano Atual</button>
+                    {% else %}
+                    <a href="{{ url_for('web.assinatura', plano='familia') }}" class="btn btn-success btn-lg btn-block btn-select-plan">Selecionar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Plano Empresarial -->
+        <div class="col-md-3 mb-4">
+            <div class="pricing-card plan-card-empresarial">
+                {% if plano_atual == 'empresarial' %}
+                <div class="current-plan-badge">Seu plano atual</div>
+                {% endif %}
+                <div class="card-header">
+                    <h3>Empresarial</h3>
+                </div>
+                <div class="card-body">
+                    <h2 class="price">R$ 39,90</h2>
+                    <p class="price-period">por mês</p>
+                    
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Perfil pessoal e empresarial</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Transações ilimitadas</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Usuários ilimitados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">Grupos ilimitados</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill feature-available"></i>
+                            <span class="feature-text">API para integração</span>
                         </li>
                         <li>
                             <i class="bi bi-check-circle-fill feature-available"></i>
                             <span class="feature-text">Suporte prioritário</span>
                         </li>
-                        <li>
-                            <i class="bi bi-check-circle-fill feature-available"></i>
-                            <span class="feature-text">5 usuários</span>
-                        </li>
                     </ul>
                 </div>
                 <div class="card-footer">
-                    {% if plano_atual == 'profissional' %}
+                    {% if plano_atual == 'empresarial' %}
                     <button class="btn btn-success btn-lg btn-block btn-select-plan disabled">Plano Atual</button>
                     {% else %}
-                    <a href="{{ url_for('web.assinatura', plano='profissional') }}" class="btn btn-success btn-lg btn-block btn-select-plan">Selecionar</a>
+                    <a href="{{ url_for('web.assinatura', plano='empresarial') }}" class="btn btn-success btn-lg btn-block btn-select-plan">Selecionar</a>
                     {% endif %}
                 </div>
             </div>
@@ -358,69 +412,94 @@
                         <th>Recurso</th>
                         <th>Gratuito</th>
                         <th>Premium</th>
-                        <th>Profissional</th>
+                        <th>Família</th>
+                        <th>Empresarial</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Transações por mês</td>
                         <td>3.000</td>
-                        <td>20.000</td>
                         <td>Ilimitado</td>
+                        <td>Ilimitado</td>
+                        <td>Ilimitado</td>
+                    </tr>
+                    <tr>
+                        <td>Dashboard</td>
+                        <td>Básico</td>
+                        <td>Completo</td>
+                        <td>Completo</td>
+                        <td>Completo</td>
+                    </tr>
+                    <tr>
+                        <td>Categorias</td>
+                        <td>Limitadas (8)</td>
+                        <td>Personalizadas</td>
+                        <td>Personalizadas</td>
+                        <td>Personalizadas</td>
+                    </tr>
+                    <tr>
+                        <td>Usuários</td>
+                        <td>1</td>
+                        <td>3</td>
+                        <td>5</td>
+                        <td>Ilimitados</td>
+                    </tr>
+                    <tr>
+                        <td>Perfil empresarial</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td>Grupos</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td>Familiares</td>
+                        <td>Ilimitados</td>
+                    </tr>
+                    <tr>
+                        <td>Exportação de dados</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+                        <td>CSV</td>
+                        <td>CSV/Excel</td>
+                        <td>Todos os formatos</td>
                     </tr>
                     <tr>
                         <td>Relatórios detalhados</td>
                         <td><i class="bi bi-x-circle-fill text-danger"></i></td>
                         <td><i class="bi bi-check-circle-fill text-success"></i></td>
                         <td><i class="bi bi-check-circle-fill text-success"></i></td>
-                    </tr>
-                    <tr>
-                        <td>Dashboard interativo</td>
-                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
-                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
                         <td><i class="bi bi-check-circle-fill text-success"></i></td>
                     </tr>
                     <tr>
-                        <td>Exportação de dados</td>
+                        <td>Integração com Google Agenda</td>
+                        <td><i class="bi bi-x-circle-fill text-danger"></i></td>
                         <td><i class="bi bi-x-circle-fill text-danger"></i></td>
                         <td><i class="bi bi-check-circle-fill text-success"></i></td>
                         <td><i class="bi bi-check-circle-fill text-success"></i></td>
                     </tr>
                     <tr>
-                        <td>Reconhecimento de imagens de notas fiscais</td>
+                        <td>API para integração</td>
                         <td><i class="bi bi-x-circle-fill text-danger"></i></td>
-                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
-                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
-                    </tr>
-                    <tr>
-                        <td>Integração com bancos</td>
                         <td><i class="bi bi-x-circle-fill text-danger"></i></td>
-                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
-                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
-                    </tr>
-                    <tr>
-                        <td>Categorização automática avançada</td>
                         <td><i class="bi bi-x-circle-fill text-danger"></i></td>
-                        <td><i class="bi bi-check-circle-fill text-success"></i></td>
                         <td><i class="bi bi-check-circle-fill text-success"></i></td>
                     </tr>
                     <tr>
                         <td>Suporte</td>
                         <td>E-mail</td>
                         <td>Chat/E-mail</td>
+                        <td>Chat/E-mail</td>
                         <td>Prioritário</td>
-                    </tr>
-                    <tr>
-                        <td>Usuários por conta</td>
-                        <td>1</td>
-                        <td>2</td>
-                        <td>5</td>
                     </tr>
                     <tr>
                         <td>Preço mensal</td>
                         <td>R$ 0</td>
                         <td>R$ 29,90</td>
-                        <td>R$ 59,90</td>
+                        <td>R$ 32,90</td>
+                        <td>R$ 39,90</td>
                     </tr>
                 </tbody>
             </table>
