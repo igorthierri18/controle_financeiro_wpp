@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, session, jsonify, send_file
-from database.models import Usuario, Despesa, Receita, Lembrete, CategoriaPersonalizada, Membro, TextProcessor
+from database.models import Usuario, Despesa, Receita, Lembrete, CategoriaPersonalizada, Membro, TextProcessor, MetaFinanceira, Divida, Orcamento
 from functools import wraps
 import os
 import sqlite3
@@ -47,6 +47,13 @@ def plano_required(planos_permitidos):
         return decorated_function
     return decorator
 
+@web_bp.route('/perfil-empresarial')
+@login_required
+@plano_required(['familia', 'empresarial'])
+def perfil_empresarial():
+    # implementação
+    pass
+
 # Rota inicial
 @web_bp.route('/')
 def index():
@@ -78,79 +85,62 @@ def dashboard():
     
     usuario_id = session.get('usuario_id')
     
-    # Cria instância do modelo de usuário e busca dados do usuário logado
+    # Busca dados do usuário
     usuario_model = Usuario(Config.DATABASE)
     usuario = usuario_model.buscar_por_id(usuario_id)
     
-    # Cria instâncias dos modelos necessários
+    # Busca lembretes próximos
     lembrete_model = Lembrete(Config.DATABASE)
-    categoria_model = CategoriaPersonalizada(Config.DATABASE)
-    membro_model = Membro(Config.DATABASE)
-    
-    # Busca os lembretes ativos para o usuário
-    lembretes_pessoais = lembrete_model.buscar(
+    lembretes = lembrete_model.buscar(
         usuario_id=usuario_id,
-        tipo_perfil='pessoal',
         concluido=0
     )
+    lembretes = sorted(lembretes, key=lambda x: x['data'])[:3]  # Top 3 próximos
     
-    lembretes_empresariais = lembrete_model.buscar(
-        usuario_id=usuario_id,
-        tipo_perfil='empresarial',
-        concluido=0
-    )
-    
-    # Busca as categorias personalizadas
-    categorias_pessoais = categoria_model.buscar(
+    # Busca orçamentos
+    orcamento_model = Orcamento(Config.DATABASE)
+    orcamentos = orcamento_model.buscar(
         usuario_id=usuario_id,
         tipo_perfil='pessoal'
     )
     
-    categorias_empresariais = categoria_model.buscar(
-        usuario_id=usuario_id,
-        tipo_perfil='empresarial'
-    )
-    
-    # Busca os membros
-    membros_familia = membro_model.buscar(
-        usuario_id=usuario_id,
-        tipo_grupo='familia'
-    )
-    
-    membros_empresa = membro_model.buscar(
-        usuario_id=usuario_id,
-        tipo_grupo='empresa'
-    )
-    
-    # Verifica se é necessário criar os usuários principais
-    if not membros_familia and not membros_empresa:
-        # Cria o usuário principal para família e empresa
-        membro_model.criar_usuario_principal(usuario_id)
-        
-        # Recarrega os membros
-        membros_familia = membro_model.buscar(
-            usuario_id=usuario_id,
-            tipo_grupo='familia'
+    # Adiciona gastos atuais para orçamentos
+    for orcamento in orcamentos:
+        orcamento['gasto_atual'] = orcamento_model.calcular_gasto_atual(
+            orcamento_id=orcamento['id']
         )
-        
-        membros_empresa = membro_model.buscar(
-            usuario_id=usuario_id,
-            tipo_grupo='empresa'
-        )
+    
+    # Busca metas financeiras
+    meta_model = MetaFinanceira(Config.DATABASE)
+    metas = meta_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='pessoal'
+    )
+    
+    # Busca dívidas
+    divida_model = Divida(Config.DATABASE)
+    dividas = divida_model.buscar(
+        usuario_id=usuario_id,
+        tipo_perfil='pessoal'
+    )
+    
+    # Determina quais funcionalidades o usuário pode acessar com base no plano
+    plano = usuario.get('plano', 'gratuito')
+    
+    # Acesso a perfil empresarial depende do plano
+    pode_acesso_empresarial = plano in ['familia', 'empresarial']
     
     return render_template(
         'dashboard.html',
         app_name=Config.APP_NAME,
         usuario=usuario,
-        plano=usuario.get('plano', 'gratuito'),
-        lembretes_pessoais=lembretes_pessoais,
-        lembretes_empresariais=lembretes_empresariais,
-        categorias_pessoais=categorias_pessoais,
-        categorias_empresariais=categorias_empresariais,
-        membros_familia=membros_familia,
-        membros_empresa=membros_empresa
+        lembretes=lembretes,
+        orcamentos=orcamentos,
+        metas=metas,
+        dividas=dividas,
+        plano=plano,
+        pode_acesso_empresarial=pode_acesso_empresarial
     )
-
 # Rota para recuperar senha (stub para corrigir o erro de url_for)
 @web_bp.route('/recuperar_senha', methods=['GET', 'POST'])
 def recuperar_senha():
@@ -618,6 +608,7 @@ def cancelar_assinatura():
     
     return redirect(url_for('web.perfil'))
 
+
 # Rotas para gerenciamento de lembretes
 @web_bp.route('/lembretes')
 @login_required
@@ -756,6 +747,73 @@ def excluir_lembrete(lembrete_id):
     flash('Lembrete excluído com sucesso!', 'success')
     
     return redirect(url_for('web.lembretes'))
+
+@web_bp.route('/sincronizar_agenda', methods=['POST'])
+@login_required
+def sincronizar_agenda():
+    """Sincroniza os lembretes com o Google Calendar"""
+    from config import Config
+    
+    # Mensagem temporária até a implementação completa
+    flash('Funcionalidade de sincronização com Google Calendar será implementada em breve.', 'info')
+    
+    # Redireciona de volta para a página de lembretes
+    return redirect(url_for('web.lembretes'))
+
+@web_bp.route('/orcamentos')
+@login_required
+def orcamentos():
+    """Página de gerenciamento de orçamentos"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    return render_template(
+        'orcamentos.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        plano=usuario.get('plano', 'gratuito')
+    )
+
+@web_bp.route('/orcamentos/adicionar', methods=['POST'])
+@login_required
+def adicionar_orcamento():
+    """Adicionar um novo orçamento"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    
+    # Obtém dados do formulário e cria o orçamento
+    # ...
+    
+    return redirect(url_for('web.orcamentos'))
+
+@web_bp.route('/metas')
+@login_required
+def metas_financeiras():
+    """Página de gestão de metas financeiras"""
+    from config import Config
+    
+    usuario_id = session.get('usuario_id')
+    usuario_model = Usuario(Config.DATABASE)
+    usuario = usuario_model.buscar_por_id(usuario_id)
+    
+    return render_template(
+        'metas_financeiras.html',
+        app_name=Config.APP_NAME,
+        usuario=usuario,
+        plano=usuario.get('plano', 'gratuito')
+    )
+
+@web_bp.route('/metas/adicionar', methods=['POST'])
+@login_required
+def adicionar_meta():
+    """Adicionar uma nova meta financeira"""
+    # ...
+    
+    return redirect(url_for('web.metas_financeiras'))
 
 # Rotas para gerenciamento de categorias
 @web_bp.route('/categorias')

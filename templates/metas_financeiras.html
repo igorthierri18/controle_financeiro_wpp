@@ -1,0 +1,1262 @@
+{% extends 'base.html' %}
+
+{% block title %}Metas Financeiras - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.metas-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 40px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.metas-header h1 {
+    font-weight: 600;
+}
+
+.metas-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.goal-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.goal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.goal-header {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.goal-title {
+    margin: 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.goal-title .icon {
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: white;
+    font-size: 16px;
+}
+
+.goal-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.goal-body {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.goal-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.goal-current {
+    font-size: 24px;
+    font-weight: 700;
+    color: #28a745;
+}
+
+.goal-target {
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.goal-progress {
+    margin-bottom: 15px;
+}
+
+.goal-progress-bar {
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.progress-inner {
+    height: 100%;
+    border-radius: 5px;
+    background-color: #28a745;
+    transition: width 1s ease-in-out;
+}
+
+.goal-progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.goal-details {
+    margin-bottom: 15px;
+    flex-grow: 1;
+}
+
+.goal-detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.goal-detail-label {
+    color: #6c757d;
+}
+
+.goal-detail-value {
+    font-weight: 500;
+}
+
+.goal-contribution {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: auto;
+}
+
+.goal-contribution-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.goal-contribution-text {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.goal-footer {
+    border-top: 1px solid #eee;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.goal-congratulation {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.goal-congratulation i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.empty-state {
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 40px 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    color: #dee2e6;
+    margin-bottom: 15px;
+}
+
+.empty-state-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-state-text {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.fab-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #28a745;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.fab-button:hover {
+    transform: scale(1.1);
+    background-color: #218838;
+    color: white;
+    text-decoration: none;
+}
+
+.profile-selector {
+    display: flex;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+.profile-option {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-option.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.profile-option:not(.active):hover {
+    background-color: #f8f9fa;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="metas-header">
+    <div class="container">
+        <h1>Metas Financeiras</h1>
+        <p>Defina metas, acompanhe seu progresso e realize seus sonhos financeiros.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Seletor de perfil (pessoal/empresarial) -->
+    <div class="profile-selector">
+        <div class="profile-option active" id="profile-personal">
+            <i class="bi bi-person me-1"></i> Perfil Pessoal
+        </div>
+        <div class="profile-option" id="profile-business">
+            <i class="bi bi-building me-1"></i> Perfil Empresarial
+        </div>
+    </div>
+    
+    <!-- Lista de metas -->
+    <div class="row" id="lista-metas">
+        <!-- Será carregado via JavaScript -->
+    </div>
+    
+    <!-- Estado vazio (mostrado quando não há metas) -->
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="empty-state-icon">
+            <i class="bi bi-flag"></i>
+        </div>
+        <h3 class="empty-state-title">Nenhuma meta definida</h3>
+        <p class="empty-state-text">
+            Crie metas financeiras para organizar melhor suas economias e planejar para o futuro.
+        </p>
+        <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#modalAddMeta">
+            <i class="bi bi-plus-circle me-2"></i>Criar Primeira Meta
+        </button>
+    </div>
+    
+    <!-- Resumo das Metas -->
+    <div class="row mb-4" id="metas-resumo">
+        <div class="col-md-4">
+            <div class="goal-card">
+                <div class="goal-header">
+                    <h5 class="goal-title">Total Economizado</h5>
+                </div>
+                <div class="goal-body text-center">
+                    <div class="fw-bold fs-3 mb-2" id="total-economizado">R$ 0,00</div>
+                    <div class="text-muted">Em todas as metas ativas</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="goal-card">
+                <div class="goal-header">
+                    <h5 class="goal-title">Progresso Médio</h5>
+                </div>
+                <div class="goal-body text-center">
+                    <div class="fw-bold fs-3 mb-2" id="progresso-medio">0%</div>
+                    <div class="text-muted">Das suas metas financeiras</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="goal-card">
+                <div class="goal-header">
+                    <h5 class="goal-title">Próxima Meta</h5>
+                </div>
+                <div class="goal-body text-center">
+                    <div class="fw-bold fs-3 mb-2" id="proxima-meta">-</div>
+                    <div class="text-muted">Meta mais próxima do objetivo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botão flutuante para adicionar meta -->
+    <a href="#" class="fab-button" data-bs-toggle="modal" data-bs-target="#modalAddMeta">
+        <i class="bi bi-plus"></i>
+    </a>
+</div>
+
+<!-- Modal para adicionar meta financeira -->
+<div class="modal fade" id="modalAddMeta" tabindex="-1" aria-labelledby="modalAddMetaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAddMetaLabel">Nova Meta Financeira</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-meta">
+                    <div class="mb-3">
+                        <label for="meta-titulo" class="form-label">Nome da Meta</label>
+                        <input type="text" class="form-control" id="meta-titulo" name="titulo" required placeholder="Ex: Viagem de Férias">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="meta-valor-alvo" class="form-label">Valor a Atingir</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="meta-valor-alvo" name="valor_alvo" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="meta-valor-atual" class="form-label">Valor Atual (opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="meta-valor-atual" name="valor_atual" step="0.01" min="0" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="meta-data-alvo" class="form-label">Data Limite</label>
+                        <input type="date" class="form-control" id="meta-data-alvo" name="data_alvo" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="meta-icone" class="form-label">Ícone</label>
+                        <select class="form-select" id="meta-icone" name="icone">
+                            <option value="bi-airplane">✈️ Viagem</option>
+                            <option value="bi-house">🏠 Casa</option>
+                            <option value="bi-car-front">🚗 Carro</option>
+                            <option value="bi-laptop">💻 Eletrônicos</option>
+                            <option value="bi-mortarboard">🎓 Educação</option>
+                            <option value="bi-piggy-bank">💰 Poupança</option>
+                            <option value="bi-gift">🎁 Presente</option>
+                            <option value="bi-bank">🏦 Investimento</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="meta-automatico" class="form-label">Contribuição Automática (opcional)</label>
+                        <div class="row g-3 align-items-center">
+                            <div class="col-auto">
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" id="meta-automatico" name="valor_automatico" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <select class="form-select" id="meta-periodicidade" name="periodicidade">
+                                    <option value="semanal">por semana</option>
+                                    <option value="mensal" selected>por mês</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="meta-tipo-perfil" class="form-label">Perfil</label>
+                        <select class="form-select" id="meta-tipo-perfil" name="tipo_perfil">
+                            <option value="pessoal" selected>Pessoal</option>
+                            <option value="empresarial">Empresarial</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-salvar-meta">Criar Meta</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar meta financeira -->
+<div class="modal fade" id="modalEditarMeta" tabindex="-1" aria-labelledby="modalEditarMetaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarMetaLabel">Editar Meta Financeira</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-meta">
+                    <input type="hidden" id="editar-meta-id" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="editar-meta-titulo" class="form-label">Nome da Meta</label>
+                        <input type="text" class="form-control" id="editar-meta-titulo" name="titulo" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-meta-valor-alvo" class="form-label">Valor a Atingir</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="editar-meta-valor-alvo" name="valor_alvo" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-meta-valor-atual" class="form-label">Valor Atual</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="editar-meta-valor-atual" name="valor_atual" step="0.01" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-meta-data-alvo" class="form-label">Data Limite</label>
+                        <input type="date" class="form-control" id="editar-meta-data-alvo" name="data_alvo" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-meta-icone" class="form-label">Ícone</label>
+                        <select class="form-select" id="editar-meta-icone" name="icone">
+                            <option value="bi-airplane">✈️ Viagem</option>
+                            <option value="bi-house">🏠 Casa</option>
+                            <option value="bi-car-front">🚗 Carro</option>
+                            <option value="bi-laptop">💻 Eletrônicos</option>
+                            <option value="bi-mortarboard">🎓 Educação</option>
+                            <option value="bi-piggy-bank">💰 Poupança</option>
+                            <option value="bi-gift">🎁 Presente</option>
+                            <option value="bi-bank">🏦 Investimento</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-meta-automatico" class="form-label">Contribuição Automática</label>
+                        <div class="row g-3 align-items-center">
+                            <div class="col-auto">
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" id="editar-meta-automatico" name="valor_automatico" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <select class="form-select" id="editar-meta-periodicidade" name="periodicidade">
+                                    <option value="semanal">por semana</option>
+                                    <option value="mensal">por mês</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-atualizar-meta">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar contribuição -->
+<div class="modal fade" id="modalContribuicao" tabindex="-1" aria-labelledby="modalContribuicaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalContribuicaoLabel">Adicionar Contribuição</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-contribuicao">
+                    <input type="hidden" id="contribuicao-meta-id" name="meta_id">
+                    
+                    <div class="mb-3">
+                        <label for="contribuicao-valor" class="form-label">Valor</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="contribuicao-valor" name="valor" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contribuicao-data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="contribuicao-data" name="data" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contribuicao-observacao" class="form-label">Observação (opcional)</label>
+                        <input type="text" class="form-control" id="contribuicao-observacao" name="observacao">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-salvar-contribuicao">Adicionar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para excluir -->
+<div class="modal fade" id="modalConfirmExcluir" tabindex="-1" aria-labelledby="modalConfirmExcluirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmExcluirLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir esta meta financeira?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de histórico de contribuições -->
+<div class="modal fade" id="modalHistorico" tabindex="-1" aria-labelledby="modalHistoricoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalHistoricoLabel">Histórico de Contribuições</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Valor</th>
+                                <th>Observação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historico-contribuicoes">
+                            <!-- Será preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Variáveis globais
+    let perfilAtual = 'pessoal';
+    let metaParaExcluir = null;
+    
+    // Ícones para metas
+    const goalIcons = {
+        'bi-airplane': {icon: 'bi-airplane', color: '#6f42c1', emoji: '✈️'},
+        'bi-house': {icon: 'bi-house', color: '#20c997', emoji: '🏠'},
+        'bi-car-front': {icon: 'bi-car-front', color: '#fd7e14', emoji: '🚗'},
+        'bi-laptop': {icon: 'bi-laptop', color: '#6c757d', emoji: '💻'},
+        'bi-mortarboard': {icon: 'bi-mortarboard', color: '#e83e8c', emoji: '🎓'},
+        'bi-piggy-bank': {icon: 'bi-piggy-bank', color: '#28a745', emoji: '💰'},
+        'bi-gift': {icon: 'bi-gift', color: '#dc3545', emoji: '🎁'},
+        'bi-bank': {icon: 'bi-bank', color: '#007bff', emoji: '🏦'}
+    };
+    
+    // Quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa a data-alvo para 6 meses no futuro
+        const dataAlvo = new Date();
+        dataAlvo.setMonth(dataAlvo.getMonth() + 6);
+        document.getElementById('meta-data-alvo').valueAsDate = dataAlvo;
+        
+        // Data atual para contribuições
+        document.getElementById('contribuicao-data').valueAsDate = new Date();
+        
+        // Seletor de perfil
+        document.getElementById('profile-personal').addEventListener('click', function() {
+            perfilAtual = 'pessoal';
+            document.getElementById('profile-personal').classList.add('active');
+            document.getElementById('profile-business').classList.remove('active');
+            carregarMetas();
+        });
+        
+        document.getElementById('profile-business').addEventListener('click', function() {
+            perfilAtual = 'empresarial';
+            document.getElementById('profile-business').classList.add('active');
+            document.getElementById('profile-personal').classList.remove('active');
+            carregarMetas();
+        });
+        
+        // Botão para salvar meta
+        document.getElementById('btn-salvar-meta').addEventListener('click', function() {
+            const form = document.getElementById('form-add-meta');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const meta = {};
+            
+            formData.forEach((value, key) => {
+                if (['valor_alvo', 'valor_atual', 'valor_automatico'].includes(key)) {
+                    meta[key] = parseFloat(value) || 0;
+                } else {
+                    meta[key] = value;
+                }
+            });
+            
+            // Adiciona o perfil atual
+            meta.tipo_perfil = perfilAtual;
+            
+            // Envia para a API
+            criarMeta(meta);
+        });
+        
+        // Botão para atualizar meta
+        document.getElementById('btn-atualizar-meta').addEventListener('click', function() {
+            const form = document.getElementById('form-editar-meta');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const meta = {};
+            const id = document.getElementById('editar-meta-id').value;
+            
+            formData.forEach((value, key) => {
+                if (['valor_alvo', 'valor_atual', 'valor_automatico'].includes(key)) {
+                    meta[key] = parseFloat(value) || 0;
+                } else if (key !== 'id') {
+                    meta[key] = value;
+                }
+            });
+            
+            // Atualiza a meta
+            atualizarMeta(id, meta);
+        });
+        
+        // Botão de confirmação de exclusão
+        document.getElementById('btn-confirmar-exclusao').addEventListener('click', function() {
+            if (metaParaExcluir) {
+                excluirMeta(metaParaExcluir);
+            }
+        });
+        
+        // Botão para salvar contribuição
+        document.getElementById('btn-salvar-contribuicao').addEventListener('click', function() {
+            const form = document.getElementById('form-contribuicao');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const contribuicao = {};
+            
+            formData.forEach((value, key) => {
+                if (key === 'valor') {
+                    contribuicao[key] = parseFloat(value);
+                } else {
+                    contribuicao[key] = value;
+                }
+            });
+            
+            // Adiciona a contribuição
+            adicionarContribuicao(contribuicao);
+        });
+        
+        // Carrega as metas iniciais
+        carregarMetas();
+    });
+    
+    // Função para formatar moeda
+    function formatarMoeda(valor) {
+        return 'R$ ' + valor.toFixed(2).replace('.', ',');
+    }
+    
+    // Função para formatar data
+    function formatarData(data) {
+        if (!data) return "";
+        
+        const dataObj = new Date(data);
+        return dataObj.toLocaleDateString('pt-BR');
+    }
+    
+    // Função para calcular dias restantes
+    function calcularDiasRestantes(dataAlvo) {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        
+        const alvo = new Date(dataAlvo);
+        
+        // Calcula a diferença em dias
+        const diferenca = alvo - hoje;
+        return Math.ceil(diferenca / (1000 * 60 * 60 * 24));
+    }
+    
+    // Função para carregar as metas
+    async function carregarMetas() {
+        try {
+            // Em uma implementação real, buscaria da API
+            // const response = await fetch(`/api/metas?tipo_perfil=${perfilAtual}`);
+            // const metas = await response.json();
+            
+            // Dados de exemplo para demonstração
+            const metas = [
+                {
+                    id: 1,
+                    titulo: "Viagem de Férias",
+                    valor_alvo: 10000,
+                    valor_atual: 3500,
+                    data_alvo: "2023-12-15",
+                    icone: "bi-airplane",
+                    valor_automatico: 500,
+                    periodicidade_contribuicao: "mensal",
+                    concluida: 0,
+                    tipo_perfil: "pessoal",
+                    contribuicoes: [
+                        {data: "2023-01-10", valor: 1000, observacao: "Valor inicial"},
+                        {data: "2023-02-15", valor: 500, observacao: "Automatico"},
+                        {data: "2023-03-15", valor: 500, observacao: "Automatico"},
+                        {data: "2023-04-15", valor: 500, observacao: "Automatico"},
+                        {data: "2023-05-15", valor: 500, observacao: "Automatico"},
+                        {data: "2023-06-15", valor: 500, observacao: "Automatico"}
+                    ]
+                },
+                {
+                    id: 2,
+                    titulo: "Novo Notebook",
+                    valor_alvo: 5000,
+                    valor_atual: 3000,
+                    data_alvo: "2023-09-30",
+                    icone: "bi-laptop",
+                    valor_automatico: 0,
+                    periodicidade_contribuicao: null,
+                    concluida: 0,
+                    tipo_perfil: "pessoal",
+                    contribuicoes: [
+                        {data: "2023-02-10", valor: 1500, observacao: "Valor inicial"},
+                        {data: "2023-04-05", valor: 1500, observacao: "Bônus de trabalho"}
+                    ]
+                },
+                {
+                    id: 3,
+                    titulo: "Equipamento para Empresa",
+                    valor_alvo: 15000,
+                    valor_atual: 5000,
+                    data_alvo: "2023-11-30",
+                    icone: "bi-tools",
+                    valor_automatico: 2000,
+                    periodicidade_contribuicao: "mensal",
+                    concluida: 0,
+                    tipo_perfil: "empresarial",
+                    contribuicoes: [
+                        {data: "2023-03-10", valor: 5000, observacao: "Alocação inicial"}
+                    ]
+                }
+            ];
+            
+            // Filtra pelo perfil atual
+            const metasFiltradas = metas.filter(m => m.tipo_perfil === perfilAtual);
+            
+            // Atualiza a interface
+            renderizarMetas(metasFiltradas);
+            atualizarResumo(metasFiltradas);
+            
+        } catch (error) {
+            console.error('Erro ao carregar metas:', error);
+            
+            const listaMetas = document.getElementById('lista-metas');
+            listaMetas.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Erro ao carregar metas. Por favor, tente novamente mais tarde.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('empty-state').style.display = 'none';
+        }
+    }
+    
+    // Função para renderizar as metas na tela
+    function renderizarMetas(metas) {
+        const listaMetas = document.getElementById('lista-metas');
+        listaMetas.innerHTML = '';
+        
+        // Mostra o estado vazio se não houver metas
+        if (metas.length === 0) {
+            document.getElementById('empty-state').style.display = 'block';
+            return;
+        } else {
+            document.getElementById('empty-state').style.display = 'none';
+        }
+        
+        // Renderiza cada meta
+        metas.forEach(meta => {
+            // Calcula a porcentagem de progresso
+            const porcentagem = (meta.valor_atual / meta.valor_alvo) * 100;
+            const porcentagemFormatada = Math.min(porcentagem, 100).toFixed(0);
+            
+            // Calcula dias restantes
+            const diasRestantes = calcularDiasRestantes(meta.data_alvo);
+            
+            // Determina a cor e ícone
+            const iconInfo = goalIcons[meta.icone] || {icon: 'bi-flag', color: '#28a745', emoji: '🚩'};
+            
+            // Cria o card da meta
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4 mb-4';
+            
+            // Verifica se a meta foi concluída (100% ou mais)
+            const metaConcluida = porcentagem >= 100;
+            
+            let conteudo = `
+                <div class="goal-card">
+                    <div class="goal-header">
+                        <h5 class="goal-title">
+                            <span class="icon" style="background-color: ${iconInfo.color}">
+                                <i class="bi ${iconInfo.icon}"></i>
+                            </span>
+                            ${meta.titulo}
+                        </h5>
+                        <span class="goal-badge" style="background-color: ${metaConcluida ? '#d4edda' : '#f8f9fa'}; color: ${metaConcluida ? '#155724' : '#6c757d'};">
+                            ${metaConcluida ? 'Concluída' : (diasRestantes + ' dias')}
+                        </span>
+                    </div>
+                    <div class="goal-body">
+            `;
+            
+            // Se a meta foi concluída, mostra mensagem de parabéns
+            if (metaConcluida) {
+                conteudo += `
+                    <div class="goal-congratulation">
+                        <i class="bi bi-trophy"></i>
+                        <h5>Parabéns!</h5>
+                        <p>Você atingiu sua meta financeira.</p>
+                    </div>
+                `;
+            }
+            
+            conteudo += `
+                        <div class="goal-value">
+                            <div class="goal-current">${formatarMoeda(meta.valor_atual)}</div>
+                            <div class="goal-target">de ${formatarMoeda(meta.valor_alvo)}</div>
+                        </div>
+                        
+                        <div class="goal-progress">
+                            <div class="goal-progress-bar">
+                                <div class="progress-inner" style="width: ${porcentagemFormatada}%;"></div>
+                            </div>
+                            <div class="goal-progress-text">
+                                <span>${porcentagemFormatada}% concluído</span>
+                                <span>Faltam ${formatarMoeda(meta.valor_alvo - meta.valor_atual)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-details">
+                            <div class="goal-detail-row">
+                                <div class="goal-detail-label">Data limite</div>
+                                <div class="goal-detail-value">${formatarData(meta.data_alvo)}</div>
+                            </div>
+                            <div class="goal-detail-row">
+                                <div class="goal-detail-label">Dias restantes</div>
+                                <div class="goal-detail-value">${diasRestantes} dias</div>
+                            </div>
+                        </div>
+            `;
+            
+            // Se tiver contribuição automática
+            if (meta.valor_automatico && meta.valor_automatico > 0) {
+                conteudo += `
+                        <div class="goal-contribution">
+                            <div class="goal-contribution-title">
+                                <span>Contribuição Automática</span>
+                                <span>${formatarMoeda(meta.valor_automatico)}</span>
+                            </div>
+                            <div class="goal-contribution-text">
+                                ${meta.periodicidade_contribuicao === 'mensal' ? 'Por mês' : 'Por semana'}
+                            </div>
+                        </div>
+                `;
+            }
+            
+            conteudo += `
+                    </div>
+                    <div class="goal-footer">
+                        <button class="btn btn-sm btn-outline-success btn-contribuir-meta" data-id="${meta.id}">
+                            <i class="bi bi-plus-circle me-1"></i> Contribuir
+                        </button>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary btn-historico-meta" data-id="${meta.id}">
+                                <i class="bi bi-clock-history"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary btn-editar-meta" data-id="${meta.id}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-excluir-meta" data-id="${meta.id}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            col.innerHTML = conteudo;
+            listaMetas.appendChild(col);
+        });
+        
+        // Adiciona eventos aos botões
+        adicionarEventosBotoes();
+    }
+    
+    // Função para atualizar o resumo
+    function atualizarResumo(metas) {
+        // Calcula totais
+        const totalEconomizado = metas.reduce((total, meta) => total + meta.valor_atual, 0);
+        
+        // Calcula progresso médio
+        let progressoMedio = 0;
+        if (metas.length > 0) {
+            const somaProgressos = metas.reduce((total, meta) => {
+                return total + ((meta.valor_atual / meta.valor_alvo) * 100);
+            }, 0);
+            progressoMedio = somaProgressos / metas.length;
+        }
+        
+        // Encontra a próxima meta (a que está mais perto de ser concluída)
+        let proximaMeta = "-";
+        if (metas.length > 0) {
+            // Filtra metas não concluídas
+            const metasNaoConcluidas = metas.filter(meta => (meta.valor_atual / meta.valor_alvo) < 1);
+            if (metasNaoConcluidas.length > 0) {
+                // Ordena por porcentagem de conclusão (decrescente)
+                metasNaoConcluidas.sort((a, b) => {
+                    return (b.valor_atual / b.valor_alvo) - (a.valor_atual / a.valor_alvo);
+                });
+                proximaMeta = metasNaoConcluidas[0].titulo;
+            }
+        }
+        
+        // Atualiza os valores na tela
+        document.getElementById('total-economizado').textContent = formatarMoeda(totalEconomizado);
+        document.getElementById('progresso-medio').textContent = `${progressoMedio.toFixed(0)}%`;
+        document.getElementById('proxima-meta').textContent = proximaMeta;
+    }
+    
+    // Função para adicionar eventos aos botões
+    function adicionarEventosBotoes() {
+        // Botões de editar meta
+        document.querySelectorAll('.btn-editar-meta').forEach(button => {
+            button.addEventListener('click', function() {
+                const metaId = this.dataset.id;
+                abrirModalEditarMeta(metaId);
+            });
+        });
+        
+        // Botões de excluir meta
+        document.querySelectorAll('.btn-excluir-meta').forEach(button => {
+            button.addEventListener('click', function() {
+                metaParaExcluir = this.dataset.id;
+                
+                // Abre o modal de confirmação
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmExcluir'));
+                modal.show();
+            });
+        });
+        
+        // Botões de contribuir para meta
+        document.querySelectorAll('.btn-contribuir-meta').forEach(button => {
+            button.addEventListener('click', function() {
+                const metaId = this.dataset.id;
+                abrirModalContribuicao(metaId);
+            });
+        });
+        
+        // Botões de ver histórico
+        document.querySelectorAll('.btn-historico-meta').forEach(button => {
+            button.addEventListener('click', function() {
+                const metaId = this.dataset.id;
+                abrirHistoricoContribuicoes(metaId);
+            });
+        });
+    }
+    
+    // Função para abrir modal de edição de meta
+    function abrirModalEditarMeta(metaId) {
+        // Em uma implementação real, buscaria da API
+        alert('Edição de meta será implementada em breve.');
+    }
+    
+    // Função para abrir modal de contribuição
+    function abrirModalContribuicao(metaId) {
+        // Preenche o ID da meta no formulário
+        document.getElementById('contribuicao-meta-id').value = metaId;
+        
+        // Define a data atual
+        document.getElementById('contribuicao-data').valueAsDate = new Date();
+        
+        // Abre o modal
+        const modal = new bootstrap.Modal(document.getElementById('modalContribuicao'));
+        modal.show();
+    }
+    
+    // Função para abrir histórico de contribuições
+    function abrirHistoricoContribuicoes(metaId) {
+        // Em uma implementação real, buscaria da API
+        // const response = await fetch(`/api/metas/${metaId}/contribuicoes`);
+        // const contribuicoes = await response.json();
+        
+        // Dados de exemplo para demonstração
+        const metas = [
+            {
+                id: 1,
+                contribuicoes: [
+                    {data: "2023-01-10", valor: 1000, observacao: "Valor inicial"},
+                    {data: "2023-02-15", valor: 500, observacao: "Automatico"},
+                    {data: "2023-03-15", valor: 500, observacao: "Automatico"},
+                    {data: "2023-04-15", valor: 500, observacao: "Automatico"},
+                    {data: "2023-05-15", valor: 500, observacao: "Automatico"},
+                    {data: "2023-06-15", valor: 500, observacao: "Automatico"}
+                ]
+            },
+            {
+                id: 2,
+                contribuicoes: [
+                    {data: "2023-02-10", valor: 1500, observacao: "Valor inicial"},
+                    {data: "2023-04-05", valor: 1500, observacao: "Bônus de trabalho"}
+                ]
+            }
+        ];
+        
+        const meta = metas.find(m => m.id == metaId);
+        
+        if (!meta) {
+            alert('Meta não encontrada.');
+            return;
+        }
+        
+        // Preenche o histórico
+        const tbody = document.getElementById('historico-contribuicoes');
+        tbody.innerHTML = '';
+        
+        if (meta.contribuicoes.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center">
+                        Ainda não há contribuições para esta meta.
+                    </td>
+                </tr>
+            `;
+        } else {
+            // Ordena as contribuições da mais recente para a mais antiga
+            const contribuicoesOrdenadas = [...meta.contribuicoes].sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            contribuicoesOrdenadas.forEach(contrib => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${formatarData(contrib.data)}</td>
+                    <td>${formatarMoeda(contrib.valor)}</td>
+                    <td>${contrib.observacao || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Abre o modal
+        const modal = new bootstrap.Modal(document.getElementById('modalHistorico'));
+        modal.show();
+    }
+    
+    // Função para criar uma nova meta
+    async function criarMeta(meta) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch('/api/metas', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(meta)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Meta criada:', meta);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAddMeta'));
+            modal.hide();
+            
+            // Limpa o formulário
+            document.getElementById('form-add-meta').reset();
+            
+            // Recarrega as metas
+            carregarMetas();
+            
+            // Feedback para o usuário
+            alert('Meta criada com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao criar meta:', error);
+            alert('Erro ao criar meta. Por favor, tente novamente.');
+        }
+    }
+    
+    // Função para atualizar uma meta
+    async function atualizarMeta(id, meta) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch(`/api/metas/${id}`, {
+            //     method: 'PUT',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(meta)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Meta atualizada:', id, meta);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarMeta'));
+            modal.hide();
+            
+            // Recarrega as metas
+            carregarMetas();
+            
+            // Feedback para o usuário
+            alert('Meta atualizada com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao atualizar meta:', error);
+            alert('Erro ao atualizar meta. Por favor, tente novamente.');
+        }
+    }
+    
+    // Função para excluir uma meta
+    async function excluirMeta(id) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch(`/api/metas/${id}`, {
+            //     method: 'DELETE'
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Meta excluída:', id);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
+            modal.hide();
+            
+            // Recarrega as metas
+            carregarMetas();
+            
+            // Feedback para o usuário
+            alert('Meta excluída com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao excluir meta:', error);
+            alert('Erro ao excluir meta. Por favor, tente novamente.');
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
+            modal.hide();
+        }
+    }
+    
+    // Função para adicionar uma contribuição
+    async function adicionarContribuicao(contribuicao) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch('/api/metas/contribuicao', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(contribuicao)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Contribuição adicionada:', contribuicao);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalContribuicao'));
+            modal.hide();
+            
+            // Limpa o formulário
+            document.getElementById('form-contribuicao').reset();
+            
+            // Recarrega as metas
+            carregarMetas();
+            
+            // Feedback para o usuário
+            alert('Contribuição adicionada com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao adicionar contribuição:', error);
+            alert('Erro ao adicionar contribuição. Por favor, tente novamente.');
+        }
+    }
+</script>
+{% endblock %}

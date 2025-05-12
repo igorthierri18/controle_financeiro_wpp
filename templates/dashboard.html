@@ -393,6 +393,12 @@
     color: white;
 }
 
+.profile-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f0f0f0;
+}
+
 .trend-indicator {
     display: inline-flex;
     align-items: center;
@@ -435,9 +441,16 @@
         <div class="profile-option active" id="profile-personal">
             <i class="bi bi-person me-1"></i> Perfil Pessoal
         </div>
+        {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
         <div class="profile-option" id="profile-business">
             <i class="bi bi-building me-1"></i> Perfil Empresarial
         </div>
+        {% else %}
+        <div class="profile-option disabled">
+            <i class="bi bi-building me-1"></i> Perfil Empresarial
+            <span class="badge bg-warning ms-1" style="font-size: 8px;">Premium</span>
+        </div>
+        {% endif %}
     </div>
     
     <!-- Seletores de período -->
@@ -819,7 +832,10 @@
             <div class="widget-container">
                 <h5 class="d-flex justify-content-between align-items-center">
                     <span>Metas Financeiras</span>
-                    <a href="#" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalFinancialGoal">Adicionar</a>
+                    <div>
+                        <a href="/metas" class="btn btn-sm btn-outline-success">Ver Metas</a>
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFinancialGoal">Adicionar</button>
+                    </div>
                 </h5>
                 
                 <div class="widget-item">
@@ -899,6 +915,429 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
+                    <h5 class="modal-title" id="modalAddTransacaoLabel">Adicionar Transação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="transactionTypeTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-despesa" data-bs-toggle="tab" data-bs-target="#despesa-tab-pane" type="button" role="tab">Despesa</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-receita" data-bs-toggle="tab" data-bs-target="#receita-tab-pane" type="button" role="tab">Receita</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-transferencia" data-bs-toggle="tab" data-bs-target="#transferencia-tab-pane" type="button" role="tab">Transferência</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3" id="transactionTypeTabsContent">
+                        <div class="tab-pane fade show active" id="despesa-tab-pane" role="tabpanel" tabindex="0">
+                            <!-- Formulário de despesa -->
+                            <form id="form-despesa">
+                                <div class="mb-3">
+                                    <label for="despesa-valor" class="form-label">Valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" id="despesa-valor" name="valor" step="0.01" min="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-descricao" class="form-label">Descrição</label>
+                                    <input type="text" class="form-control" id="despesa-descricao" name="descricao" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-categoria" class="form-label">Categoria</label>
+                                    <select class="form-select" id="despesa-categoria" name="categoria" required>
+                                        <option value="alimentação">🍽️ Alimentação</option>
+                                        <option value="transporte">🚗 Transporte</option>
+                                        <option value="moradia">🏠 Moradia</option>
+                                        <option value="saúde">⚕️ Saúde</option>
+                                        <option value="educação">📚 Educação</option>
+                                        <option value="lazer">🎭 Lazer</option>
+                                        <option value="vestuário">👕 Vestuário</option>
+                                        <option value="outros">📦 Outros</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-data" class="form-label">Data</label>
+                                    <input type="date" class="form-control" id="despesa-data" name="data" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-forma-pagamento" class="form-label">Forma de Pagamento</label>
+                                    <select class="form-select" id="despesa-forma-pagamento" name="forma_pagamento">
+                                        <option value="">Selecione...</option>
+                                        <option value="Dinheiro">Dinheiro</option>
+                                        <option value="Débito">Cartão de Débito</option>
+                                        <option value="Crédito">Cartão de Crédito</option>
+                                        <option value="PIX">PIX</option>
+                                        <option value="Transferência">Transferência Bancária</option>
+                                        <option value="Boleto">Boleto</option>
+                                    </select>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="despesa-parcelada" name="parcelado">
+                                    <label class="form-check-label" for="despesa-parcelada">
+                                        Despesa parcelada
+                                    </label>
+                                </div>
+                                <div class="mb-3" id="div-parcelas" style="display: none;">
+                                    <label for="despesa-parcelas" class="form-label">Número de Parcelas</label>
+                                    <input type="number" class="form-control" id="despesa-parcelas" name="num_parcelas" min="2" value="2">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="despesa-tipo-perfil" class="form-label">Perfil</label>
+                                    <select class="form-select" id="despesa-tipo-perfil" name="tipo_perfil">
+                                        <option value="pessoal" selected>Pessoal</option>
+                                        {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
+                                        <option value="empresarial">Empresarial</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Salvar Despesa</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="receita-tab-pane" role="tabpanel" tabindex="0">
+                            <!-- Formulário de receita -->
+                            <form id="form-receita">
+                                <div class="mb-3">
+                                    <label for="receita-valor" class="form-label">Valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" id="receita-valor" name="valor" step="0.01" min="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="receita-descricao" class="form-label">Descrição</label>
+                                    <input type="text" class="form-control" id="receita-descricao" name="descricao" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="receita-categoria" class="form-label">Categoria</label>
+                                    <select class="form-select" id="receita-categoria" name="categoria" required>
+                                        <option value="salario">💰 Salário</option>
+                                        <option value="freelance">💼 Freelance</option>
+                                        <option value="investimento">📈 Investimento</option>
+                                        <option value="presente">🎁 Presente</option>
+                                        <option value="outros">📦 Outros</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="receita-data" class="form-label">Data</label>
+                                    <input type="date" class="form-control" id="receita-data" name="data" required>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="receita-recorrente" name="recorrente">
+                                    <label class="form-check-label" for="receita-recorrente">
+                                        Receita recorrente
+                                    </label>
+                                </div>
+                                <div class="mb-3" id="div-periodicidade" style="display: none;">
+                                    <label for="receita-periodicidade" class="form-label">Periodicidade</label>
+                                    <select class="form-select" id="receita-periodicidade" name="periodicidade">
+                                        <option value="mensal">Mensal</option>
+                                        <option value="quinzenal">Quinzenal</option>
+                                        <option value="semanal">Semanal</option>
+                                        <option value="anual">Anual</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="receita-tipo-perfil" class="form-label">Perfil</label>
+                                    <select class="form-select" id="receita-tipo-perfil" name="tipo_perfil">
+                                        <option value="pessoal" selected>Pessoal</option>
+                                        {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
+                                        <option value="empresarial">Empresarial</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Salvar Receita</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="transferencia-tab-pane" role="tabpanel" tabindex="0">
+                            <!-- Formulário de transferência (nova funcionalidade) -->
+                            <form id="form-transferencia">
+                                <div class="mb-3">
+                                    <label for="transferencia-valor" class="form-label">Valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" id="transferencia-valor" name="valor" step="0.01" min="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="transferencia-descricao" class="form-label">Descrição</label>
+                                    <input type="text" class="form-control" id="transferencia-descricao" name="descricao" placeholder="Ex: Transferência para poupança" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="transferencia-origem" class="form-label">Conta de Origem</label>
+                                    <select class="form-select" id="transferencia-origem" name="conta_origem" required>
+                                        <option value="conta-corrente">Conta Corrente</option>
+                                        <option value="poupanca">Poupança</option>
+                                        <option value="investimentos">Investimentos</option>
+                                        <option value="dinheiro">Dinheiro</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="transferencia-destino" class="form-label">Conta de Destino</label>
+                                    <select class="form-select" id="transferencia-destino" name="conta_destino" required>
+                                        <option value="poupanca">Poupança</option>
+                                        <option value="conta-corrente">Conta Corrente</option>
+                                        <option value="investimentos">Investimentos</option>
+                                        <option value="dinheiro">Dinheiro</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="transferencia-data" class="form-label">Data</label>
+                                    <input type="date" class="form-control" id="transferencia-data" name="data" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="transferencia-tipo-perfil" class="form-label">Perfil</label>
+                                    <select class="form-select" id="transferencia-tipo-perfil" name="tipo_perfil">
+                                        <option value="pessoal" selected>Pessoal</option>
+                                        {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
+                                        <option value="empresarial">Empresarial</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Salvar Transferência</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para escanear nota/comprovante -->
+    <div class="modal fade" id="modalScanReceipt" tabindex="-1" aria-labelledby="modalScanReceiptLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalScanReceiptLabel">Escanear Comprovante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <p>Escolha uma opção para adicionar o comprovante:</p>
+                        <div class="d-flex justify-content-center gap-3 mb-4">
+                            <button class="btn btn-outline-success" id="btn-capture-photo">
+                                <i class="bi bi-camera me-2"></i>Tirar Foto
+                            </button>
+                            <button class="btn btn-outline-primary" id="btn-upload-receipt">
+                                <i class="bi bi-upload me-2"></i>Upload
+                            </button>
+                        </div>
+                        
+                        <div id="camera-container" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>Centralize o comprovante no quadro para captura.
+                            </div>
+                            <div style="width: 100%; height: 300px; background-color: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                                <i class="bi bi-camera" style="font-size: 48px; color: #adb5bd;"></i>
+                            </div>
+                            <button class="btn btn-success" id="btn-take-photo">Capturar</button>
+                        </div>
+                        
+                        <input type="file" id="receipt-upload" accept="image/*" class="d-none">
+                        
+                        <div id="receipt-preview" style="display: none;">
+                            <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle me-2"></i>Comprovante capturado com sucesso!
+                            </div>
+                            <div id="preview-image-container" class="mb-3" style="max-height: 250px; overflow: hidden;">
+                                <img id="preview-image" src="#" alt="Preview" style="max-width: 100%; height: auto;">
+                            </div>
+                            <div class="mb-3">
+                                <h6>Dados Detectados:</h6>
+                                <div class="mb-2">
+                                    <label class="form-label">Valor</label>
+                                    <input type="text" class="form-control" id="ocr-valor" value="R$ 85,50">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Data</label>
+                                    <input type="text" class="form-control" id="ocr-data" value="12/05/2025">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Estabelecimento</label>
+                                    <input type="text" class="form-control" id="ocr-estabelecimento" value="Supermercado Exemplo">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Categoria Sugerida</label>
+                                    <select class="form-select" id="ocr-categoria">
+                                        <option value="alimentação" selected>🍽️ Alimentação</option>
+                                        <option value="transporte">🚗 Transporte</option>
+                                        <option value="moradia">🏠 Moradia</option>
+                                        <option value="outros">📦 Outros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" id="scan-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btn-save-receipt" style="display: none;">Salvar Despesa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para seleção de datas personalizada -->
+    <div class="modal fade" id="modalDatePicker" tabindex="-1" aria-labelledby="modalDatePickerLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDatePickerLabel">Selecionar Período</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="date-inicio" class="form-label">Data de Início</label>
+                        <input type="date" class="form-control" id="date-inicio" name="data_inicio">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date-fim" class="form-label">Data de Fim</label>
+                        <input type="date" class="form-control" id="date-fim" name="data_fim">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btn-aplicar-datas">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para gerenciar orçamentos -->
+    <div class="modal fade" id="modalBudget" tabindex="-1" aria-labelledby="modalBudgetLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalBudgetLabel">Gerenciar Orçamentos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" id="budgetTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-listar-orcamentos" data-bs-toggle="tab" data-bs-target="#listar-orcamentos-pane" type="button" role="tab">Meus Orçamentos</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-novo-orcamento" data-bs-toggle="tab" data-bs-target="#novo-orcamento-pane" type="button" role="tab">Novo Orçamento</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="budgetTabsContent">
+                        <div class="tab-pane fade show active" id="listar-orcamentos-pane" role="tabpanel" tabindex="0">
+                            <div class="list-group">
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Alimentação</h6>
+                                        <p class="mb-1 small text-muted">R$ 1.000,00 / Mensal</p>
+                                        <div class="progress" style="height: 5px; width: 150px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 65%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-1">Editar</button>
+                                        <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                    </div>
+                                </div>
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Transporte</h6>
+                                        <p class="mb-1 small text-muted">R$ 500,00 / Mensal</p>
+                                        <div class="progress" style="height: 5px; width: 150px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 45%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-1">Editar</button>
+                                        <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                    </div>
+                                </div>
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Moradia</h6>
+                                        <p class="mb-1 small text-muted">R$ 1.500,00 / Mensal</p>
+                                        <div class="progress" style="height: 5px; width: 150px;">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 80%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-1">Editar</button>
+                                        <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="novo-orcamento-pane" role="tabpanel" tabindex="0">
+                            <form id="form-orcamento">
+                                <div class="mb-3">
+                                    <label for="orcamento-categoria" class="form-label">Categoria</label>
+                                    <select class="form-select" id="orcamento-categoria" name="categoria" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="alimentação">🍽️ Alimentação</option>
+                                        <option value="transporte">🚗 Transporte</option>
+                                        <option value="moradia">🏠 Moradia</option>
+                                        <option value="saúde">⚕️ Saúde</option>
+                                        <option value="educação">📚 Educação</option>
+                                        <option value="lazer">🎭 Lazer</option>
+                                        <option value="vestuário">👕 Vestuário</option>
+                                        <option value="outros">📦 Outros</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="orcamento-valor" class="form-label">Valor Limite</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" id="orcamento-valor" name="valor" step="0.01" min="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="orcamento-periodicidade" class="form-label">Periodicidade</label>
+                                    <select class="form-select" id="orcamento-periodicidade" name="periodicidade" required>
+                                        <option value="mensal" selected>Mensal</option>
+                                        <option value="semanal">Semanal</option>
+                                        <option value="anual">Anual</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="orcamento-alerta" class="form-label">Alerta quando atingir</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="orcamento-alerta" name="alerta" min="1" max="100" value="80">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <div class="form-text">Você receberá uma notificação quando atingir esta porcentagem do limite.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="orcamento-tipo-perfil" class="form-label">Perfil</label>
+                                    <select class="form-select" id="orcamento-tipo-perfil" name="tipo_perfil">
+                                        <option value="pessoal" selected>Pessoal</option>
+                                        {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
+                                        <option value="empresarial">Empresarial</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Salvar Orçamento</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para adicionar meta financeira -->
+    <div class="modal fade" id="modalFinancialGoal" tabindex="-1" aria-labelledby="modalFinancialGoalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
                     <h5 class="modal-title" id="modalFinancialGoalLabel">Adicionar Meta Financeira</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
@@ -960,7 +1399,9 @@
                             <label for="meta-tipo-perfil" class="form-label">Perfil</label>
                             <select class="form-select" id="meta-tipo-perfil" name="tipo_perfil">
                                 <option value="pessoal" selected>Pessoal</option>
+                                {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
                                 <option value="empresarial">Empresarial</option>
+                                {% endif %}
                             </select>
                         </div>
                         <div class="d-grid">
@@ -1313,12 +1754,19 @@
             carregarDados(periodoAtual);
         });
         
-        profileBusiness.addEventListener('click', function() {
-            profileBusiness.classList.add('active');
-            profilePersonal.classList.remove('active');
-            perfilAtual = 'empresarial';
-            carregarDados(periodoAtual);
-        });
+        if (profileBusiness) {
+            profileBusiness.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) {
+                    alert('O perfil empresarial está disponível apenas para os planos Família e Empresarial.');
+                    return;
+                }
+                
+                profileBusiness.classList.add('active');
+                profilePersonal.classList.remove('active');
+                perfilAtual = 'empresarial';
+                carregarDados(periodoAtual);
+            });
+        }
         
         // Event listener para os botões de período
         document.querySelectorAll('.period-btn').forEach(botao => {
@@ -1696,418 +2144,3 @@
     });
 </script>
 {% endblock %}
-                    <h5 class="modal-title" id="modalAddTransacaoLabel">Adicionar Transação</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs" id="transactionTypeTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="tab-despesa" data-bs-toggle="tab" data-bs-target="#despesa-tab-pane" type="button" role="tab">Despesa</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tab-receita" data-bs-toggle="tab" data-bs-target="#receita-tab-pane" type="button" role="tab">Receita</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tab-transferencia" data-bs-toggle="tab" data-bs-target="#transferencia-tab-pane" type="button" role="tab">Transferência</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content mt-3" id="transactionTypeTabsContent">
-                        <div class="tab-pane fade show active" id="despesa-tab-pane" role="tabpanel" tabindex="0">
-                            <!-- Formulário de despesa -->
-                            <form id="form-despesa">
-                                <div class="mb-3">
-                                    <label for="despesa-valor" class="form-label">Valor</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="number" class="form-control" id="despesa-valor" name="valor" step="0.01" min="0.01" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="despesa-descricao" class="form-label">Descrição</label>
-                                    <input type="text" class="form-control" id="despesa-descricao" name="descricao" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="despesa-categoria" class="form-label">Categoria</label>
-                                    <select class="form-select" id="despesa-categoria" name="categoria" required>
-                                        <option value="alimentação">🍽️ Alimentação</option>
-                                        <option value="transporte">🚗 Transporte</option>
-                                        <option value="moradia">🏠 Moradia</option>
-                                        <option value="saúde">⚕️ Saúde</option>
-                                        <option value="educação">📚 Educação</option>
-                                        <option value="lazer">🎭 Lazer</option>
-                                        <option value="vestuário">👕 Vestuário</option>
-                                        <option value="outros">📦 Outros</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="despesa-data" class="form-label">Data</label>
-                                    <input type="date" class="form-control" id="despesa-data" name="data" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="despesa-forma-pagamento" class="form-label">Forma de Pagamento</label>
-                                    <select class="form-select" id="despesa-forma-pagamento" name="forma_pagamento">
-                                        <option value="">Selecione...</option>
-                                        <option value="Dinheiro">Dinheiro</option>
-                                        <option value="Débito">Cartão de Débito</option>
-                                        <option value="Crédito">Cartão de Crédito</option>
-                                        <option value="PIX">PIX</option>
-                                        <option value="Transferência">Transferência Bancária</option>
-                                        <option value="Boleto">Boleto</option>
-                                    </select>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="despesa-parcelada" name="parcelado">
-                                    <label class="form-check-label" for="despesa-parcelada">
-                                        Despesa parcelada
-                                    </label>
-                                </div>
-                                <div class="mb-3" id="div-parcelas" style="display: none;">
-                                    <label for="despesa-parcelas" class="form-label">Número de Parcelas</label>
-                                    <input type="number" class="form-control" id="despesa-parcelas" name="num_parcelas" min="2" value="2">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="despesa-tipo-perfil" class="form-label">Perfil</label>
-                                    <select class="form-select" id="despesa-tipo-perfil" name="tipo_perfil">
-                                        <option value="pessoal" selected>Pessoal</option>
-                                        <option value="empresarial">Empresarial</option>
-                                    </select>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-success">Salvar Despesa</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="receita-tab-pane" role="tabpanel" tabindex="0">
-                            <!-- Formulário de receita -->
-                            <form id="form-receita">
-                                <div class="mb-3">
-                                    <label for="receita-valor" class="form-label">Valor</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="number" class="form-control" id="receita-valor" name="valor" step="0.01" min="0.01" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="receita-descricao" class="form-label">Descrição</label>
-                                    <input type="text" class="form-control" id="receita-descricao" name="descricao" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="receita-categoria" class="form-label">Categoria</label>
-                                    <select class="form-select" id="receita-categoria" name="categoria" required>
-                                        <option value="salario">💰 Salário</option>
-                                        <option value="freelance">💼 Freelance</option>
-                                        <option value="investimento">📈 Investimento</option>
-                                        <option value="presente">🎁 Presente</option>
-                                        <option value="outros">📦 Outros</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="receita-data" class="form-label">Data</label>
-                                    <input type="date" class="form-control" id="receita-data" name="data" required>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="receita-recorrente" name="recorrente">
-                                    <label class="form-check-label" for="receita-recorrente">
-                                        Receita recorrente
-                                    </label>
-                                </div>
-                                <div class="mb-3" id="div-periodicidade" style="display: none;">
-                                    <label for="receita-periodicidade" class="form-label">Periodicidade</label>
-                                    <select class="form-select" id="receita-periodicidade" name="periodicidade">
-                                        <option value="mensal">Mensal</option>
-                                        <option value="quinzenal">Quinzenal</option>
-                                        <option value="semanal">Semanal</option>
-                                        <option value="anual">Anual</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="receita-tipo-perfil" class="form-label">Perfil</label>
-                                    <select class="form-select" id="receita-tipo-perfil" name="tipo_perfil">
-                                        <option value="pessoal" selected>Pessoal</option>
-                                        <option value="empresarial">Empresarial</option>
-                                    </select>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-success">Salvar Receita</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="transferencia-tab-pane" role="tabpanel" tabindex="0">
-                            <!-- Formulário de transferência (nova funcionalidade) -->
-                            <form id="form-transferencia">
-                                <div class="mb-3">
-                                    <label for="transferencia-valor" class="form-label">Valor</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="number" class="form-control" id="transferencia-valor" name="valor" step="0.01" min="0.01" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="transferencia-descricao" class="form-label">Descrição</label>
-                                    <input type="text" class="form-control" id="transferencia-descricao" name="descricao" placeholder="Ex: Transferência para poupança" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="transferencia-origem" class="form-label">Conta de Origem</label>
-                                    <select class="form-select" id="transferencia-origem" name="conta_origem" required>
-                                        <option value="conta-corrente">Conta Corrente</option>
-                                        <option value="poupanca">Poupança</option>
-                                        <option value="investimentos">Investimentos</option>
-                                        <option value="dinheiro">Dinheiro</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="transferencia-destino" class="form-label">Conta de Destino</label>
-                                    <select class="form-select" id="transferencia-destino" name="conta_destino" required>
-                                        <option value="poupanca">Poupança</option>
-                                        <option value="conta-corrente">Conta Corrente</option>
-                                        <option value="investimentos">Investimentos</option>
-                                        <option value="dinheiro">Dinheiro</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="transferencia-data" class="form-label">Data</label>
-                                    <input type="date" class="form-control" id="transferencia-data" name="data" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="transferencia-tipo-perfil" class="form-label">Perfil</label>
-                                    <select class="form-select" id="transferencia-tipo-perfil" name="tipo_perfil">
-                                        <option value="pessoal" selected>Pessoal</option>
-                                        <option value="empresarial">Empresarial</option>
-                                    </select>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-success">Salvar Transferência</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para escanear nota/comprovante -->
-    <div class="modal fade" id="modalScanReceipt" tabindex="-1" aria-labelledby="modalScanReceiptLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalScanReceiptLabel">Escanear Comprovante</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-3">
-                        <p>Escolha uma opção para adicionar o comprovante:</p>
-                        <div class="d-flex justify-content-center gap-3 mb-4">
-                            <button class="btn btn-outline-success" id="btn-capture-photo">
-                                <i class="bi bi-camera me-2"></i>Tirar Foto
-                            </button>
-                            <button class="btn btn-outline-primary" id="btn-upload-receipt">
-                                <i class="bi bi-upload me-2"></i>Upload
-                            </button>
-                        </div>
-                        
-                        <div id="camera-container" style="display: none;">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>Centralize o comprovante no quadro para captura.
-                            </div>
-                            <div style="width: 100%; height: 300px; background-color: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                                <i class="bi bi-camera" style="font-size: 48px; color: #adb5bd;"></i>
-                            </div>
-                            <button class="btn btn-success" id="btn-take-photo">Capturar</button>
-                        </div>
-                        
-                        <input type="file" id="receipt-upload" accept="image/*" class="d-none">
-                        
-                        <div id="receipt-preview" style="display: none;">
-                            <div class="alert alert-success mb-3">
-                                <i class="bi bi-check-circle me-2"></i>Comprovante capturado com sucesso!
-                            </div>
-                            <div id="preview-image-container" class="mb-3" style="max-height: 250px; overflow: hidden;">
-                                <img id="preview-image" src="#" alt="Preview" style="max-width: 100%; height: auto;">
-                            </div>
-                            <div class="mb-3">
-                                <h6>Dados Detectados:</h6>
-                                <div class="mb-2">
-                                    <label class="form-label">Valor</label>
-                                    <input type="text" class="form-control" id="ocr-valor" value="R$ 85,50">
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Data</label>
-                                    <input type="text" class="form-control" id="ocr-data" value="12/05/2025">
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Estabelecimento</label>
-                                    <input type="text" class="form-control" id="ocr-estabelecimento" value="Supermercado Exemplo">
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Categoria Sugerida</label>
-                                    <select class="form-select" id="ocr-categoria">
-                                        <option value="alimentação" selected>🍽️ Alimentação</option>
-                                        <option value="transporte">🚗 Transporte</option>
-                                        <option value="moradia">🏠 Moradia</option>
-                                        <option value="outros">📦 Outros</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" id="scan-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" id="btn-save-receipt" style="display: none;">Salvar Despesa</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para seleção de datas personalizada -->
-    <div class="modal fade" id="modalDatePicker" tabindex="-1" aria-labelledby="modalDatePickerLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalDatePickerLabel">Selecionar Período</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="date-inicio" class="form-label">Data de Início</label>
-                        <input type="date" class="form-control" id="date-inicio" name="data_inicio">
-                    </div>
-                    <div class="mb-3">
-                        <label for="date-fim" class="form-label">Data de Fim</label>
-                        <input type="date" class="form-control" id="date-fim" name="data_fim">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" id="btn-aplicar-datas">Aplicar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para gerenciar orçamentos -->
-    <div class="modal fade" id="modalBudget" tabindex="-1" aria-labelledby="modalBudgetLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalBudgetLabel">Gerenciar Orçamentos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs mb-3" id="budgetTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="tab-listar-orcamentos" data-bs-toggle="tab" data-bs-target="#listar-orcamentos-pane" type="button" role="tab">Meus Orçamentos</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tab-novo-orcamento" data-bs-toggle="tab" data-bs-target="#novo-orcamento-pane" type="button" role="tab">Novo Orçamento</button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="budgetTabsContent">
-                        <div class="tab-pane fade show active" id="listar-orcamentos-pane" role="tabpanel" tabindex="0">
-                            <div class="list-group">
-                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-1">Alimentação</h6>
-                                        <p class="mb-1 small text-muted">R$ 1.000,00 / Mensal</p>
-                                        <div class="progress" style="height: 5px; width: 150px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: 65%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary me-1">Editar</button>
-                                        <button class="btn btn-sm btn-outline-danger">Excluir</button>
-                                    </div>
-                                </div>
-                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-1">Transporte</h6>
-                                        <p class="mb-1 small text-muted">R$ 500,00 / Mensal</p>
-                                        <div class="progress" style="height: 5px; width: 150px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: 45%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary me-1">Editar</button>
-                                        <button class="btn btn-sm btn-outline-danger">Excluir</button>
-                                    </div>
-                                </div>
-                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-1">Moradia</h6>
-                                        <p class="mb-1 small text-muted">R$ 1.500,00 / Mensal</p>
-                                        <div class="progress" style="height: 5px; width: 150px;">
-                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 80%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary me-1">Editar</button>
-                                        <button class="btn btn-sm btn-outline-danger">Excluir</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="tab-pane fade" id="novo-orcamento-pane" role="tabpanel" tabindex="0">
-                            <form id="form-orcamento">
-                                <div class="mb-3">
-                                    <label for="orcamento-categoria" class="form-label">Categoria</label>
-                                    <select class="form-select" id="orcamento-categoria" name="categoria" required>
-                                        <option value="">Selecione uma categoria</option>
-                                        <option value="alimentação">🍽️ Alimentação</option>
-                                        <option value="transporte">🚗 Transporte</option>
-                                        <option value="moradia">🏠 Moradia</option>
-                                        <option value="saúde">⚕️ Saúde</option>
-                                        <option value="educação">📚 Educação</option>
-                                        <option value="lazer">🎭 Lazer</option>
-                                        <option value="vestuário">👕 Vestuário</option>
-                                        <option value="outros">📦 Outros</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="orcamento-valor" class="form-label">Valor Limite</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="number" class="form-control" id="orcamento-valor" name="valor" step="0.01" min="0.01" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="orcamento-periodicidade" class="form-label">Periodicidade</label>
-                                    <select class="form-select" id="orcamento-periodicidade" name="periodicidade" required>
-                                        <option value="mensal" selected>Mensal</option>
-                                        <option value="semanal">Semanal</option>
-                                        <option value="anual">Anual</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="orcamento-alerta" class="form-label">Alerta quando atingir</label>
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="orcamento-alerta" name="alerta" min="1" max="100" value="80">
-                                        <span class="input-group-text">%</span>
-                                    </div>
-                                    <div class="form-text">Você receberá uma notificação quando atingir esta porcentagem do limite.</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="orcamento-tipo-perfil" class="form-label">Perfil</label>
-                                    <select class="form-select" id="orcamento-tipo-perfil" name="tipo_perfil">
-                                        <option value="pessoal" selected>Pessoal</option>
-                                        <option value="empresarial">Empresarial</option>
-                                    </select>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-success">Salvar Orçamento</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para adicionar meta financeira -->
-    <div class="modal fade" id="modalFinancialGoal" tabindex="-1" aria-labelledby="modalFinancialGoalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">

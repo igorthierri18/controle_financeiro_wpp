@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 # Ensure the database directory exists
@@ -12,6 +12,11 @@ def init_db(db_path):
     # Conecta ao banco de dados
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
+    
+    # Função auxiliar para verificar se uma coluna existe
+    def column_exists(cursor, table, column):
+        cursor.execute(f"PRAGMA table_info({table})")
+        return any(row[1] == column for row in cursor.fetchall())
     
     # Cria as tabelas se não existirem
     
@@ -28,7 +33,8 @@ def init_db(db_path):
         plano TEXT DEFAULT 'gratuito',
         data_assinatura TEXT,
         data_vencimento TEXT,
-        ativo INTEGER DEFAULT 1
+        ativo INTEGER DEFAULT 1,
+        admin INTEGER DEFAULT 0
     )
     ''')
     
@@ -121,8 +127,6 @@ def init_db(db_path):
     )
     ''')
 
-    # Adicione essas tabelas à função init_db em models.py
-
     # Tabela para rastreamento de origem (referral)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS usuario_referral (
@@ -161,6 +165,7 @@ def init_db(db_path):
         FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
     )
     ''')
+    
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS lembretes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -178,6 +183,7 @@ def init_db(db_path):
         FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
     )
     ''')
+    
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS categorias_personalizadas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,6 +198,7 @@ def init_db(db_path):
         FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
     )
     ''')
+    
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS membros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -207,22 +214,235 @@ def init_db(db_path):
         FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
     )
     ''')
-    # cursor.execute('''
-    # ALTER TABLE despesas ADD COLUMN foto_url TEXT DEFAULT NULL
-    # ''')
-    # cursor.execute('''
-    # ALTER TABLE despesas ADD COLUMN audio_url TEXT DEFAULT NULL
-    # ''')
-    # cursor.execute('''
-    # ALTER TABLE despesas ADD COLUMN ocr_data TEXT DEFAULT NULL
-    # ''')
     
+    # Adiciona colunas adicionais às tabelas existentes, verificando primeiro se já existem
+    # Adiciona coluna tipo_perfil e outras colunas se não existirem
+    if not column_exists(cursor, 'despesas', 'tipo_perfil'):
+        cursor.execute('ALTER TABLE despesas ADD COLUMN tipo_perfil TEXT DEFAULT "pessoal"')
+    
+    if not column_exists(cursor, 'despesas', 'foto_url'):
+        cursor.execute('ALTER TABLE despesas ADD COLUMN foto_url TEXT DEFAULT NULL')
+    
+    if not column_exists(cursor, 'despesas', 'audio_url'):
+        cursor.execute('ALTER TABLE despesas ADD COLUMN audio_url TEXT DEFAULT NULL')
+    
+    if not column_exists(cursor, 'despesas', 'ocr_data'):
+        cursor.execute('ALTER TABLE despesas ADD COLUMN ocr_data TEXT DEFAULT NULL')
+    
+    if not column_exists(cursor, 'receitas', 'tipo_perfil'):
+        cursor.execute('ALTER TABLE receitas ADD COLUMN tipo_perfil TEXT DEFAULT "pessoal"')
+    
+    if not column_exists(cursor, 'receitas', 'foto_url'):
+        cursor.execute('ALTER TABLE receitas ADD COLUMN foto_url TEXT DEFAULT NULL')
+    
+    if not column_exists(cursor, 'receitas', 'audio_url'):
+        cursor.execute('ALTER TABLE receitas ADD COLUMN audio_url TEXT DEFAULT NULL')
+    
+    # Tabela de pagamentos fixos
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS pagamentos_fixos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER NOT NULL,
+        descricao TEXT NOT NULL,
+        valor REAL NOT NULL,
+        dia_vencimento INTEGER NOT NULL,
+        categoria TEXT,
+        forma_pagamento TEXT,
+        tipo_perfil TEXT DEFAULT 'pessoal',
+        ativo INTEGER DEFAULT 1,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+    )
+    ''')
+    
+    # Tabela de orçamentos
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS orcamentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER NOT NULL,
+        categoria TEXT NOT NULL,
+        valor_limite REAL NOT NULL,
+        periodicidade TEXT NOT NULL,
+        porcentagem_alerta INTEGER DEFAULT 80,
+        tipo_perfil TEXT DEFAULT 'pessoal',
+        ativo INTEGER DEFAULT 1,
+        data_criacao TEXT,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+    )
+    ''')
+    
+    # Tabela de metas financeiras
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS metas_financeiras (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER NOT NULL,
+        titulo TEXT NOT NULL,
+        valor_alvo REAL NOT NULL,
+        valor_atual REAL DEFAULT 0,
+        data_alvo TEXT NOT NULL,
+        icone TEXT,
+        contribuicao_automatica REAL DEFAULT 0,
+        periodicidade_contribuicao TEXT,
+        tipo_perfil TEXT DEFAULT 'pessoal',
+        concluida INTEGER DEFAULT 0,
+        data_criacao TEXT,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+    )
+    ''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS orcamentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER NOT NULL,
+        categoria TEXT NOT NULL,
+        valor_limite REAL NOT NULL,
+        periodicidade TEXT NOT NULL,
+        porcentagem_alerta INTEGER DEFAULT 80,
+        tipo_perfil TEXT DEFAULT 'pessoal',
+        ativo INTEGER DEFAULT 1,
+        data_criacao TEXT,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS metas_financeiras (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER NOT NULL,
+        titulo TEXT NOT NULL,
+        valor_alvo REAL NOT NULL,
+        valor_atual REAL DEFAULT 0,
+        data_alvo TEXT NOT NULL,
+        icone TEXT,
+        valor_automatico REAL DEFAULT 0,
+        periodicidade_contribuicao TEXT,
+        tipo_perfil TEXT DEFAULT 'pessoal',
+        concluida INTEGER DEFAULT 0,
+        data_criacao TEXT,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS meta_contribuicoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        meta_id INTEGER NOT NULL,
+        valor REAL NOT NULL,
+        data TEXT NOT NULL,
+        observacao TEXT,
+        data_criacao TEXT,
+        FOREIGN KEY (meta_id) REFERENCES metas_financeiras (id)
+     )
+    ''')  
     conn.commit()
     conn.close()
     
     print(f"Banco de dados inicializado em: {db_path}")
 
-
+class Orcamento:
+    """Classe para manipulação de orçamentos"""
+    def __init__(self, db_path):
+        self.db_path = db_path
+    
+    def criar(self, usuario_id, categoria, valor_limite, periodicidade='mensal', 
+              porcentagem_alerta=80, tipo_perfil='pessoal'):
+        """Cria um novo orçamento"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        data_criacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        cursor.execute('''
+        INSERT INTO orcamentos 
+        (usuario_id, categoria, valor_limite, periodicidade, porcentagem_alerta, tipo_perfil, data_criacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            usuario_id, categoria, valor_limite, periodicidade, porcentagem_alerta, 
+            tipo_perfil, data_criacao
+        ))
+        
+        conn.commit()
+        orcamento_id = cursor.lastrowid
+        conn.close()
+        
+        return orcamento_id
+    
+    def buscar(self, usuario_id, tipo_perfil=None):
+        """Busca orçamentos do usuário com filtros opcionais"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        query = "SELECT * FROM orcamentos WHERE usuario_id = ? AND ativo = 1"
+        params = [usuario_id]
+        
+        if tipo_perfil:
+            query += " AND tipo_perfil = ?"
+            params.append(tipo_perfil)
+        
+        query += " ORDER BY categoria ASC"
+        
+        cursor.execute(query, params)
+        orcamentos = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        return orcamentos
+    
+    def calcular_gasto_atual(self, orcamento_id):
+        """Calcula quanto já foi gasto no orçamento no período atual"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Busca dados do orçamento
+        cursor.execute("SELECT * FROM orcamentos WHERE id = ?", (orcamento_id,))
+        orcamento = cursor.fetchone()
+        
+        if not orcamento:
+            conn.close()
+            return 0
+        
+        # Define o período com base na periodicidade
+        hoje = datetime.now()
+        
+        if orcamento[3] == 'mensal':  # periodicidade
+            data_inicio = f"{hoje.year}-{hoje.month:02d}-01"
+            # Último dia do mês
+            if hoje.month == 12:
+                proximo_mes = 1
+                proximo_ano = hoje.year + 1
+            else:
+                proximo_mes = hoje.month + 1
+                proximo_ano = hoje.year
+            
+            ultimo_dia = (datetime(proximo_ano, proximo_mes, 1) - timedelta(days=1)).day
+            data_fim = f"{hoje.year}-{hoje.month:02d}-{ultimo_dia:02d}"
+        
+        elif orcamento[3] == 'semanal':
+            # Início da semana (segunda-feira)
+            data_inicio = (hoje - timedelta(days=hoje.weekday())).strftime("%Y-%m-%d")
+            # Fim da semana (domingo)
+            data_fim = (hoje + timedelta(days=6-hoje.weekday())).strftime("%Y-%m-%d")
+        
+        elif orcamento[3] == 'anual':
+            data_inicio = f"{hoje.year}-01-01"
+            data_fim = f"{hoje.year}-12-31"
+        
+        # Calcula o gasto total na categoria durante o período
+        cursor.execute("""
+        SELECT SUM(valor) as total FROM despesas 
+        WHERE usuario_id = ? AND categoria = ? AND data >= ? AND data <= ? AND tipo_perfil = ?
+        """, (
+            orcamento[1],  # usuario_id
+            orcamento[2],  # categoria
+            data_inicio,
+            data_fim,
+            orcamento[6]   # tipo_perfil
+        ))
+        
+        resultado = cursor.fetchone()
+        gasto_atual = resultado[0] or 0
+        
+        conn.close()
+        return gasto_atual
+    
 class Usuario:
     """Classe para manipulação de usuários"""
     def __init__(self, db_path):
@@ -436,7 +656,207 @@ class Usuario:
         conn.close()
         
         return result is not None and result[0] == 1
-
+    
+class PagamentoFixo:
+    """Classe para gerenciar pagamentos fixos"""
+    def __init__(self, db_path):
+        self.db_path = db_path
+    
+    def criar_tabela(self):
+        """Cria a tabela pagamentos_fixos se não existir"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS pagamentos_fixos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            descricao TEXT NOT NULL,
+            valor REAL NOT NULL,
+            dia_vencimento INTEGER NOT NULL,
+            categoria TEXT,
+            forma_pagamento TEXT,
+            tipo_perfil TEXT DEFAULT 'pessoal',
+            ativo INTEGER DEFAULT 1,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+        )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    
+    def criar(self, usuario_id, descricao, valor, dia_vencimento, categoria=None, 
+             forma_pagamento=None, tipo_perfil='pessoal'):
+        """Cria um novo pagamento fixo"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Cria a tabela se não existir
+        self.criar_tabela()
+        
+        cursor.execute('''
+        INSERT INTO pagamentos_fixos
+        (usuario_id, descricao, valor, dia_vencimento, categoria, forma_pagamento, tipo_perfil)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            usuario_id, descricao, valor, dia_vencimento, 
+            categoria, forma_pagamento, tipo_perfil
+        ))
+        
+        conn.commit()
+        pagamento_id = cursor.lastrowid
+        conn.close()
+        
+        return pagamento_id
+    
+    def buscar(self, usuario_id, tipo_perfil=None, ativo=1):
+        """Busca pagamentos fixos"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Cria a tabela se não existir
+        self.criar_tabela()
+        
+        query = "SELECT * FROM pagamentos_fixos WHERE usuario_id = ? AND ativo = ?"
+        params = [usuario_id, ativo]
+        
+        if tipo_perfil:
+            query += " AND tipo_perfil = ?"
+            params.append(tipo_perfil)
+        
+        query += " ORDER BY dia_vencimento ASC"
+        
+        cursor.execute(query, params)
+        pagamentos = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        return pagamentos
+    
+    def buscar_vencimentos_proximos(self, usuario_id, dias=5):
+        """Busca pagamentos com vencimento próximo"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Cria a tabela se não existir
+        self.criar_tabela()
+        
+        # Obtém o dia atual
+        hoje = datetime.now().day
+        
+        # Calcula o intervalo de dias para verificar
+        # Por exemplo, se hoje é dia 28 e dias=5, verificamos 28, 29, 30, 31, 1, 2
+        dias_verificar = []
+        for i in range(dias + 1):
+            dia = (hoje + i - 1) % 31 + 1  # Ajusta para o intervalo 1-31
+            dias_verificar.append(dia)
+        
+        # Consulta pagamentos com vencimento nos próximos dias
+        placeholders = ', '.join('?' for _ in dias_verificar)
+        query = f"""
+        SELECT * FROM pagamentos_fixos 
+        WHERE usuario_id = ? 
+        AND ativo = 1 
+        AND dia_vencimento IN ({placeholders})
+        ORDER BY dia_vencimento
+        """
+        
+        params = [usuario_id] + dias_verificar
+        
+        cursor.execute(query, params)
+        pagamentos = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        return pagamentos
+    
+    def atualizar(self, pagamento_id, **kwargs):
+        """Atualiza um pagamento fixo"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        campos_permitidos = [
+            'descricao', 'valor', 'dia_vencimento', 'categoria',
+            'forma_pagamento', 'tipo_perfil', 'ativo'
+        ]
+        
+        # Filtra apenas os campos válidos
+        campos = []
+        valores = []
+        
+        for campo, valor in kwargs.items():
+            if campo in campos_permitidos and valor is not None:
+                campos.append(f"{campo} = ?")
+                valores.append(valor)
+        
+        # Adiciona o ID aos valores
+        valores.append(pagamento_id)
+        
+        if campos:
+            query = f"UPDATE pagamentos_fixos SET {', '.join(campos)} WHERE id = ?"
+            cursor.execute(query, tuple(valores))
+            conn.commit()
+        
+        conn.close()
+    
+    def excluir(self, pagamento_id):
+        """Exclui um pagamento fixo (ou desativa)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Desativa em vez de excluir
+        cursor.execute("UPDATE pagamentos_fixos SET ativo = 0 WHERE id = ?", (pagamento_id,))
+        
+        conn.commit()
+        rows_affected = cursor.rowcount
+        conn.close()
+        
+        return rows_affected > 0
+    
+    def gerar_lembretes(self, usuario_id):
+        """Gera lembretes para os pagamentos fixos com vencimento próximo"""
+        pagamentos = self.buscar_vencimentos_proximos(usuario_id)
+        
+        # Cria um lembrete para cada pagamento próximo
+        lembrete_model = Lembrete(self.db_path)
+        lembretes_ids = []
+        
+        for pagamento in pagamentos:
+            # Define a data do lembrete
+            hoje = datetime.now()
+            mes_atual = hoje.month
+            ano_atual = hoje.year
+            
+            # Se o dia de vencimento já passou este mês, cria para o próximo mês
+            if pagamento['dia_vencimento'] < hoje.day:
+                if mes_atual == 12:
+                    mes_vencimento = 1
+                    ano_vencimento = ano_atual + 1
+                else:
+                    mes_vencimento = mes_atual + 1
+                    ano_vencimento = ano_atual
+            else:
+                mes_vencimento = mes_atual
+                ano_vencimento = ano_atual
+            
+            # Cria a data de vencimento como string
+            data_vencimento = f"{ano_vencimento}-{mes_vencimento:02d}-{pagamento['dia_vencimento']:02d}"
+            
+            # Cria o lembrete
+            lembrete_id = lembrete_model.criar(
+                usuario_id=usuario_id,
+                titulo=f"Pagar: {pagamento['descricao']}",
+                data=data_vencimento,
+                notificacao=5,  # Notificar 5 dias antes
+                descricao=f"Pagamento fixo: {pagamento['descricao']}",
+                valor=pagamento['valor'],
+                tipo_perfil=pagamento['tipo_perfil']
+            )
+            
+            lembretes_ids.append(lembrete_id)
+        
+        return lembretes_ids
+    
 class Membro:
     """Classe para manipulação de membros (família ou empresa)"""
     def __init__(self, db_path):
@@ -2521,3 +2941,381 @@ class TextProcessor:
                     break
         
         return dados
+    
+class MetaFinanceira:
+    """Classe para manipulação de metas financeiras"""
+    def __init__(self, db_path):
+        self.db_path = db_path
+    
+    def criar(self, usuario_id, titulo, valor_alvo, data_alvo, valor_atual=0, 
+             icone=None, valor_automatico=0, periodicidade_contribuicao=None, tipo_perfil='pessoal'):
+        """Cria uma nova meta financeira"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        data_criacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        cursor.execute('''
+        INSERT INTO metas_financeiras 
+        (usuario_id, titulo, valor_alvo, valor_atual, data_alvo, icone, 
+        valor_automatico, periodicidade_contribuicao, tipo_perfil, data_criacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            usuario_id, titulo, valor_alvo, valor_atual, data_alvo, icone, 
+            valor_automatico, periodicidade_contribuicao, tipo_perfil, data_criacao
+        ))
+        
+        conn.commit()
+        meta_id = cursor.lastrowid
+        conn.close()
+        
+        return meta_id
+    
+    def buscar(self, usuario_id, tipo_perfil=None, concluida=None):
+        """Busca metas financeiras do usuário com filtros opcionais"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        query = "SELECT * FROM metas_financeiras WHERE usuario_id = ?"
+        params = [usuario_id]
+        
+        if tipo_perfil:
+            query += " AND tipo_perfil = ?"
+            params.append(tipo_perfil)
+        
+        if concluida is not None:
+            query += " AND concluida = ?"
+            params.append(concluida)
+        
+        query += " ORDER BY data_alvo ASC"
+        
+        cursor.execute(query, params)
+        metas = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        return metas
+    
+    def buscar_por_id(self, meta_id):
+        """Busca uma meta financeira pelo ID"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM metas_financeiras WHERE id = ?", (meta_id,))
+        meta = cursor.fetchone()
+        
+        conn.close()
+        
+        return dict(meta) if meta else None
+    
+    def atualizar(self, meta_id, **kwargs):
+        """Atualiza os dados de uma meta financeira"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        campos_permitidos = [
+            'titulo', 'valor_alvo', 'valor_atual', 'data_alvo', 'icone',
+            'valor_automatico', 'periodicidade_contribuicao', 'tipo_perfil', 'concluida'
+        ]
+        
+        # Filtra apenas os campos válidos
+        campos = []
+        valores = []
+        
+        for campo, valor in kwargs.items():
+            if campo in campos_permitidos and valor is not None:
+                campos.append(f"{campo} = ?")
+                valores.append(valor)
+        
+        # Adiciona o ID da meta aos valores
+        valores.append(meta_id)
+        
+        if campos:
+            query = f"UPDATE metas_financeiras SET {', '.join(campos)} WHERE id = ?"
+            cursor.execute(query, tuple(valores))
+            conn.commit()
+        
+        conn.close()
+    
+    def excluir(self, meta_id):
+        """Exclui uma meta financeira"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM metas_financeiras WHERE id = ?", (meta_id,))
+        
+        conn.commit()
+        rows_affected = cursor.rowcount
+        conn.close()
+        
+        return rows_affected > 0
+    
+    def adicionar_contribuicao(self, meta_id, valor, observacao=None):
+        """Adiciona uma contribuição a uma meta financeira"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        data = datetime.now().strftime("%Y-%m-%d")
+        data_criacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Adiciona a contribuição
+        cursor.execute('''
+        INSERT INTO meta_contribuicoes
+        (meta_id, valor, data, observacao, data_criacao)
+        VALUES (?, ?, ?, ?, ?)
+        ''', (meta_id, valor, data, observacao, data_criacao))
+        
+        # Atualiza o valor atual da meta
+        cursor.execute('''
+        UPDATE metas_financeiras
+        SET valor_atual = valor_atual + ?
+        WHERE id = ?
+        ''', (valor, meta_id))
+        
+        # Verifica se a meta foi concluída
+        cursor.execute('''
+        UPDATE metas_financeiras
+        SET concluida = CASE WHEN valor_atual >= valor_alvo THEN 1 ELSE 0 END
+        WHERE id = ?
+        ''', (meta_id,))
+        
+        conn.commit()
+        
+        contribuicao_id = cursor.lastrowid
+        conn.close()
+        
+        return contribuicao_id
+    
+    def listar_contribuicoes(self, meta_id):
+        """Lista todas as contribuições de uma meta"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        SELECT * FROM meta_contribuicoes
+        WHERE meta_id = ?
+        ORDER BY data DESC
+        ''', (meta_id,))
+        
+        contribuicoes = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return contribuicoes
+
+class Divida:
+    """Classe para manipulação de dívidas"""
+    def __init__(self, db_path):
+        self.db_path = db_path
+    
+    def criar_tabela(self):
+        """Cria a tabela de dívidas se não existir"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS dividas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            nome TEXT NOT NULL,
+            valor_total REAL NOT NULL,
+            valor_pago REAL DEFAULT 0,
+            data_inicio TEXT,
+            data_fim TEXT,
+            taxa_juros REAL,
+            parcelas_total INTEGER,
+            parcelas_pagas INTEGER DEFAULT 0,
+            status TEXT,
+            credor TEXT,
+            tipo_perfil TEXT DEFAULT 'pessoal',
+            data_criacao TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+        )
+        ''')
+        
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS divida_pagamentos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            divida_id INTEGER NOT NULL,
+            valor REAL NOT NULL,
+            data TEXT NOT NULL,
+            observacao TEXT,
+            data_criacao TEXT,
+            FOREIGN KEY (divida_id) REFERENCES dividas (id)
+        )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    
+    def criar(self, usuario_id, nome, valor_total, data_inicio, data_fim=None, 
+             taxa_juros=None, parcelas_total=None, credor=None, tipo_perfil='pessoal'):
+        """Cria uma nova dívida"""
+        self.criar_tabela()  # Garante que a tabela existe
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        data_criacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        cursor.execute('''
+        INSERT INTO dividas
+        (usuario_id, nome, valor_total, valor_pago, data_inicio, data_fim, taxa_juros, 
+        parcelas_total, parcelas_pagas, status, credor, tipo_perfil, data_criacao)
+        VALUES (?, ?, ?, 0, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+        ''', (
+            usuario_id, nome, valor_total, data_inicio, data_fim, taxa_juros,
+            parcelas_total, 'em_dia', credor, tipo_perfil, data_criacao
+        ))
+        
+        conn.commit()
+        divida_id = cursor.lastrowid
+        conn.close()
+        
+        return divida_id
+    
+    def buscar(self, usuario_id, tipo_perfil=None, status=None):
+        """Busca dívidas do usuário com filtros opcionais"""
+        self.criar_tabela()  # Garante que a tabela existe
+        
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        query = "SELECT * FROM dividas WHERE usuario_id = ?"
+        params = [usuario_id]
+        
+        if tipo_perfil:
+            query += " AND tipo_perfil = ?"
+            params.append(tipo_perfil)
+        
+        if status:
+            query += " AND status = ?"
+            params.append(status)
+        
+        query += " ORDER BY data_fim ASC"
+        
+        cursor.execute(query, params)
+        dividas = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        return dividas
+    
+    def buscar_por_id(self, divida_id):
+        """Busca uma dívida pelo ID"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM dividas WHERE id = ?", (divida_id,))
+        divida = cursor.fetchone()
+        
+        conn.close()
+        
+        return dict(divida) if divida else None
+    
+    def atualizar(self, divida_id, **kwargs):
+        """Atualiza os dados de uma dívida"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        campos_permitidos = [
+            'nome', 'valor_total', 'valor_pago', 'data_inicio', 'data_fim',
+            'taxa_juros', 'parcelas_total', 'parcelas_pagas', 'status', 
+            'credor', 'tipo_perfil'
+        ]
+        
+        # Filtra apenas os campos válidos
+        campos = []
+        valores = []
+        
+        for campo, valor in kwargs.items():
+            if campo in campos_permitidos and valor is not None:
+                campos.append(f"{campo} = ?")
+                valores.append(valor)
+        
+        # Adiciona o ID da dívida aos valores
+        valores.append(divida_id)
+        
+        if campos:
+            query = f"UPDATE dividas SET {', '.join(campos)} WHERE id = ?"
+            cursor.execute(query, tuple(valores))
+            conn.commit()
+        
+        conn.close()
+    
+    def excluir(self, divida_id):
+        """Exclui uma dívida"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Exclui os pagamentos associados
+        cursor.execute("DELETE FROM divida_pagamentos WHERE divida_id = ?", (divida_id,))
+        
+        # Exclui a dívida
+        cursor.execute("DELETE FROM dividas WHERE id = ?", (divida_id,))
+        
+        conn.commit()
+        rows_affected = cursor.rowcount
+        conn.close()
+        
+        return rows_affected > 0
+    
+    def registrar_pagamento(self, divida_id, valor, data=None, observacao=None):
+        """Registra um pagamento para uma dívida"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        if data is None:
+            data = datetime.now().strftime("%Y-%m-%d")
+            
+        data_criacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Registra o pagamento
+        cursor.execute('''
+        INSERT INTO divida_pagamentos
+        (divida_id, valor, data, observacao, data_criacao)
+        VALUES (?, ?, ?, ?, ?)
+        ''', (divida_id, valor, data, observacao, data_criacao))
+        
+        # Atualiza a dívida
+        cursor.execute('''
+        UPDATE dividas
+        SET valor_pago = valor_pago + ?,
+            parcelas_pagas = parcelas_pagas + 1
+        WHERE id = ?
+        ''', (valor, divida_id))
+        
+        # Verifica se a dívida foi quitada
+        cursor.execute('''
+        UPDATE dividas
+        SET status = CASE 
+            WHEN valor_pago >= valor_total THEN 'quitada'
+            ELSE 'em_dia'
+        END
+        WHERE id = ?
+        ''', (divida_id,))
+        
+        conn.commit()
+        pagamento_id = cursor.lastrowid
+        conn.close()
+        
+        return pagamento_id
+    
+    def listar_pagamentos(self, divida_id):
+        """Lista todos os pagamentos de uma dívida"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        SELECT * FROM divida_pagamentos
+        WHERE divida_id = ?
+        ORDER BY data DESC
+        ''', (divida_id,))
+        
+        pagamentos = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return pagamentos

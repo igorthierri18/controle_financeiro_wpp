@@ -1,0 +1,915 @@
+{% extends 'base.html' %}
+
+{% block title %}Orçamentos - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.orcamentos-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 40px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.orcamentos-header h1 {
+    font-weight: 600;
+}
+
+.orcamentos-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.budget-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.budget-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.budget-header {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.budget-title {
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.budget-title .icon {
+    margin-right: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: white;
+}
+
+.budget-status {
+    font-size: 14px;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.status-ok {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.budget-body {
+    padding: 20px;
+}
+
+.budget-amount {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.budget-label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-right: 10px;
+}
+
+.budget-value {
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.budget-progress {
+    height: 10px;
+    margin-bottom: 15px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 5px;
+}
+
+.budget-details {
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.budget-details span {
+    display: flex;
+    align-items: center;
+}
+
+.budget-details i {
+    margin-right: 5px;
+}
+
+.budget-footer {
+    border-top: 1px solid #eee;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.budget-footer .btn {
+    margin-left: 10px;
+}
+
+.empty-state {
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 40px 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    color: #dee2e6;
+    margin-bottom: 15px;
+}
+
+.empty-state-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-state-text {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.fab-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #28a745;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.fab-button:hover {
+    transform: scale(1.1);
+    background-color: #218838;
+}
+
+@media (max-width: 576px) {
+    .budget-amount {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .budget-value {
+        margin-top: 5px;
+    }
+}
+
+.profile-selector {
+    display: flex;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+.profile-option {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-option.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.profile-option:not(.active):hover {
+    background-color: #f8f9fa;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="orcamentos-header">
+    <div class="container">
+        <h1>Orçamentos</h1>
+        <p>Defina limites de gastos para cada categoria e monitore seu progresso.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Seletor de perfil (pessoal/empresarial) -->
+    <div class="profile-selector">
+        <div class="profile-option active" id="profile-personal">
+            <i class="bi bi-person me-1"></i> Perfil Pessoal
+        </div>
+        <div class="profile-option" id="profile-business">
+            <i class="bi bi-building me-1"></i> Perfil Empresarial
+        </div>
+    </div>
+    
+    <!-- Lista de orçamentos -->
+    <div class="row" id="lista-orcamentos">
+        <!-- Será carregado via JavaScript -->
+    </div>
+    
+    <!-- Estado vazio (mostrado quando não há orçamentos) -->
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="empty-state-icon">
+            <i class="bi bi-clipboard-data"></i>
+        </div>
+        <h3 class="empty-state-title">Nenhum orçamento definido</h3>
+        <p class="empty-state-text">
+            Crie orçamentos para controlar seus gastos por categoria e melhorar sua saúde financeira.
+        </p>
+        <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#modalAddOrcamento">
+            <i class="bi bi-plus-circle me-2"></i>Criar Primeiro Orçamento
+        </button>
+    </div>
+    
+    <!-- Estatísticas de Orçamento -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="budget-card">
+                <div class="budget-header">
+                    <h5 class="budget-title">Visão Geral dos Orçamentos</h5>
+                </div>
+                <div class="budget-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="fw-bold text-success fs-4" id="stat-orcamentos-total">0</div>
+                            <div class="text-muted">Orçamentos Ativos</div>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="fw-bold text-primary fs-4" id="stat-orcamentos-no-limite">0</div>
+                            <div class="text-muted">Dentro do Limite</div>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="fw-bold text-danger fs-4" id="stat-orcamentos-excedidos">0</div>
+                            <div class="text-muted">Excedidos</div>
+                        </div>
+                    </div>
+                    <div id="grafico-orcamentos-visao-geral" style="height: 250px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botão flutuante para adicionar orçamento -->
+    <a href="#" class="fab-button" data-bs-toggle="modal" data-bs-target="#modalAddOrcamento">
+        <i class="bi bi-plus"></i>
+    </a>
+</div>
+
+<!-- Modal para adicionar orçamento -->
+<div class="modal fade" id="modalAddOrcamento" tabindex="-1" aria-labelledby="modalAddOrcamentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAddOrcamentoLabel">Novo Orçamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-orcamento">
+                    <div class="mb-3">
+                        <label for="orcamento-categoria" class="form-label">Categoria</label>
+                        <select class="form-select" id="orcamento-categoria" name="categoria" required>
+                            <option value="">Selecione uma categoria</option>
+                            <option value="alimentação">🍽️ Alimentação</option>
+                            <option value="transporte">🚗 Transporte</option>
+                            <option value="moradia">🏠 Moradia</option>
+                            <option value="saúde">⚕️ Saúde</option>
+                            <option value="educação">📚 Educação</option>
+                            <option value="lazer">🎭 Lazer</option>
+                            <option value="vestuário">👕 Vestuário</option>
+                            <option value="outros">📦 Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="orcamento-valor" class="form-label">Valor Limite</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="orcamento-valor" name="valor_limite" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="orcamento-periodicidade" class="form-label">Periodicidade</label>
+                        <select class="form-select" id="orcamento-periodicidade" name="periodicidade" required>
+                            <option value="mensal" selected>Mensal</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="orcamento-alerta" class="form-label">Alerta quando atingir</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="orcamento-alerta" name="porcentagem_alerta" min="1" max="100" value="80">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">Você receberá uma notificação quando atingir esta porcentagem do limite.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="orcamento-tipo-perfil" class="form-label">Perfil</label>
+                        <select class="form-select" id="orcamento-tipo-perfil" name="tipo_perfil">
+                            <option value="pessoal" selected>Pessoal</option>
+                            <option value="empresarial">Empresarial</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-salvar-orcamento">Salvar Orçamento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar orçamento -->
+<div class="modal fade" id="modalEditarOrcamento" tabindex="-1" aria-labelledby="modalEditarOrcamentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarOrcamentoLabel">Editar Orçamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-orcamento">
+                    <input type="hidden" id="editar-orcamento-id" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="editar-orcamento-categoria" class="form-label">Categoria</label>
+                        <select class="form-select" id="editar-orcamento-categoria" name="categoria" required>
+                            <option value="alimentação">🍽️ Alimentação</option>
+                            <option value="transporte">🚗 Transporte</option>
+                            <option value="moradia">🏠 Moradia</option>
+                            <option value="saúde">⚕️ Saúde</option>
+                            <option value="educação">📚 Educação</option>
+                            <option value="lazer">🎭 Lazer</option>
+                            <option value="vestuário">👕 Vestuário</option>
+                            <option value="outros">📦 Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-orcamento-valor" class="form-label">Valor Limite</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="editar-orcamento-valor" name="valor_limite" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-orcamento-periodicidade" class="form-label">Periodicidade</label>
+                        <select class="form-select" id="editar-orcamento-periodicidade" name="periodicidade" required>
+                            <option value="mensal">Mensal</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-orcamento-alerta" class="form-label">Alerta quando atingir</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="editar-orcamento-alerta" name="porcentagem_alerta" min="1" max="100" value="80">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-atualizar-orcamento">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para excluir -->
+<div class="modal fade" id="modalConfirmExcluir" tabindex="-1" aria-labelledby="modalConfirmExcluirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmExcluirLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este orçamento?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Variáveis globais
+    let perfilAtual = 'pessoal';
+    let orcamentoParaExcluir = null;
+    
+    // Mapa de cores por categoria
+    const categoryCols = {
+        'alimentação': '#FFA726',
+        'transporte': '#42A5F5',
+        'moradia': '#66BB6A',
+        'saúde': '#EC407A',
+        'educação': '#AB47BC',
+        'lazer': '#26C6DA',
+        'vestuário': '#8D6E63',
+        'outros': '#78909C'
+    };
+    
+    // Mapa de ícones por categoria
+    const categoryIcons = {
+        'alimentação': '🍽️',
+        'transporte': '🚗',
+        'moradia': '🏠',
+        'saúde': '⚕️',
+        'educação': '📚',
+        'lazer': '🎭',
+        'vestuário': '👕',
+        'outros': '📦'
+    };
+    
+    // Quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seletor de perfil
+        document.getElementById('profile-personal').addEventListener('click', function() {
+            perfilAtual = 'pessoal';
+            document.getElementById('profile-personal').classList.add('active');
+            document.getElementById('profile-business').classList.remove('active');
+            carregarOrcamentos();
+        });
+        
+        document.getElementById('profile-business').addEventListener('click', function() {
+            perfilAtual = 'empresarial';
+            document.getElementById('profile-business').classList.add('active');
+            document.getElementById('profile-personal').classList.remove('active');
+            carregarOrcamentos();
+        });
+        
+        // Botão de salvar orçamento
+        document.getElementById('btn-salvar-orcamento').addEventListener('click', function() {
+            const form = document.getElementById('form-add-orcamento');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const orcamento = {};
+            
+            formData.forEach((value, key) => {
+                if (key === 'valor_limite' || key === 'porcentagem_alerta') {
+                    orcamento[key] = parseFloat(value);
+                } else {
+                    orcamento[key] = value;
+                }
+            });
+            
+            // Adiciona o perfil atual
+            orcamento.tipo_perfil = perfilAtual;
+            
+            // Envia para a API
+            criarOrcamento(orcamento);
+        });
+        
+        // Botão de atualizar orçamento
+        document.getElementById('btn-atualizar-orcamento').addEventListener('click', function() {
+            const form = document.getElementById('form-editar-orcamento');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const orcamento = {};
+            const id = document.getElementById('editar-orcamento-id').value;
+            
+            formData.forEach((value, key) => {
+                if (key === 'valor_limite' || key === 'porcentagem_alerta') {
+                    orcamento[key] = parseFloat(value);
+                } else if (key !== 'id') {
+                    orcamento[key] = value;
+                }
+            });
+            
+            // Atualiza o orçamento
+            atualizarOrcamento(id, orcamento);
+        });
+        
+        // Botão de confirmar exclusão
+        document.getElementById('btn-confirmar-exclusao').addEventListener('click', function() {
+            if (orcamentoParaExcluir) {
+                excluirOrcamento(orcamentoParaExcluir);
+            }
+        });
+        
+        // Carrega os orçamentos iniciais
+        carregarOrcamentos();
+    });
+    
+    // Função para formatar moeda
+    function formatarMoeda(valor) {
+        return 'R$ ' + valor.toFixed(2).replace('.', ',');
+    }
+    
+    // Função para carregar os orçamentos
+    async function carregarOrcamentos() {
+        try {
+            // Em uma implementação real, buscaria da API
+            // const response = await fetch(`/api/orcamentos?tipo_perfil=${perfilAtual}`);
+            // const orcamentos = await response.json();
+            
+            // Dados de exemplo para demonstração
+            const orcamentos = [
+                {
+                    id: 1,
+                    categoria: 'alimentação',
+                    valor_limite: 1000,
+                    gasto_atual: 650,
+                    periodicidade: 'mensal',
+                    porcentagem_alerta: 80,
+                    tipo_perfil: 'pessoal'
+                },
+                {
+                    id: 2,
+                    categoria: 'transporte',
+                    valor_limite: 500,
+                    gasto_atual: 225,
+                    periodicidade: 'mensal',
+                    porcentagem_alerta: 70,
+                    tipo_perfil: 'pessoal'
+                },
+                {
+                    id: 3,
+                    categoria: 'moradia',
+                    valor_limite: 1500,
+                    gasto_atual: 1200,
+                    periodicidade: 'mensal',
+                    porcentagem_alerta: 90,
+                    tipo_perfil: 'pessoal'
+                }
+            ];
+            
+            // Filtra pelo perfil atual
+            const orcamentosFiltrados = orcamentos.filter(o => o.tipo_perfil === perfilAtual);
+            
+            // Atualiza a interface
+            renderizarOrcamentos(orcamentosFiltrados);
+            atualizarEstatisticas(orcamentosFiltrados);
+            
+        } catch (error) {
+            console.error('Erro ao carregar orçamentos:', error);
+            
+            const listaOrcamentos = document.getElementById('lista-orcamentos');
+            listaOrcamentos.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Erro ao carregar orçamentos. Por favor, tente novamente mais tarde.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('empty-state').style.display = 'none';
+        }
+    }
+    
+    // Função para renderizar os orçamentos na tela
+    function renderizarOrcamentos(orcamentos) {
+        const listaOrcamentos = document.getElementById('lista-orcamentos');
+        listaOrcamentos.innerHTML = '';
+        
+        // Mostra o estado vazio se não houver orçamentos
+        if (orcamentos.length === 0) {
+            document.getElementById('empty-state').style.display = 'block';
+            return;
+        } else {
+            document.getElementById('empty-state').style.display = 'none';
+        }
+        
+        // Renderiza cada orçamento
+        orcamentos.forEach(orcamento => {
+            // Calcula a porcentagem de uso
+            const porcentagem = (orcamento.gasto_atual / orcamento.valor_limite) * 100;
+            const porcentagemFormatada = Math.min(porcentagem, 100).toFixed(0);
+            
+            // Determina o status com base na porcentagem
+            let statusClass, statusText;
+            
+            if (porcentagem >= 100) {
+                statusClass = 'status-danger';
+                statusText = 'Excedido';
+            } else if (porcentagem >= orcamento.porcentagem_alerta) {
+                statusClass = 'status-warning';
+                statusText = 'Próximo ao limite';
+            } else {
+                statusClass = 'status-ok';
+                statusText = 'Dentro do limite';
+            }
+            
+            // Determina a cor da barra de progresso
+            let progressColor;
+            if (porcentagem >= 90) {
+                progressColor = '#dc3545'; // Vermelho
+            } else if (porcentagem >= 75) {
+                progressColor = '#ffc107'; // Amarelo
+            } else {
+                progressColor = '#28a745'; // Verde
+            }
+            
+            // Categoria
+            const categoriaColor = categoryCols[orcamento.categoria] || '#78909C';
+            const categoriaIcon = categoryIcons[orcamento.categoria] || '📦';
+            
+            // Criar o HTML do card de orçamento
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+            
+            col.innerHTML = `
+                <div class="budget-card">
+                    <div class="budget-header">
+                        <h5 class="budget-title">
+                            <span class="icon" style="background-color: ${categoriaColor}">${categoriaIcon}</span>
+                            ${orcamento.categoria.charAt(0).toUpperCase() + orcamento.categoria.slice(1)}
+                        </h5>
+                        <span class="budget-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="budget-body">
+                        <div class="budget-amount">
+                            <div class="budget-label">Gasto atual</div>
+                            <div class="budget-value">${formatarMoeda(orcamento.gasto_atual)} de ${formatarMoeda(orcamento.valor_limite)}</div>
+                        </div>
+                        
+                        <div class="budget-progress">
+                            <div class="progress-bar" style="width: ${porcentagemFormatada}%; background-color: ${progressColor}"></div>
+                        </div>
+                        
+                        <div class="budget-details">
+                            <span><i class="bi bi-calendar3"></i> ${orcamento.periodicidade.charAt(0).toUpperCase() + orcamento.periodicidade.slice(1)}</span>
+                            <span>${porcentagemFormatada}% utilizado</span>
+                        </div>
+                    </div>
+                    <div class="budget-footer">
+                        <button class="btn btn-sm btn-outline-primary btn-editar-orcamento" data-id="${orcamento.id}">Editar</button>
+                        <button class="btn btn-sm btn-outline-danger btn-excluir-orcamento" data-id="${orcamento.id}">Excluir</button>
+                    </div>
+                </div>
+            `;
+            
+            listaOrcamentos.appendChild(col);
+        });
+        
+        // Adiciona os eventos aos botões
+        adicionarEventosBotoes();
+    }
+    
+    // Função para atualizar as estatísticas
+    function atualizarEstatisticas(orcamentos) {
+        const totalOrcamentos = orcamentos.length;
+        
+        // Calcula quantos orçamentos estão dentro do limite e quantos excederam
+        const orcamentosNoLimite = orcamentos.filter(o => (o.gasto_atual / o.valor_limite) * 100 < o.porcentagem_alerta).length;
+        const orcamentosExcedidos = orcamentos.filter(o => (o.gasto_atual / o.valor_limite) * 100 >= 100).length;
+        const orcamentosProximosLimite = totalOrcamentos - orcamentosNoLimite - orcamentosExcedidos;
+        
+        // Atualiza os valores na interface
+        document.getElementById('stat-orcamentos-total').textContent = totalOrcamentos;
+        document.getElementById('stat-orcamentos-no-limite').textContent = orcamentosNoLimite;
+        document.getElementById('stat-orcamentos-excedidos').textContent = orcamentosExcedidos;
+        
+        // Atualiza o gráfico (em uma versão futura)
+        // Por enquanto, mostra uma mensagem
+        document.getElementById('grafico-orcamentos-visao-geral').innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-pie-chart me-2"></i>
+                Gráfico de visão geral dos orçamentos será implementado em breve.
+            </div>
+        `;
+    }
+    
+    // Função para adicionar eventos aos botões
+    function adicionarEventosBotoes() {
+        // Botões de editar orçamento
+        document.querySelectorAll('.btn-editar-orcamento').forEach(button => {
+            button.addEventListener('click', function() {
+                const orcamentoId = this.dataset.id;
+                abrirModalEditarOrcamento(orcamentoId);
+            });
+        });
+        
+        // Botões de excluir orçamento
+        document.querySelectorAll('.btn-excluir-orcamento').forEach(button => {
+            button.addEventListener('click', function() {
+                orcamentoParaExcluir = this.dataset.id;
+                
+                // Abre o modal de confirmação
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmExcluir'));
+                modal.show();
+            });
+        });
+    }
+    
+    // Função para abrir o modal de edição de orçamento
+    async function abrirModalEditarOrcamento(orcamentoId) {
+        try {
+            // Em uma implementação real, buscaria da API
+            // const response = await fetch(`/api/orcamentos/${orcamentoId}`);
+            // const orcamento = await response.json();
+            
+            // Dados de exemplo para demonstração
+            const orcamentos = [
+                {
+                    id: 1,
+                    categoria: 'alimentação',
+                    valor_limite: 1000,
+                    gasto_atual: 650,
+                    periodicidade: 'mensal',
+                    porcentagem_alerta: 80,
+                    tipo_perfil: 'pessoal'
+                },
+                {
+                    id: 2,
+                    categoria: 'transporte',
+                    valor_limite: 500,
+                    gasto_atual: 225,
+                    periodicidade: 'mensal',
+                    porcentagem_alerta: 70,
+                    tipo_perfil: 'pessoal'
+                },
+                {
+                    id: 3,
+                    categoria: 'moradia',
+                    valor_limite: 1500,
+                    gasto_atual: 1200,
+                    periodicidade: 'mensal',
+                    porcentagem_alerta: 90,
+                    tipo_perfil: 'pessoal'
+                }
+            ];
+            
+            const orcamento = orcamentos.find(o => o.id == orcamentoId);
+            
+            if (!orcamento) {
+                throw new Error('Orçamento não encontrado');
+            }
+            
+            // Preenche o formulário
+            document.getElementById('editar-orcamento-id').value = orcamento.id;
+            document.getElementById('editar-orcamento-categoria').value = orcamento.categoria;
+            document.getElementById('editar-orcamento-valor').value = orcamento.valor_limite;
+            document.getElementById('editar-orcamento-periodicidade').value = orcamento.periodicidade;
+            document.getElementById('editar-orcamento-alerta').value = orcamento.porcentagem_alerta;
+            
+            // Abre o modal
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarOrcamento'));
+            modal.show();
+            
+        } catch (error) {
+            console.error('Erro ao abrir modal de edição:', error);
+            alert('Erro ao carregar dados do orçamento. Por favor, tente novamente.');
+        }
+    }
+    
+    // Função para criar um novo orçamento
+    async function criarOrcamento(orcamento) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch('/api/orcamentos', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(orcamento)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Orçamento criado:', orcamento);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAddOrcamento'));
+            modal.hide();
+            
+            // Limpa o formulário
+            document.getElementById('form-add-orcamento').reset();
+            
+            // Recarrega os orçamentos
+            carregarOrcamentos();
+            
+            // Feedback para o usuário
+            alert('Orçamento criado com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao criar orçamento:', error);
+            alert('Erro ao criar orçamento. Por favor, tente novamente.');
+        }
+    }
+    
+    // Função para atualizar um orçamento
+    async function atualizarOrcamento(id, orcamento) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch(`/api/orcamentos/${id}`, {
+            //     method: 'PUT',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(orcamento)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Orçamento atualizado:', id, orcamento);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarOrcamento'));
+            modal.hide();
+            
+            // Recarrega os orçamentos
+            carregarOrcamentos();
+            
+            // Feedback para o usuário
+            alert('Orçamento atualizado com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao atualizar orçamento:', error);
+            alert('Erro ao atualizar orçamento. Por favor, tente novamente.');
+        }
+    }
+    
+    // Função para excluir um orçamento
+    async function excluirOrcamento(id) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch(`/api/orcamentos/${id}`, {
+            //     method: 'DELETE'
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Orçamento excluído:', id);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
+            modal.hide();
+            
+            // Recarrega os orçamentos
+            carregarOrcamentos();
+            
+            // Feedback para o usuário
+            alert('Orçamento excluído com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao excluir orçamento:', error);
+            alert('Erro ao excluir orçamento. Por favor, tente novamente.');
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
+            modal.hide();
+        }
+    }
+</script>
+{% endblock %}

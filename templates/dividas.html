@@ -1,0 +1,1184 @@
+{% extends 'base.html' %}
+
+{% block title %}Dívidas e Financiamentos - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.dividas-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 40px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.dividas-header h1 {
+    font-weight: 600;
+}
+
+.dividas-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.debt-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.debt-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.debt-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+}
+
+.debt-title {
+    margin: 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.debt-title .icon {
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: white;
+    font-size: 16px;
+}
+
+.debt-status {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.status-em_dia {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-atrasado {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-quitado {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.debt-body {
+    padding: 20px;
+}
+
+.debt-details {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.debt-detail-col {
+    flex: 1;
+    min-width: 120px;
+    margin-bottom: 15px;
+}
+
+.debt-detail-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.debt-detail-value {
+    font-weight: 600;
+}
+
+.debt-progress {
+    margin-bottom: 15px;
+}
+
+.debt-progress-bar {
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.progress-inner {
+    height: 100%;
+    border-radius: 5px;
+    background-color: #28a745;
+}
+
+.debt-progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.debt-footer {
+    border-top: 1px solid #eee;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.debt-footer .btn {
+    margin-left: 10px;
+}
+
+.empty-state {
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 40px 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    color: #dee2e6;
+    margin-bottom: 15px;
+}
+
+.empty-state-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-state-text {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.fab-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #28a745;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.fab-button:hover {
+    transform: scale(1.1);
+    background-color: #218838;
+    color: white;
+    text-decoration: none;
+}
+
+.debt-type-nav {
+    margin-bottom: 30px;
+}
+
+.debt-type-nav .nav-link {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 500;
+    margin-right: 10px;
+}
+
+.profile-selector {
+    display: flex;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+.profile-option {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-option.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.profile-option:not(.active):hover {
+    background-color: #f8f9fa;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="dividas-header">
+    <div class="container">
+        <h1>Dívidas e Financiamentos</h1>
+        <p>Gerencie todas as suas dívidas, empréstimos e financiamentos em um só lugar.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Seletor de perfil (pessoal/empresarial) -->
+    <div class="profile-selector">
+        <div class="profile-option active" id="profile-personal">
+            <i class="bi bi-person me-1"></i> Perfil Pessoal
+        </div>
+        <div class="profile-option" id="profile-business">
+            <i class="bi bi-building me-1"></i> Perfil Empresarial
+        </div>
+    </div>
+    
+    <!-- Menu de navegação -->
+    <ul class="nav nav-pills debt-type-nav" id="debt-type-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="all-tab" data-bs-toggle="pill" href="#all" role="tab">
+                <i class="bi bi-grid me-1"></i> Todos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="loans-tab" data-bs-toggle="pill" href="#loans" role="tab">
+                <i class="bi bi-cash-coin me-1"></i> Empréstimos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="credit-tab" data-bs-toggle="pill" href="#credit" role="tab">
+                <i class="bi bi-credit-card me-1"></i> Cartões de Crédito
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="finance-tab" data-bs-toggle="pill" href="#finance" role="tab">
+                <i class="bi bi-house-door me-1"></i> Financiamentos
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Conteúdo das abas -->
+    <div class="tab-content" id="debt-type-content">
+        <!-- Aba "Todos" -->
+        <div class="tab-pane fade show active" id="all" role="tabpanel">
+            <div class="row" id="all-debts-list">
+                <!-- Será carregado via JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Aba "Empréstimos" -->
+        <div class="tab-pane fade" id="loans" role="tabpanel">
+            <div class="row" id="loans-list">
+                <!-- Será carregado via JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Aba "Cartões de Crédito" -->
+        <div class="tab-pane fade" id="credit" role="tabpanel">
+            <div class="row" id="credit-list">
+                <!-- Será carregado via JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Aba "Financiamentos" -->
+        <div class="tab-pane fade" id="finance" role="tabpanel">
+            <div class="row" id="finance-list">
+                <!-- Será carregado via JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estado vazio (mostrado quando não há dívidas) -->
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="empty-state-icon">
+            <i class="bi bi-credit-card"></i>
+        </div>
+        <h3 class="empty-state-title">Nenhuma dívida registrada</h3>
+        <p class="empty-state-text">
+            Cadastre suas dívidas, empréstimos e financiamentos para acompanhar os pagamentos e controlar melhor suas finanças.
+        </p>
+        <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#modalAddDivida">
+            <i class="bi bi-plus-circle me-2"></i>Cadastrar Primeira Dívida
+        </button>
+    </div>
+    
+    <!-- Resumo das Dívidas -->
+    <div class="row mb-4" id="dividas-resumo">
+        <div class="col-md-4">
+            <div class="debt-card">
+                <div class="debt-header">
+                    <h5 class="budget-title">Total Dívidas</h5>
+                </div>
+                <div class="debt-body text-center">
+                    <div class="fw-bold fs-3 mb-2" id="total-dividas">R$ 0,00</div>
+                    <div class="text-muted">Valor total devedor</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="debt-card">
+                <div class="debt-header">
+                    <h5 class="budget-title">Parcelas Mensais</h5>
+                </div>
+                <div class="debt-body text-center">
+                    <div class="fw-bold fs-3 mb-2" id="parcelas-mensais">R$ 0,00</div>
+                    <div class="text-muted">Valor total mensal</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="debt-card">
+                <div class="debt-header">
+                    <h5 class="budget-title">Comprometimento</h5>
+                </div>
+                <div class="debt-body text-center">
+                    <div class="fw-bold fs-3 mb-2" id="percentual-comprometimento">0%</div>
+                    <div class="text-muted">Da renda mensal</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botão flutuante para adicionar dívida -->
+    <a href="#" class="fab-button" data-bs-toggle="modal" data-bs-target="#modalAddDivida">
+        <i class="bi bi-plus"></i>
+    </a>
+</div>
+
+<!-- Modal para adicionar nova dívida -->
+<div class="modal fade" id="modalAddDivida" tabindex="-1" aria-labelledby="modalAddDividaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAddDividaLabel">Adicionar Nova Dívida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-divida">
+                    <div class="mb-3">
+                        <label for="divida-tipo" class="form-label">Tipo de Dívida</label>
+                        <select class="form-select" id="divida-tipo" name="tipo" required>
+                            <option value="">Selecione...</option>
+                            <option value="emprestimo">Empréstimo</option>
+                            <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="financiamento">Financiamento</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-nome" class="form-label">Nome/Descrição</label>
+                        <input type="text" class="form-control" id="divida-nome" name="nome" placeholder="Ex: Empréstimo Banco XYZ" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-valor-total" class="form-label">Valor Total</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="divida-valor-total" name="valor_total" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-valor-pago" class="form-label">Valor Já Pago (opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="divida-valor-pago" name="valor_pago" step="0.01" min="0" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-data-inicio" class="form-label">Data de Início</label>
+                        <input type="date" class="form-control" id="divida-data-inicio" name="data_inicio" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-data-fim" class="form-label">Data de Vencimento/Término</label>
+                        <input type="date" class="form-control" id="divida-data-fim" name="data_fim" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-juros" class="form-label">Taxa de Juros (% a.m.)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="divida-juros" name="taxa_juros" step="0.01" min="0">
+                            <span class="input-group-text">% a.m.</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-parcelas-total" class="form-label">Número Total de Parcelas</label>
+                        <input type="number" class="form-control" id="divida-parcelas-total" name="parcelas_total" min="1" value="1">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-parcelas-pagas" class="form-label">Parcelas Já Pagas</label>
+                        <input type="number" class="form-control" id="divida-parcelas-pagas" name="parcelas_pagas" min="0" value="0">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-credor" class="form-label">Credor/Instituição</label>
+                        <input type="text" class="form-control" id="divida-credor" name="credor" placeholder="Ex: Banco XYZ">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="divida-tipo-perfil" class="form-label">Perfil</label>
+                        <select class="form-select" id="divida-tipo-perfil" name="tipo_perfil">
+                            <option value="pessoal" selected>Pessoal</option>
+                            <option value="empresarial">Empresarial</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-salvar-divida">Adicionar Dívida</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar dívida -->
+<div class="modal fade" id="modalEditarDivida" tabindex="-1" aria-labelledby="modalEditarDividaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarDividaLabel">Editar Dívida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-divida">
+                    <input type="hidden" id="editar-divida-id" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="editar-divida-tipo" class="form-label">Tipo de Dívida</label>
+                        <select class="form-select" id="editar-divida-tipo" name="tipo" required>
+                            <option value="emprestimo">Empréstimo</option>
+                            <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="financiamento">Financiamento</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-divida-nome" class="form-label">Nome/Descrição</label>
+                        <input type="text" class="form-control" id="editar-divida-nome" name="nome" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-divida-valor-total" class="form-label">Valor Total</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="editar-divida-valor-total" name="valor_total" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-divida-valor-pago" class="form-label">Valor Já Pago</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="editar-divida-valor-pago" name="valor_pago" step="0.01" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-divida-parcelas-total" class="form-label">Número Total de Parcelas</label>
+                        <input type="number" class="form-control" id="editar-divida-parcelas-total" name="parcelas_total" min="1">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editar-divida-parcelas-pagas" class="form-label">Parcelas Já Pagas</label>
+                        <input type="number" class="form-control" id="editar-divida-parcelas-pagas" name="parcelas_pagas" min="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-atualizar-divida">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para registrar pagamento -->
+<div class="modal fade" id="modalRegistrarPagamento" tabindex="-1" aria-labelledby="modalRegistrarPagamentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRegistrarPagamentoLabel">Registrar Pagamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-registrar-pagamento">
+                    <input type="hidden" id="pagamento-divida-id" name="divida_id">
+                    
+                    <div class="mb-3">
+                        <label for="pagamento-valor" class="form-label">Valor do Pagamento</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="pagamento-valor" name="valor" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="pagamento-data" class="form-label">Data do Pagamento</label>
+                        <input type="date" class="form-control" id="pagamento-data" name="data" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="pagamento-tipo" class="form-label">Tipo de Pagamento</label>
+                        <select class="form-select" id="pagamento-tipo" name="tipo">
+                            <option value="parcela">Parcela Regular</option>
+                            <option value="extra">Pagamento Extra</option>
+                            <option value="amortizacao">Amortização</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="pagamento-observacao" class="form-label">Observação (opcional)</label>
+                        <textarea class="form-control" id="pagamento-observacao" name="observacao" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-confirmar-pagamento">Registrar Pagamento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para excluir -->
+<div class="modal fade" id="modalConfirmExcluir" tabindex="-1" aria-labelledby="modalConfirmExcluirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmExcluirLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir esta dívida?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Variáveis globais
+    let perfilAtual = 'pessoal';
+    let dividaParaExcluir = null;
+    
+    // Ícones para tipos de dívida
+    const debtIcons = {
+        'emprestimo': 'bi-cash-coin',
+        'cartao_credito': 'bi-credit-card',
+        'financiamento': 'bi-house-door',
+        'outros': 'bi-currency-exchange'
+    };
+    
+    // Cores para tipos de dívida
+    const debtColors = {
+        'emprestimo': '#6f42c1',       // Roxo
+        'cartao_credito': '#e83e8c',   // Rosa
+        'financiamento': '#20c997',    // Verde água
+        'outros': '#6c757d'            // Cinza
+    };
+    
+    // Nomes para exibição dos tipos de dívida
+    const debtTypeNames = {
+        'emprestimo': 'Empréstimo',
+        'cartao_credito': 'Cartão de Crédito',
+        'financiamento': 'Financiamento',
+        'outros': 'Outros'
+    };
+    
+    // Quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa os campos de data para hoje
+        document.getElementById('divida-data-inicio').valueAsDate = new Date();
+        document.getElementById('pagamento-data').valueAsDate = new Date();
+        
+        // Calcula data de fim (1 ano a partir de hoje)
+        const dataFim = new Date();
+        dataFim.setFullYear(dataFim.getFullYear() + 1);
+        document.getElementById('divida-data-fim').valueAsDate = dataFim;
+        
+        // Seletor de perfil
+        document.getElementById('profile-personal').addEventListener('click', function() {
+            perfilAtual = 'pessoal';
+            document.getElementById('profile-personal').classList.add('active');
+            document.getElementById('profile-business').classList.remove('active');
+            carregarDividas();
+        });
+        
+        document.getElementById('profile-business').addEventListener('click', function() {
+            perfilAtual = 'empresarial';
+            document.getElementById('profile-business').classList.add('active');
+            document.getElementById('profile-personal').classList.remove('active');
+            carregarDividas();
+        });
+        
+        // Botão para salvar nova dívida
+        document.getElementById('btn-salvar-divida').addEventListener('click', function() {
+            const form = document.getElementById('form-add-divida');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const divida = {};
+            
+            formData.forEach((value, key) => {
+                if (['valor_total', 'valor_pago', 'taxa_juros', 'parcelas_total', 'parcelas_pagas'].includes(key)) {
+                    divida[key] = parseFloat(value) || 0;
+                } else {
+                    divida[key] = value;
+                }
+            });
+            
+            // Adiciona o perfil atual
+            divida.tipo_perfil = perfilAtual;
+            
+            // Envia para a API
+            criarDivida(divida);
+        });
+        
+        // Botões para as abas de tipo de dívida
+        document.querySelectorAll('#debt-type-tabs .nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(event) {
+                const tipoAtivo = event.target.id.replace('-tab', '');
+                filtrarDividasPorTipo(tipoAtivo);
+            });
+        });
+        
+        // Botão de confirmação de exclusão
+        document.getElementById('btn-confirmar-exclusao').addEventListener('click', function() {
+            if (dividaParaExcluir) {
+                excluirDivida(dividaParaExcluir);
+            }
+        });
+        
+        // Botão para registrar pagamento
+        document.getElementById('btn-confirmar-pagamento').addEventListener('click', function() {
+            const form = document.getElementById('form-registrar-pagamento');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const pagamento = {};
+            
+            formData.forEach((value, key) => {
+                if (key === 'valor') {
+                    pagamento[key] = parseFloat(value);
+                } else {
+                    pagamento[key] = value;
+                }
+            });
+            
+            // Registra o pagamento
+            registrarPagamento(pagamento);
+        });
+        
+        // Carrega as dívidas iniciais
+        carregarDividas();
+    });
+    
+    // Função para formatar moeda
+    function formatarMoeda(valor) {
+        return 'R$ ' + valor.toFixed(2).replace('.', ',');
+    }
+    
+    // Função para formatar data
+    function formatarData(data) {
+        if (!data) return "";
+        
+        const dataObj = new Date(data);
+        return dataObj.toLocaleDateString('pt-BR');
+    }
+    
+    // Função para calcular diferença de meses entre duas datas
+    function calcularDiferencaMeses(dataInicio, dataFim) {
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+        
+        return (fim.getFullYear() - inicio.getFullYear()) * 12 + fim.getMonth() - inicio.getMonth();
+    }
+    
+    // Função para carregar as dívidas
+    async function carregarDividas() {
+        try {
+            // Em uma implementação real, buscaria da API
+            // const response = await fetch(`/api/dividas?tipo_perfil=${perfilAtual}`);
+            // const dividas = await response.json();
+            
+            // Dados de exemplo para demonstração
+            const dividas = [
+                {
+                    id: 1,
+                    nome: "Empréstimo Bancário",
+                    tipo: "emprestimo",
+                    valor_total: 10000.00,
+                    valor_pago: 2500.00,
+                    data_inicio: "2023-01-15",
+                    data_fim: "2024-01-15",
+                    taxa_juros: 1.99,
+                    parcelas_total: 12,
+                    parcelas_pagas: 3,
+                    status: "em_dia",
+                    credor: "Banco XYZ",
+                    tipo_perfil: "pessoal"
+                },
+                {
+                    id: 2,
+                    nome: "Cartão de Crédito",
+                    tipo: "cartao_credito",
+                    valor_total: 5000.00,
+                    valor_pago: 1000.00,
+                    data_inicio: "2023-03-10",
+                    data_fim: "2023-08-10",
+                    taxa_juros: 3.99,
+                    parcelas_total: 5,
+                    parcelas_pagas: 1,
+                    status: "em_dia",
+                    credor: "Banco ABC",
+                    tipo_perfil: "pessoal"
+                },
+                {
+                    id: 3,
+                    nome: "Financiamento de Equipamentos",
+                    tipo: "financiamento",
+                    valor_total: 25000.00,
+                    valor_pago: 5000.00,
+                    data_inicio: "2023-02-01",
+                    data_fim: "2024-02-01",
+                    taxa_juros: 1.5,
+                    parcelas_total: 12,
+                    parcelas_pagas: 2,
+                    status: "em_dia",
+                    credor: "Banco Empresarial",
+                    tipo_perfil: "empresarial"
+                }
+            ];
+            
+            // Filtra pelo perfil atual
+            const dividasFiltradas = dividas.filter(d => d.tipo_perfil === perfilAtual);
+            
+            // Atualiza a interface
+            renderizarDividas(dividasFiltradas);
+            atualizarResumo(dividasFiltradas);
+            
+            // Filtra novamente baseado na aba ativa
+            const tipoAtivo = document.querySelector('#debt-type-tabs .nav-link.active').id.replace('-tab', '');
+            if (tipoAtivo !== 'all') {
+                filtrarDividasPorTipo(tipoAtivo);
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar dívidas:', error);
+            
+            document.getElementById('all-debts-list').innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Erro ao carregar dívidas. Por favor, tente novamente mais tarde.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('empty-state').style.display = 'none';
+        }
+    }
+    
+    // Função para renderizar as dívidas na tela
+    function renderizarDividas(dividas) {
+        const listaDividas = document.getElementById('all-debts-list');
+        listaDividas.innerHTML = '';
+        
+        // Mostra o estado vazio se não houver dívidas
+        if (dividas.length === 0) {
+            document.getElementById('empty-state').style.display = 'block';
+            
+            // Limpa também as outras listas
+            document.getElementById('loans-list').innerHTML = '';
+            document.getElementById('credit-list').innerHTML = '';
+            document.getElementById('finance-list').innerHTML = '';
+            
+            return;
+        } else {
+            document.getElementById('empty-state').style.display = 'none';
+        }
+        
+        // Também limpa as outras listas para repreenchê-las
+        document.getElementById('loans-list').innerHTML = '';
+        document.getElementById('credit-list').innerHTML = '';
+        document.getElementById('finance-list').innerHTML = '';
+        
+        // Renderiza cada dívida
+        dividas.forEach(divida => {
+            // Cria um clone da dívida para cada lista
+            const divCol = criarCardDivida(divida);
+            listaDividas.appendChild(divCol);
+            
+            // Adiciona a dívida à lista específica do seu tipo
+            if (divida.tipo === 'emprestimo') {
+                document.getElementById('loans-list').appendChild(criarCardDivida(divida));
+            } else if (divida.tipo === 'cartao_credito') {
+                document.getElementById('credit-list').appendChild(criarCardDivida(divida));
+            } else if (divida.tipo === 'financiamento') {
+                document.getElementById('finance-list').appendChild(criarCardDivida(divida));
+            }
+        });
+        
+        // Adiciona eventos aos botões
+        adicionarEventosBotoes();
+    }
+    
+    // Função para criar um card de dívida
+    function criarCardDivida(divida) {
+        // Calcula a porcentagem paga
+        const porcentagemPaga = (divida.valor_pago / divida.valor_total) * 100;
+        const porcentagemParcelas = (divida.parcelas_pagas / divida.parcelas_total) * 100;
+        
+        // Determina a cor e ícone com base no tipo
+        const corDivida = debtColors[divida.tipo] || '#6c757d';
+        const iconeDivida = debtIcons[divida.tipo] || 'bi-cash';
+        
+        // Determina a classe de status
+        const statusClass = `status-${divida.status}`;
+        const statusText = divida.status === 'em_dia' ? 'Em Dia' : 
+                         (divida.status === 'atrasado' ? 'Atrasado' : 
+                         (divida.status === 'quitado' ? 'Quitado' : divida.status));
+        
+        // Cria o elemento da coluna
+        const divCol = document.createElement('div');
+        divCol.className = 'col-md-6 col-lg-4 mb-4';
+        
+        divCol.innerHTML = `
+            <div class="debt-card">
+                <div class="debt-header">
+                    <h5 class="debt-title">
+                        <span class="icon" style="background-color: ${corDivida}">
+                            <i class="bi ${iconeDivida}"></i>
+                        </span>
+                        ${divida.nome}
+                    </h5>
+                    <span class="debt-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="debt-body">
+                    <div class="debt-details">
+                        <div class="debt-detail-col">
+                            <div class="debt-detail-label">Valor Total</div>
+                            <div class="debt-detail-value">${formatarMoeda(divida.valor_total)}</div>
+                        </div>
+                        <div class="debt-detail-col">
+                            <div class="debt-detail-label">Valor Pago</div>
+                            <div class="debt-detail-value">${formatarMoeda(divida.valor_pago)}</div>
+                        </div>
+                        <div class="debt-detail-col">
+                            <div class="debt-detail-label">Valor Restante</div>
+                            <div class="debt-detail-value">${formatarMoeda(divida.valor_total - divida.valor_pago)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="debt-details">
+                        <div class="debt-detail-col">
+                            <div class="debt-detail-label">Início</div>
+                            <div class="debt-detail-value">${formatarData(divida.data_inicio)}</div>
+                        </div>
+                        <div class="debt-detail-col">
+                            <div class="debt-detail-label">Vencimento</div>
+                            <div class="debt-detail-value">${formatarData(divida.data_fim)}</div>
+                        </div>
+                        <div class="debt-detail-col">
+                            <div class="debt-detail-label">Taxa de Juros</div>
+                            <div class="debt-detail-value">${divida.taxa_juros}% a.m.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="debt-progress">
+                        <div class="debt-detail-label">Progresso de Pagamento</div>
+                        <div class="debt-progress-bar">
+                            <div class="progress-inner" style="width: ${porcentagemPaga.toFixed(0)}%"></div>
+                        </div>
+                        <div class="debt-progress-text">
+                            <span>${formatarMoeda(divida.valor_pago)}</span>
+                            <span>${porcentagemPaga.toFixed(0)}%</span>
+                            <span>${formatarMoeda(divida.valor_total)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="debt-progress">
+                        <div class="debt-detail-label">Parcelas Pagas</div>
+                        <div class="debt-progress-bar">
+                            <div class="progress-inner" style="width: ${porcentagemParcelas.toFixed(0)}%"></div>
+                        </div>
+                        <div class="debt-progress-text">
+                            <span>${divida.parcelas_pagas} de ${divida.parcelas_total}</span>
+                            <span>${porcentagemParcelas.toFixed(0)}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="debt-footer">
+                    <button class="btn btn-sm btn-outline-success btn-registrar-pagamento" data-id="${divida.id}">
+                        <i class="bi bi-cash me-1"></i> Registrar Pagamento
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary btn-editar-divida" data-id="${divida.id}">
+                        <i class="bi bi-pencil"></i> Editar
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger btn-excluir-divida" data-id="${divida.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        return divCol;
+    }
+    
+    // Função para atualizar o resumo
+    function atualizarResumo(dividas) {
+        // Calcula totais
+        const totalDividas = dividas.reduce((total, divida) => total + (divida.valor_total - divida.valor_pago), 0);
+        
+        // Calcula parcelas mensais (simplificado)
+        let parcelasMensais = 0;
+        dividas.forEach(divida => {
+            if (divida.status !== 'quitado') {
+                // Calcula parcelas baseado no valor restante e parcelas restantes
+                const valorRestante = divida.valor_total - divida.valor_pago;
+                const parcelasRestantes = divida.parcelas_total - divida.parcelas_pagas;
+                
+                if (parcelasRestantes > 0) {
+                    parcelasMensais += valorRestante / parcelasRestantes;
+                }
+            }
+        });
+        
+        // Calcula comprometimento (exemplo: baseado em R$ 5000 de renda mensal)
+        const rendaMensal = 5000; // Em uma implementação real, usaria a renda do usuário
+        const comprometimento = (parcelasMensais / rendaMensal) * 100;
+        
+        // Atualiza os valores na tela
+        document.getElementById('total-dividas').textContent = formatarMoeda(totalDividas);
+        document.getElementById('parcelas-mensais').textContent = formatarMoeda(parcelasMensais);
+        document.getElementById('percentual-comprometimento').textContent = `${comprometimento.toFixed(1)}%`;
+    }
+    
+    // Função para filtrar dívidas por tipo
+    function filtrarDividasPorTipo(tipo) {
+        // Se for "all", todas as dívidas já estão mostradas
+        if (tipo === 'all') return;
+        
+        // Define o mapeamento entre o ID da aba e o tipo de dívida
+        const tiposDivida = {
+            'loans': 'emprestimo',
+            'credit': 'cartao_credito',
+            'finance': 'financiamento'
+        };
+        
+        // Verifica se a lista específica já tem itens
+        const listaDividas = document.getElementById(`${tipo}-list`);
+        
+        if (listaDividas.children.length === 0) {
+            listaDividas.innerHTML = `
+                <div class="col-12">
+                    <div class="empty-state" style="padding: 30px;">
+                        <div class="empty-state-icon" style="font-size: 36px;">
+                            <i class="bi bi-credit-card"></i>
+                        </div>
+                        <h3 class="empty-state-title" style="font-size: 18px;">Nenhuma dívida deste tipo</h3>
+                        <p class="empty-state-text">Você ainda não tem ${tiposDivida[tipo] === 'emprestimo' ? 'empréstimos' : 
+                                                  (tiposDivida[tipo] === 'cartao_credito' ? 'dívidas de cartão de crédito' : 
+                                                  'financiamentos')} cadastrados.</p>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAddDivida">
+                            <i class="bi bi-plus-circle me-1"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Função para adicionar eventos aos botões
+    function adicionarEventosBotoes() {
+        // Botões de editar dívida
+        document.querySelectorAll('.btn-editar-divida').forEach(button => {
+            button.addEventListener('click', function() {
+                const dividaId = this.dataset.id;
+                abrirModalEditarDivida(dividaId);
+            });
+        });
+        
+        // Botões de excluir dívida
+        document.querySelectorAll('.btn-excluir-divida').forEach(button => {
+            button.addEventListener('click', function() {
+                dividaParaExcluir = this.dataset.id;
+                
+                // Abre o modal de confirmação
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmExcluir'));
+                modal.show();
+            });
+        });
+        
+        // Botões de registrar pagamento
+        document.querySelectorAll('.btn-registrar-pagamento').forEach(button => {
+            button.addEventListener('click', function() {
+                const dividaId = this.dataset.id;
+                abrirModalRegistrarPagamento(dividaId);
+            });
+        });
+    }
+    
+    // Função para abrir o modal de edição de dívida
+    function abrirModalEditarDivida(dividaId) {
+        // Em uma implementação real, buscaria os dados da dívida da API
+        alert('Edição de dívida será implementada em breve.');
+    }
+    
+    // Função para abrir o modal de registro de pagamento
+    function abrirModalRegistrarPagamento(dividaId) {
+        // Preenche o ID da dívida no formulário
+        document.getElementById('pagamento-divida-id').value = dividaId;
+        
+        // Define a data atual
+        document.getElementById('pagamento-data').valueAsDate = new Date();
+        
+        // Abre o modal
+        const modal = new bootstrap.Modal(document.getElementById('modalRegistrarPagamento'));
+        modal.show();
+    }
+    
+    // Função para criar uma nova dívida
+    async function criarDivida(divida) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch('/api/dividas', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(divida)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Dívida criada:', divida);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAddDivida'));
+            modal.hide();
+            
+            // Limpa o formulário
+            document.getElementById('form-add-divida').reset();
+            
+            // Recarrega as dívidas
+            carregarDividas();
+            
+            // Feedback para o usuário
+            alert('Dívida adicionada com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao criar dívida:', error);
+            alert('Erro ao adicionar dívida. Por favor, tente novamente.');
+        }
+    }
+    
+    // Função para excluir uma dívida
+    async function excluirDivida(id) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch(`/api/dividas/${id}`, {
+            //     method: 'DELETE'
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Dívida excluída:', id);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
+            modal.hide();
+            
+            // Recarrega as dívidas
+            carregarDividas();
+            
+            // Feedback para o usuário
+            alert('Dívida excluída com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao excluir dívida:', error);
+            alert('Erro ao excluir dívida. Por favor, tente novamente.');
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
+            modal.hide();
+        }
+    }
+    
+    // Função para registrar um pagamento
+    async function registrarPagamento(pagamento) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch('/api/dividas/pagamento', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(pagamento)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Pagamento registrado:', pagamento);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalRegistrarPagamento'));
+            modal.hide();
+            
+            // Limpa o formulário
+            document.getElementById('form-registrar-pagamento').reset();
+            
+            // Recarrega as dívidas
+            carregarDividas();
+            
+            // Feedback para o usuário
+            alert('Pagamento registrado com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao registrar pagamento:', error);
+            alert('Erro ao registrar pagamento. Por favor, tente novamente.');
+        }
+    }
+</script>
+{% endblock %}

@@ -65,6 +65,51 @@ def webhook():
     
     return str(resposta)
 
+def enviar_notificacoes_vencimentos():
+    """Envia notificações de lembretes via WhatsApp"""
+    from twilio.rest import Client
+    
+    # Inicializa o cliente Twilio
+    client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
+    
+    # Busca os lembretes para notificação
+    lembrete_model = Lembrete(Config.DATABASE)
+    notificacoes = lembrete_model.criar_notificacoes()
+    
+    mensagens_enviadas = 0
+    
+    # Para cada lembrete, envia uma notificação
+    for notificacao in notificacoes:
+        # Busca o usuário
+        usuario_model = Usuario(Config.DATABASE)
+        usuario = usuario_model.buscar_por_id(notificacao['usuario_id'])
+        
+        if not usuario or not usuario.get('celular'):
+            continue
+        
+        # Formata a mensagem
+        dias_texto = "hoje" if notificacao['dias_restantes'] == 0 else f"em {notificacao['dias_restantes']} dias"
+        mensagem = (
+            f"🔔 *Lembrete de pagamento*\n\n"
+            f"Você tem um lembrete para '{notificacao['titulo']}' que vence {dias_texto}.\n"
+            f"Data: {notificacao['data']}\n"
+            f"\nEnvie \"ajuda\" para ver os comandos disponíveis."
+        )
+        
+        try:
+            # Envia a mensagem via Twilio
+            message = client.messages.create(
+                body=mensagem,
+                from_=Config.TWILIO_PHONE_NUMBER,
+                to=f"whatsapp:+{usuario['celular']}"
+            )
+            
+            mensagens_enviadas += 1
+        except Exception as e:
+            print(f"Erro ao enviar notificação: {e}")
+    
+    return mensagens_enviadas
+
 def processar_mensagem(mensagem, remetente, profile_name=None):
     """Processa a mensagem recebida e retorna uma resposta"""
     # Remove o prefixo 'whatsapp:' do número do remetente

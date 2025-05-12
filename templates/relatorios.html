@@ -1,0 +1,1345 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.relatorios-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 40px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.relatorios-header h1 {
+    font-weight: 600;
+}
+
+.relatorios-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.dashboard-card {
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card-header {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dashboard-card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.dashboard-card-body {
+    padding: 20px;
+}
+
+.data-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.data-value.positive {
+    color: #28a745;
+}
+
+.data-value.negative {
+    color: #dc3545;
+}
+
+.data-label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.charts-container {
+    min-height: 300px;
+}
+
+.tab-content {
+    padding-top: 20px;
+}
+
+.filter-bar {
+    background-color: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.filter-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-input {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.export-buttons button {
+    border-radius: 20px;
+    padding: 8px 20px;
+}
+
+.custom-select {
+    border-radius: 20px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.data-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.data-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 20px;
+    color: white;
+}
+
+.date-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.action-buttons button {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.pagination {
+    margin-top: 20px;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="relatorios-header">
+    <div class="container">
+        <h1>Relatórios Detalhados</h1>
+        <p>Analise em detalhes suas finanças e obtenha insights valiosos.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Seletor de Perfil -->
+    <div class="row mb-4">
+        <div class="col-md-6 offset-md-3">
+            <div class="btn-group w-100">
+                <button class="btn btn-lg btn-success active" id="btn-perfil-pessoal">Perfil Pessoal</button>
+                <button class="btn btn-lg btn-outline-success" id="btn-perfil-empresarial">Perfil Empresarial</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resumo Financeiro -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h3>Receitas</h3>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/api/exportar/receitas" download>Exportar CSV</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalAddTransacao">Adicionar Receita</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="dashboard-card-body text-center">
+                    <div class="data-value positive" id="total-receitas-pessoal">R$ {{ total_receitas_pessoal|format_currency }}</div>
+                    <div class="data-label">Total de receitas</div>
+                    
+                    <div id="grafico-receitas-pessoal" class="charts-container"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h3>Despesas</h3>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/api/exportar/despesas" download>Exportar CSV</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalAddTransacao">Adicionar Despesa</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="dashboard-card-body text-center">
+                    <div class="data-value negative" id="total-despesas-pessoal">R$ {{ total_despesas_pessoal|format_currency }}</div>
+                    <div class="data-label">Total de despesas</div>
+                    
+                    <div id="grafico-despesas-pessoal" class="charts-container"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h3>Saldo</h3>
+                    <span class="badge {% if saldo_pessoal >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if saldo_pessoal >= 0 %}Positivo{% else %}Negativo{% endif %}
+                    </span>
+                </div>
+                <div class="dashboard-card-body text-center">
+                    <div class="data-value {% if saldo_pessoal >= 0 %}positive{% else %}negative{% endif %}" id="saldo-pessoal">
+                        R$ {{ saldo_pessoal|format_currency }}
+                    </div>
+                    <div class="data-label">Saldo atual</div>
+                    
+                    <div id="grafico-evolucao-saldo" class="charts-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Abas de Relatórios -->
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="relatoriosTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="despesas-tab" data-bs-toggle="tab" href="#despesas" role="tab">Despesas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="receitas-tab" data-bs-toggle="tab" href="#receitas" role="tab">Receitas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="categorias-tab" data-bs-toggle="tab" href="#categorias" role="tab">Por Categoria</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="tempo-tab" data-bs-toggle="tab" href="#tempo" role="tab">Ao Longo do Tempo</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="previsao-tab" data-bs-toggle="tab" href="#previsao" role="tab">Previsão</a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="dashboard-card-body">
+                    <!-- Filtros -->
+                    <div class="filter-bar">
+                        <div class="filter-row">
+                            <div class="filter-input">
+                                <label for="filtro-periodo" class="form-label">Período</label>
+                                <select class="form-select custom-select" id="filtro-periodo">
+                                    <option value="mes">Este Mês</option>
+                                    <option value="semana">Últimos 7 dias</option>
+                                    <option value="3meses">Últimos 3 meses</option>
+                                    <option value="6meses">Últimos 6 meses</option>
+                                    <option value="ano">Este ano</option>
+                                    <option value="custom">Período personalizado</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-input" id="filtro-data-inicio-container" style="display: none;">
+                                <label for="filtro-data-inicio" class="form-label">Data Início</label>
+                                <input type="date" class="form-control" id="filtro-data-inicio">
+                            </div>
+                            
+                            <div class="filter-input" id="filtro-data-fim-container" style="display: none;">
+                                <label for="filtro-data-fim" class="form-label">Data Fim</label>
+                                <input type="date" class="form-control" id="filtro-data-fim">
+                            </div>
+                            
+                            <div class="filter-input">
+                                <label for="filtro-categoria" class="form-label">Categoria</label>
+                                <select class="form-select custom-select" id="filtro-categoria">
+                                    <option value="">Todas as categorias</option>
+                                    <option value="alimentação">🍽️ Alimentação</option>
+                                    <option value="transporte">🚗 Transporte</option>
+                                    <option value="moradia">🏠 Moradia</option>
+                                    <option value="saúde">⚕️ Saúde</option>
+                                    <option value="educação">📚 Educação</option>
+                                    <option value="lazer">🎭 Lazer</option>
+                                    <option value="vestuário">👕 Vestuário</option>
+                                    <option value="outros">📦 Outros</option>
+                                </select>
+                            </div>
+                            
+                            <div class="export-buttons">
+                                <button class="btn btn-success" id="btn-aplicar-filtros">
+                                    <i class="bi bi-funnel"></i> Aplicar Filtros
+                                </button>
+                                
+                                <button class="btn btn-outline-success" id="btn-exportar-csv">
+                                    <i class="bi bi-file-earmark-excel"></i> Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="relatoriosTabContent">
+                        <!-- Aba de Despesas -->
+                        <div class="tab-pane fade show active" id="despesas" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table data-table" id="tabela-despesas">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Descrição</th>
+                                            <th>Categoria</th>
+                                            <th>Valor</th>
+                                            <th>Forma Pagto</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="loading">
+                                            <td colspan="6" class="text-center">
+                                                <div class="spinner-border text-success" role="status">
+                                                    <span class="visually-hidden">Carregando...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <nav aria-label="Paginação">
+                                <ul class="pagination justify-content-center" id="paginacao-despesas">
+                                    <!-- Paginação será preenchida via JavaScript -->
+                                </ul>
+                            </nav>
+                        </div>
+                        
+                        <!-- Aba de Receitas -->
+                        <div class="tab-pane fade" id="receitas" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table data-table" id="tabela-receitas">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Descrição</th>
+                                            <th>Categoria</th>
+                                            <th>Valor</th>
+                                            <th>Recorrente</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="loading">
+                                            <td colspan="6" class="text-center">
+                                                <div class="spinner-border text-success" role="status">
+                                                    <span class="visually-hidden">Carregando...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <nav aria-label="Paginação">
+                                <ul class="pagination justify-content-center" id="paginacao-receitas">
+                                    <!-- Paginação será preenchida via JavaScript -->
+                                </ul>
+                            </nav>
+                        </div>
+                        
+                        <!-- Aba por Categoria -->
+                        <div class="tab-pane fade" id="categorias" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div id="grafico-categorias" class="charts-container" style="height: 500px;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h4 class="mb-3">Detalhes por Categoria</h4>
+                                    <div id="lista-categorias">
+                                        <!-- Lista será preenchida via JavaScript -->
+                                        <div class="text-center my-5">
+                                            <div class="spinner-border text-success" role="status">
+                                                <span class="visually-hidden">Carregando...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Aba ao Longo do Tempo -->
+                        <div class="tab-pane fade" id="tempo" role="tabpanel">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div id="grafico-tempo" class="charts-container" style="height: 500px;"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Detalhes mensais -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h4 class="mb-3">Análise Mensal</h4>
+                                    <div class="table-responsive">
+                                        <table class="table data-table" id="tabela-analise-mensal">
+                                            <thead>
+                                                <tr>
+                                                    <th>Mês</th>
+                                                    <th>Receitas</th>
+                                                    <th>Despesas</th>
+                                                    <th>Saldo</th>
+                                                    <th>Economia</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr class="loading">
+                                                    <td colspan="5" class="text-center">
+                                                        <div class="spinner-border text-success" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Aba de Previsão -->
+                        <div class="tab-pane fade" id="previsao" role="tabpanel">
+                            {% if plano == 'gratuito' %}
+                                <div class="alert alert-info">
+                                    <h5><i class="bi bi-lock"></i> Recurso Premium</h5>
+                                    <p>As previsões financeiras estão disponíveis apenas para planos Premium, Família e Empresarial.</p>
+                                    <a href="{{ url_for('web.planos') }}" class="btn btn-success mt-2">Ver Planos</a>
+                                </div>
+                            {% else %}
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div id="grafico-previsao" class="charts-container" style="height: 500px;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <div class="dashboard-card">
+                                            <div class="dashboard-card-header">
+                                                <h3>Próximos Meses (Previsão)</h3>
+                                            </div>
+                                            <div class="dashboard-card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table" id="tabela-previsao">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Mês</th>
+                                                                <th>Receitas (prev.)</th>
+                                                                <th>Despesas (prev.)</th>
+                                                                <th>Saldo</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="loading">
+                                                                <td colspan="4" class="text-center">
+                                                                    <div class="spinner-border text-success" role="status">
+                                                                        <span class="visually-hidden">Carregando...</span>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="dashboard-card">
+                                            <div class="dashboard-card-header">
+                                                <h3>Recomendações</h3>
+                                            </div>
+                                            <div class="dashboard-card-body" id="recomendacoes">
+                                                <div class="text-center my-5">
+                                                    <div class="spinner-border text-success" role="status">
+                                                        <span class="visually-hidden">Carregando...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar despesa -->
+<div class="modal fade" id="modalEditarDespesa" tabindex="-1" aria-labelledby="modalEditarDespesaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarDespesaLabel">Editar Despesa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-despesa" method="POST">
+                    <input type="hidden" id="editar-despesa-id" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="editar-despesa-valor" class="form-label">Valor</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="editar-despesa-valor" name="valor" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-despesa-descricao" class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="editar-despesa-descricao" name="descricao" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-despesa-categoria" class="form-label">Categoria</label>
+                        <select class="form-select" id="editar-despesa-categoria" name="categoria" required>
+                            <option value="alimentação">🍽️ Alimentação</option>
+                            <option value="transporte">🚗 Transporte</option>
+                            <option value="moradia">🏠 Moradia</option>
+                            <option value="saúde">⚕️ Saúde</option>
+                            <option value="educação">📚 Educação</option>
+                            <option value="lazer">🎭 Lazer</option>
+                            <option value="vestuário">👕 Vestuário</option>
+                            <option value="outros">📦 Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-despesa-data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="editar-despesa-data" name="data" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-despesa-forma-pagamento" class="form-label">Forma de Pagamento</label>
+                        <select class="form-select" id="editar-despesa-forma-pagamento" name="forma_pagamento">
+                            <option value="">Selecione...</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Débito">Cartão de Débito</option>
+                            <option value="Crédito">Cartão de Crédito</option>
+                            <option value="PIX">PIX</option>
+                            <option value="Transferência">Transferência Bancária</option>
+                            <option value="Boleto">Boleto</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="form-editar-despesa" class="btn btn-success">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar receita -->
+<div class="modal fade" id="modalEditarReceita" tabindex="-1" aria-labelledby="modalEditarReceitaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarReceitaLabel">Editar Receita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-receita" method="POST">
+                    <input type="hidden" id="editar-receita-id" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="editar-receita-valor" class="form-label">Valor</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="editar-receita-valor" name="valor" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-receita-descricao" class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="editar-receita-descricao" name="descricao" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-receita-categoria" class="form-label">Categoria</label>
+                        <select class="form-select" id="editar-receita-categoria" name="categoria" required>
+                            <option value="salario">💰 Salário</option>
+                            <option value="freelance">💼 Freelance</option>
+                            <option value="investimento">📈 Investimento</option>
+                            <option value="presente">🎁 Presente</option>
+                            <option value="outros">📦 Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-receita-data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="editar-receita-data" name="data" required>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editar-receita-recorrente" name="recorrente">
+                        <label class="form-check-label" for="editar-receita-recorrente">
+                            Receita recorrente
+                        </label>
+                    </div>
+                    <div class="mb-3" id="editar-div-periodicidade" style="display: none;">
+                        <label for="editar-receita-periodicidade" class="form-label">Periodicidade</label>
+                        <select class="form-select" id="editar-receita-periodicidade" name="periodicidade">
+                            <option value="mensal">Mensal</option>
+                            <option value="quinzenal">Quinzenal</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="form-editar-receita" class="btn btn-success">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para excluir -->
+<div class="modal fade" id="modalConfirmacaoExcluir" tabindex="-1" aria-labelledby="modalConfirmacaoExcluirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmacaoExcluirLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este item?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Variáveis globais
+    let perfilAtual = 'pessoal';
+    let periodoAtual = 'mes';
+    let dataInicio = null;
+    let dataFim = null;
+    let categoriaAtual = '';
+    let paginaAtual = 1;
+    const itensPorPagina = 20;
+    let itemParaExcluir = null;
+    
+    // Formatação de valores
+    function formatarMoeda(valor) {
+        return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+    }
+    
+    // Formatação de datas
+    function formatarData(dataStr) {
+        if (!dataStr) return '';
+        const data = new Date(dataStr);
+        return data.toLocaleDateString('pt-BR');
+    }
+    
+    // Cores para categorias
+    const coresCategorias = {
+        'alimentação': '#FFA726',
+        'transporte': '#42A5F5',
+        'moradia': '#66BB6A',
+        'saúde': '#EC407A',
+        'educação': '#AB47BC',
+        'lazer': '#26C6DA',
+        'vestuário': '#8D6E63',
+        'outros': '#78909C',
+        'salario': '#4CAF50',
+        'freelance': '#2196F3',
+        'investimento': '#F44336',
+        'presente': '#9C27B0'
+    };
+    
+    // Ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar os botões de período
+        document.getElementById('filtro-periodo').addEventListener('change', function() {
+            const periodo = this.value;
+            periodoAtual = periodo;
+            
+            // Mostra/oculta os campos de data personalizada
+            const showCustomDates = periodo === 'custom';
+            document.getElementById('filtro-data-inicio-container').style.display = showCustomDates ? 'block' : 'none';
+            document.getElementById('filtro-data-fim-container').style.display = showCustomDates ? 'block' : 'none';
+            
+            // Se não for período personalizado, aplica filtros diretamente
+            if (!showCustomDates) {
+                aplicarFiltros();
+            }
+        });
+        
+        // Inicializa seletor de categoria
+        document.getElementById('filtro-categoria').addEventListener('change', function() {
+            categoriaAtual = this.value;
+        });
+        
+        // Botão de aplicar filtros
+        document.getElementById('btn-aplicar-filtros').addEventListener('click', function() {
+            aplicarFiltros();
+        });
+        
+        // Botão de exportar CSV
+        document.getElementById('btn-exportar-csv').addEventListener('click', function() {
+            let params = `periodo=${periodoAtual}&tipo_perfil=${perfilAtual}`;
+            
+            if (categoriaAtual) {
+                params += `&categoria=${categoriaAtual}`;
+            }
+            
+            if (periodoAtual === 'custom' && dataInicio && dataFim) {
+                params += `&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+            }
+            
+            if (document.querySelector('.nav-link.active').id === 'despesas-tab') {
+                window.location.href = `/api/exportar/despesas?${params}`;
+            } else if (document.querySelector('.nav-link.active').id === 'receitas-tab') {
+                window.location.href = `/api/exportar/receitas?${params}`;
+            }
+        });
+        
+        // Botões de perfil
+        document.getElementById('btn-perfil-pessoal').addEventListener('click', function() {
+            document.getElementById('btn-perfil-pessoal').classList.add('btn-success');
+            document.getElementById('btn-perfil-pessoal').classList.remove('btn-outline-success');
+            
+            document.getElementById('btn-perfil-empresarial').classList.add('btn-outline-success');
+            document.getElementById('btn-perfil-empresarial').classList.remove('btn-success');
+            
+            perfilAtual = 'pessoal';
+            aplicarFiltros();
+        });
+        
+        document.getElementById('btn-perfil-empresarial').addEventListener('click', function() {
+            document.getElementById('btn-perfil-empresarial').classList.add('btn-success');
+            document.getElementById('btn-perfil-empresarial').classList.remove('btn-outline-success');
+            
+            document.getElementById('btn-perfil-pessoal').classList.add('btn-outline-success');
+            document.getElementById('btn-perfil-pessoal').classList.remove('btn-success');
+            
+            perfilAtual = 'empresarial';
+            aplicarFiltros();
+        });
+        
+        // Configuração de formulários de edição
+        document.getElementById('editar-receita-recorrente').addEventListener('change', function() {
+            document.getElementById('editar-div-periodicidade').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Botão de confirmação de exclusão
+        document.getElementById('btn-confirmar-exclusao').addEventListener('click', function() {
+            if (!itemParaExcluir) return;
+            
+            const [tipo, id] = itemParaExcluir.split('-');
+            excluirItem(tipo, id);
+        });
+        
+        // Aplica filtros iniciais
+        aplicarFiltros();
+        
+        // Inicializa abas
+        document.querySelectorAll('.nav-tabs .nav-link').forEach(function(tab) {
+            tab.addEventListener('shown.bs.tab', function(e) {
+                aplicarFiltros();
+            });
+        });
+    });
+    
+    // Função para aplicar filtros e carregar dados
+    function aplicarFiltros() {
+        const tabAtiva = document.querySelector('.nav-link.active').id;
+        
+        // Define período
+        if (periodoAtual === 'custom') {
+            dataInicio = document.getElementById('filtro-data-inicio').value;
+            dataFim = document.getElementById('filtro-data-fim').value;
+            
+            if (!dataInicio || !dataFim) {
+                // Se as datas não foram informadas, usa o período padrão (mês)
+                periodoAtual = 'mes';
+            }
+        } else {
+            dataInicio = null;
+            dataFim = null;
+        }
+        
+        // Carrega os dados baseados na aba ativa
+        if (tabAtiva === 'despesas-tab') {
+            carregarDespesas();
+        } else if (tabAtiva === 'receitas-tab') {
+            carregarReceitas();
+        } else if (tabAtiva === 'categorias-tab') {
+            carregarGraficoCategoria();
+        } else if (tabAtiva === 'tempo-tab') {
+            carregarGraficoTempo();
+        } else if (tabAtiva === 'previsao-tab') {
+            carregarPrevisao();
+        }
+        
+        // Atualiza totais e saldo
+        atualizarTotais();
+    }
+    
+    // Função para atualizar os totais e gráficos de resumo
+    async function atualizarTotais() {
+        try {
+            // Prepara parâmetros
+            let params = `periodo=${periodoAtual}&tipo_perfil=${perfilAtual}`;
+            
+            if (periodoAtual === 'custom' && dataInicio && dataFim) {
+                params += `&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+            }
+            
+            // Busca o resumo
+            const response = await fetch(`/api/resumo?${params}`);
+            const resumo = await response.json();
+            
+            // Atualiza os valores exibidos
+            document.getElementById('total-receitas-pessoal').textContent = formatarMoeda(resumo.total_receitas);
+            document.getElementById('total-despesas-pessoal').textContent = formatarMoeda(resumo.total_despesas);
+            document.getElementById('saldo-pessoal').textContent = formatarMoeda(resumo.saldo);
+            
+            // Define a classe do saldo
+            if (resumo.saldo >= 0) {
+                document.getElementById('saldo-pessoal').classList.add('positive');
+                document.getElementById('saldo-pessoal').classList.remove('negative');
+            } else {
+                document.getElementById('saldo-pessoal').classList.add('negative');
+                document.getElementById('saldo-pessoal').classList.remove('positive');
+            }
+            
+            // Carrega o gráfico de receitas por categoria
+            carregarGraficoReceitasPorCategoria();
+            
+            // Carrega o gráfico de despesas por categoria
+            carregarGraficoDespesasPorCategoria();
+            
+            // Carrega o gráfico de evolução de saldo
+            carregarGraficoEvolucaoSaldo();
+            
+        } catch (error) {
+            console.error('Erro ao atualizar totais:', error);
+        }
+    }
+    
+    // Funções para carregar as tabelas e gráficos
+    async function carregarDespesas() {
+        try {
+            // Prepara parâmetros
+            let params = `periodo=${periodoAtual}&tipo_perfil=${perfilAtual}`;
+            
+            if (categoriaAtual) {
+                params += `&categoria=${categoriaAtual}`;
+            }
+            
+            if (periodoAtual === 'custom' && dataInicio && dataFim) {
+                params += `&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+            }
+            
+            // Busca as despesas
+            const response = await fetch(`/api/despesas?${params}`);
+            const despesas = await response.json();
+            
+            // Renderiza a tabela
+            const tabela = document.getElementById('tabela-despesas').querySelector('tbody');
+            tabela.innerHTML = '';
+            
+            if (despesas.length === 0) {
+                tabela.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">Nenhuma despesa encontrada para o período selecionado.</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Calcula a paginação
+            const totalPaginas = Math.ceil(despesas.length / itensPorPagina);
+            const inicio = (paginaAtual - 1) * itensPorPagina;
+            const fim = Math.min(inicio + itensPorPagina, despesas.length);
+            
+            // Renderiza as despesas da página atual
+            for (let i = inicio; i < fim; i++) {
+                const despesa = despesas[i];
+                const tr = document.createElement('tr');
+                
+                // Formata a data
+                const data = formatarData(despesa.data);
+                
+                // Formata a categoria
+                const categoriaClass = despesa.categoria.replace('ç', 'c').replace('ã', 'a').replace('í', 'i').replace('ú', 'u').replace('é', 'e').replace('á', 'a').replace('ó', 'o');
+                const corCategoria = coresCategorias[despesa.categoria] || '#78909C';
+                
+                tr.innerHTML = `
+                    <td>
+                        <span class="date-badge">${data}</span>
+                    </td>
+                    <td>${despesa.descricao}</td>
+                    <td>
+                        <span class="category-badge" style="background-color: ${corCategoria}">
+                            ${despesa.categoria}
+                        </span>
+                    </td>
+                    <td>R$ ${parseFloat(despesa.valor).toFixed(2).replace('.', ',')}</td>
+                    <td>${despesa.forma_pagamento || '-'}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-outline-primary btn-editar-despesa" data-id="${despesa.id}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger btn-excluir-despesa" data-id="${despesa.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tabela.appendChild(tr);
+            }
+            
+            // Atualiza a paginação
+            atualizarPaginacao(totalPaginas, 'paginacao-despesas');
+            
+            // Adiciona eventos aos botões
+            adicionarEventosBotoes();
+            
+        } catch (error) {
+            console.error('Erro ao carregar despesas:', error);
+            const tabela = document.getElementById('tabela-despesas').querySelector('tbody');
+            tabela.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger">
+                        Erro ao carregar dados. Por favor, tente novamente mais tarde.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    // Função para carregar receitas
+    async function carregarReceitas() {
+        try {
+            // Prepara parâmetros
+            let params = `periodo=${periodoAtual}&tipo_perfil=${perfilAtual}`;
+            
+            if (categoriaAtual) {
+                params += `&categoria=${categoriaAtual}`;
+            }
+            
+            if (periodoAtual === 'custom' && dataInicio && dataFim) {
+                params += `&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+            }
+            
+            // Busca as receitas
+            const response = await fetch(`/api/receitas?${params}`);
+            const receitas = await response.json();
+            
+            // Renderiza a tabela
+            const tabela = document.getElementById('tabela-receitas').querySelector('tbody');
+            tabela.innerHTML = '';
+            
+            if (receitas.length === 0) {
+                tabela.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">Nenhuma receita encontrada para o período selecionado.</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Calcula a paginação
+            const totalPaginas = Math.ceil(receitas.length / itensPorPagina);
+            const inicio = (paginaAtual - 1) * itensPorPagina;
+            const fim = Math.min(inicio + itensPorPagina, receitas.length);
+            
+            // Renderiza as receitas da página atual
+            for (let i = inicio; i < fim; i++) {
+                const receita = receitas[i];
+                const tr = document.createElement('tr');
+                
+                // Formata a data
+                const data = formatarData(receita.data);
+                
+                // Formata a categoria
+                const categoriaClass = receita.categoria.replace('ç', 'c').replace('ã', 'a').replace('í', 'i').replace('ú', 'u').replace('é', 'e').replace('á', 'a').replace('ó', 'o');
+                const corCategoria = coresCategorias[receita.categoria] || '#4CAF50';
+                
+                tr.innerHTML = `
+                    <td>
+                        <span class="date-badge">${data}</span>
+                    </td>
+                    <td>${receita.descricao}</td>
+                    <td>
+                        <span class="category-badge" style="background-color: ${corCategoria}">
+                            ${receita.categoria}
+                        </span>
+                    </td>
+                    <td class="text-success fw-bold">R$ ${parseFloat(receita.valor).toFixed(2).replace('.', ',')}</td>
+                    <td>
+                        ${receita.recorrente ? `<span class="badge bg-info">Sim (${receita.periodicidade || 'mensal'})</span>` : 'Não'}
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-outline-primary btn-editar-receita" data-id="${receita.id}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger btn-excluir-receita" data-id="${receita.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tabela.appendChild(tr);
+            }
+            
+            // Atualiza a paginação
+            atualizarPaginacao(totalPaginas, 'paginacao-receitas');
+            
+            // Adiciona eventos aos botões
+            adicionarEventosBotoes();
+            
+        } catch (error) {
+            console.error('Erro ao carregar receitas:', error);
+            const tabela = document.getElementById('tabela-receitas').querySelector('tbody');
+            tabela.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger">
+                        Erro ao carregar dados. Por favor, tente novamente mais tarde.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    // Função para atualizar a paginação
+    function atualizarPaginacao(totalPaginas, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        
+        if (totalPaginas <= 1) return;
+        
+        // Adiciona botão "anterior"
+        const liPrev = document.createElement('li');
+        liPrev.className = `page-item ${paginaAtual === 1 ? 'disabled' : ''}`;
+        liPrev.innerHTML = `
+            <button class="page-link" ${paginaAtual === 1 ? 'disabled' : ''} data-page="${paginaAtual - 1}">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        `;
+        container.appendChild(liPrev);
+        
+        // Define quantas páginas mostrar antes e depois da atual
+        const paginasVisiveis = 2;
+        let inicio = Math.max(1, paginaAtual - paginasVisiveis);
+        let fim = Math.min(totalPaginas, paginaAtual + paginasVisiveis);
+        
+        // Garante que sempre mostramos o mesmo número de botões
+        if (paginaAtual - inicio < paginasVisiveis) {
+            fim = Math.min(totalPaginas, fim + (paginasVisiveis - (paginaAtual - inicio)));
+        }
+        if (fim - paginaAtual < paginasVisiveis) {
+            inicio = Math.max(1, inicio - (paginasVisiveis - (fim - paginaAtual)));
+        }
+        
+        // Adiciona botão para primeira página se necessário
+        if (inicio > 1) {
+            const liFirst = document.createElement('li');
+            liFirst.className = 'page-item';
+            liFirst.innerHTML = `
+                <button class="page-link" data-page="1">1</button>
+            `;
+            container.appendChild(liFirst);
+            
+            if (inicio > 2) {
+                const liEllipsis = document.createElement('li');
+                liEllipsis.className = 'page-item disabled';
+                liEllipsis.innerHTML = `<span class="page-link">...</span>`;
+                container.appendChild(liEllipsis);
+            }
+        }
+        
+        // Adiciona botões de página
+        for (let i = inicio; i <= fim; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === paginaAtual ? 'active' : ''}`;
+            li.innerHTML = `
+                <button class="page-link" data-page="${i}">${i}</button>
+            `;
+            container.appendChild(li);
+        }
+        
+        // Adiciona botão para última página se necessário
+        if (fim < totalPaginas) {
+            if (fim < totalPaginas - 1) {
+                const liEllipsis = document.createElement('li');
+                liEllipsis.className = 'page-item disabled';
+                liEllipsis.innerHTML = `<span class="page-link">...</span>`;
+                container.appendChild(liEllipsis);
+            }
+            
+            const liLast = document.createElement('li');
+            liLast.className = 'page-item';
+            liLast.innerHTML = `
+                <button class="page-link" data-page="${totalPaginas}">${totalPaginas}</button>
+            `;
+            container.appendChild(liLast);
+        }
+        
+        // Adiciona botão "próximo"
+        const liNext = document.createElement('li');
+        liNext.className = `page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}`;
+        liNext.innerHTML = `
+            <button class="page-link" ${paginaAtual === totalPaginas ? 'disabled' : ''} data-page="${paginaAtual + 1}">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        `;
+        container.appendChild(liNext);
+        
+        // Adiciona eventos aos botões de paginação
+        document.querySelectorAll(`#${containerId} .page-link`).forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.hasAttribute('disabled')) return;
+                
+                paginaAtual = parseInt(this.dataset.page);
+                aplicarFiltros();
+            });
+        });
+    }
+    
+    // Função para adicionar eventos aos botões de edição e exclusão
+    function adicionarEventosBotoes() {
+        // Botões de editar despesa
+        document.querySelectorAll('.btn-editar-despesa').forEach(button => {
+            button.addEventListener('click', async function() {
+                const id = this.dataset.id;
+                
+                try {
+                    const response = await fetch(`/api/despesas/${id}`);
+                    const despesa = await response.json();
+                    
+                    // Preenche o formulário
+                    document.getElementById('editar-despesa-id').value = despesa.id;
+                    document.getElementById('editar-despesa-valor').value = despesa.valor;
+                    document.getElementById('editar-despesa-descricao').value = despesa.descricao;
+                    document.getElementById('editar-despesa-categoria').value = despesa.categoria;
+                    document.getElementById('editar-despesa-data').value = despesa.data;
+                    document.getElementById('editar-despesa-forma-pagamento').value = despesa.forma_pagamento || '';
+                    
+                    // Configura o formulário
+                    document.getElementById('form-editar-despesa').action = `/transacoes/editar_despesa/${id}`;
+                    
+                    // Abre o modal
+                    const modal = new bootstrap.Modal(document.getElementById('modalEditarDespesa'));
+                    modal.show();
+                } catch (error) {
+                    console.error('Erro ao carregar dados da despesa:', error);
+                    alert('Erro ao carregar dados da despesa. Por favor, tente novamente.');
+                }
+            });
+        });
+        
+        // Botões de editar receita
+        document.querySelectorAll('.btn-editar-receita').forEach(button => {
+            button.addEventListener('click', async function() {
+                const id = this.dataset.id;
+                
+                try {
+                    const response = await fetch(`/api/receitas/${id}`);
+                    const receita = await response.json();
+                    
+                    // Preenche o formulário
+                    document.getElementById('editar-receita-id').value = receita.id;
+                    document.getElementById('editar-receita-valor').value = receita.valor;
+                    document.getElementById('editar-receita-descricao').value = receita.descricao;
+                    document.getElementById('editar-receita-categoria').value = receita.categoria;
+                    document.getElementById('editar-receita-data').value = receita.data;
+                    
+                    const recorrenteCheckbox = document.getElementById('editar-receita-recorrente');
+                    recorrenteCheckbox.checked = receita.recorrente === 1;
+                    
+                    document.getElementById('editar-div-periodicidade').style.display = receita.recorrente === 1 ? 'block' : 'none';
+                    
+                    if (receita.recorrente === 1 && receita.periodicidade) {
+                        document.getElementById('editar-receita-periodicidade').value = receita.periodicidade;
+                    }
+                    
+                    // Configura o formulário
+                    document.getElementById('form-editar-receita').action = `/transacoes/editar_receita/${id}`;
+                    
+                    // Abre o modal
+                    const modal = new bootstrap.Modal(document.getElementById('modalEditarReceita'));
+                    modal.show();
+                } catch (error) {
+                    console.error('Erro ao carregar dados da receita:', error);
+                    alert('Erro ao carregar dados da receita. Por favor, tente novamente.');
+                }
+            });
+        });
+        
+        // Botões de excluir despesa
+        document.querySelectorAll('.btn-excluir-despesa').forEach(button => {
+            button.addEventListener('click', function() {
+                itemParaExcluir = `despesa-${this.dataset.id}`;
+                
+                // Abre o modal de confirmação
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExcluir'));
+                modal.show();
+            });
+        });
+        
+        // Botões de excluir receita
+        document.querySelectorAll('.btn-excluir-receita').forEach(button => {
+            button.addEventListener('click', function() {
+                itemParaExcluir = `receita-${this.dataset.id}`;
+                
+                // Abre o modal de confirmação
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExcluir'));
+                modal.show();
+            });
+        });
+    }
+    
+    // Função para excluir um item
+    async function excluirItem(tipo, id) {
+        try {
+            // Envia o pedido de exclusão
+            const response = await fetch(`/api/${tipo}s/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                // Fecha o modal
+                bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExcluir')).hide();
+                
+                // Notifica o usuário
+                alert(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} excluída com sucesso.`);
+                
+                // Recarrega os dados
+                aplicarFiltros();
+            } else {
+                const erro = await response.json();
+                throw new Error(erro.error || `Erro ao excluir ${tipo}.`);
+            }
+        } catch (error) {
+            console.error(`Erro ao excluir ${tipo}:`, error);
+            alert(`Erro ao excluir ${tipo}. Por favor, tente novamente.\n${error.message}`);
+            bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExcluir')).hide();
+        }
+    }
+    
+    // Função para carregar gráfico de receitas por categoria
+    async function carregarGraficoReceitasPorCategoria() {
+        // Implementação básica - pode expandir conforme necessidade
+        const grafico = document.getElementById('grafico-receitas-pessoal');
+        grafico.innerHTML = '<div class="text-center py-5 text-muted">Carregando...</div>';
+    }
+    
+    // Função para carregar gráfico de despesas por categoria
+    async function carregarGraficoDespesasPorCategoria() {
+        // Implementação básica - pode expandir conforme necessidade
+        const grafico = document.getElementById('grafico-despesas-pessoal');
+        grafico.innerHTML = '<div class="text-center py-5 text-muted">Carregando...</div>';
+    }
+    
+    // Função para carregar gráfico de evolução de saldo
+    async function carregarGraficoEvolucaoSaldo() {
+        // Implementação básica - pode expandir conforme necessidade
+        const grafico = document.getElementById('grafico-evolucao-saldo');
+        grafico.innerHTML = '<div class="text-center py-5 text-muted">Carregando...</div>';
+    }
+    
+    // Função para carregar gráfico por categoria
+    async function carregarGraficoCategoria() {
+        // Implementação básica - pode expandir conforme necessidade
+        const grafico = document.getElementById('grafico-categorias');
+        grafico.innerHTML = '<div class="text-center py-5 text-muted">Carregando...</div>';
+    }
+    
+    // Função para carregar gráfico ao longo do tempo
+    async function carregarGraficoTempo() {
+        // Implementação básica - pode expandir conforme necessidade
+        const grafico = document.getElementById('grafico-tempo');
+        grafico.innerHTML = '<div class="text-center py-5 text-muted">Carregando...</div>';
+    }
+    
+    // Função para carregar previsão
+    async function carregarPrevisao() {
+        // Implementação básica - pode expandir conforme necessidade
+        if (document.querySelector('#previsao .alert-info')) {
+            return; // Plano gratuito, não carrega previsão
+        }
+        
+        const grafico = document.getElementById('grafico-previsao');
+        grafico.innerHTML = '<div class="text-center py-5 text-muted">Carregando...</div>';
+    }
+</script>
+{% endblock %}
