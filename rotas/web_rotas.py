@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, session, jsonify, send_file
-from database.models import Usuario, Despesa, Receita, Lembrete, CategoriaPersonalizada, Membro, TextProcessor, MetaFinanceira, Divida, Orcamento
+from database.supabase_models import Usuario, Despesa, Receita, Lembrete, CategoriaPersonalizada, Membro, TextProcessor, MetaFinanceira, Divida, Orcamento
 from functools import wraps
 import os
 import sqlite3

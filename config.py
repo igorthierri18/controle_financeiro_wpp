@@ -1,18 +1,36 @@
 import os
+from dotenv import load_dotenv
+import psycopg2
+from psycopg2 import sql
+
+load_dotenv()
 
 class Config:
     # Configurações básicas
     SECRET_KEY = os.environ.get('SECRET_KEY', 'chave_secreta_de_desenvolvimento')
     DEBUG = os.environ.get('FLASK_DEBUG', 'True') == 'True'
+
+    # Configurações do Supabase (PostgreSQL)
+    SUPABASE_URL = os.environ.get('SUPABASE_URL')
+    SUPABASE_KEY = os.environ.get('SUPABASE_ANON_KEY')
     
-    # Banco de dados
-    DATABASE = os.environ.get('DATABASE_PATH', 'database/financas.db')
+    # Configurações do PostgreSQL direto (opcional)
+    POSTGRES_USER = os.environ.get('POSTGRES_USER')
+    POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+    POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
+    POSTGRES_PORT = os.environ.get('POSTGRES_PORT', '5432')
+    POSTGRES_DB = os.environ.get('POSTGRES_DB', 'postgres')
     
-    # Configurações da Twilio
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', 'AC44f80c30e4bb518bd8c4a0e48ce0e5cb')
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', 'cd4ee54cc121bc56cbe4e0b50b71c426')
-    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', 'whatsapp:+12083468766')
-    
+    # Configurações da Twilio (WhatsApp)
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+
+    WHATSAPP_JOIN_CODE = os.environ.get('WHATSAPP_JOIN_CODE')
+    WHATSAPP_NUMBER = os.environ.get('WHATSAPP_NUMBER')
+
+    WEBHOOK_BASE_URL = os.environ.get('WEBHOOK_BASE_URL', 'http://localhost:8080')
+
     # Configurações da aplicação
     APP_NAME = 'DespeZap'
     APP_DESCRIPTION = 'Controle financeiro fácil via WhatsApp'
@@ -79,10 +97,15 @@ class Config:
         'suporte': 'prioritário'
     }
     
-    # URL base para o webhook (em produção)
-    # Esta URL é usada para gerar o QR code e instruções de conexão
-    WEBHOOK_BASE_URL = os.environ.get('WEBHOOK_BASE_URL', 'http://localhost:8080')
-    
-    # Código de ativação do WhatsApp Sandbox
-    WHATSAPP_JOIN_CODE = os.environ.get('WHATSAPP_JOIN_CODE', 'join successful-angle')
-    WHATSAPP_NUMBER = os.environ.get('WHATSAPP_NUMBER', '+1 415 523 8886')
+    @classmethod
+    def get_database(cls):
+        """Retorna a conexão com o Supabase"""
+        from supabase import create_client
+        return create_client(cls.SUPABASE_URL, cls.SUPABASE_KEY)
+
+    @classmethod
+    def get_postgres_uri(cls):
+        """Retorna a URI de conexão direta com o PostgreSQL (se necessário)"""
+        if all([cls.POSTGRES_USER, cls.POSTGRES_PASSWORD, cls.POSTGRES_HOST]):
+            return f"postgresql://{cls.POSTGRES_USER}:{cls.POSTGRES_PASSWORD}@{cls.POSTGRES_HOST}:{cls.POSTGRES_PORT}/{cls.POSTGRES_DB}"
+        return None

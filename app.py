@@ -1,7 +1,8 @@
 import os
 from flask import Flask
 from config import Config
-from database.models import init_db
+# from database.models import init_db
+from database.supabase_models import init_supabase_db
 from rotas.web_rotas import web_bp
 from rotas.api_rotas import api_bp
 from rotas.webhook_rotas import webhook_bp
@@ -12,7 +13,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Inicializa o banco de dados
-init_db(app.config['DATABASE'])
+# init_db(app.config['DATABASE'])
+init_supabase_db()
 
 # Registra os blueprints
 app.register_blueprint(web_bp)

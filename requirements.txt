@@ -17,6 +17,8 @@ pydub
 pymupdf
 matplotlib
 plotly
+psycopg2-binary
+supabase
 
 
 # flask==2.0.1

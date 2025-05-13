@@ -29,9 +29,17 @@ services:
         sync: false
       - key: TWILIO_PHONE_NUMBER
         sync: false
-      - key: DATABASE_PATH
-        value: database/financas.db
+      # - key: DATABASE_PATH
+      #   value: database/financas.db
       - key: WHATSAPP_JOIN_CODE
         value: join successful-angle
       - key: WHATSAPP_NUMBER
         value: +1 415 523 8886
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: https://bunafenqbfbnmcjzygpg.supabase.co
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bmFmZW5xYmZibm1janp5Z3BnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTk4ODAsImV4cCI6MjA2MjU5NTg4MH0.LugWlxGVmnXYufckM2c5pSKfe_K5nr-ueZSe83Z32Ms
+      - key: POSTGRES_PASSWORD
+        value: E8X1cCvtNTFZ780J
+      - key: POSTGRES_HOST
+        value: db.bunafenqbfbnmcjzygpg.supabase.co

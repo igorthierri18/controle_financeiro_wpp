@@ -1,7 +1,7 @@
 from flask import Blueprint, request, url_for
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.request_validator import RequestValidator
-from database.models import Usuario, Despesa, Receita, TextProcessor
+from database.supabase_models import Usuario, Despesa, Receita, TextProcessor
 from config import Config
 from datetime import datetime, timedelta
 import re
