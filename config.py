@@ -19,38 +19,65 @@ class Config:
     
     # Configurações de assinatura
     PLANO_GRATUITO = {
-    'nome': 'Gratuito',
-    'preco': 0,
-    'limite_transacoes': 3000,
-    'relatorios_detalhados': False,
-    'dashboard_interativo': True,
-    'exportacao_dados': False,
-    'suporte': 'E-mail',
-    'limite_usuarios': 1
+        'nome': 'Gratuito',
+        'preco': 0,
+        'limite_transacoes': 100,  # 100 transações/mês
+        'dashboard': 'básico',
+        'categorias': 'limitadas (8)',
+        'usuarios': 1,
+        'perfil_empresarial': False,
+        'exportacao_dados': False,
+        'lembretes_automaticos': False,
+        'relatorios_detalhados': False,
+        'suporte': 'E-mail'
     }
 
     PLANO_PREMIUM = {
         'nome': 'Premium',
         'preco': 29.90,
-        'limite_transacoes': 20000,
+        'limite_transacoes': float('inf'),  # Transações ilimitadas
+        'dashboard': 'completo',
+        'categorias': 'personalizadas e ilimitadas',
+        'usuarios': 3,
+        'perfil_empresarial': False,
+        'exportacao_dados': 'CSV',
+        'lembretes_automaticos': True,
         'relatorios_detalhados': True,
-        'dashboard_interativo': True,
-        'exportacao_dados': True,
-        'suporte': 'Chat/E-mail',
-        'limite_usuarios': 2
+        'suporte': 'Chat/E-mail'
     }
 
-    PLANO_PROFISSIONAL = {
-        'nome': 'Profissional',
-        'preco': 59.90,
-        'limite_transacoes': float('inf'),  # Ilimitado
+    PLANO_FAMILIA = {
+        'nome': 'Família',
+        'preco': 32.90,
+        'limite_transacoes': float('inf'),  # Transações ilimitadas
+        'dashboard': 'completo',
+        'categorias': 'personalizadas e ilimitadas',
+        'usuarios': 5,
+        'perfil_empresarial': True,
+        'grupos': 'familiares ilimitados',
+        'exportacao_dados': 'CSV/Excel',
+        'lembretes_automaticos': True,
         'relatorios_detalhados': True,
-        'dashboard_interativo': True,
-        'exportacao_dados': True,
-        'suporte': 'Prioritário',
-        'limite_usuarios': 5
+        'integracao_google': True,
+        'suporte': 'Chat/E-mail'
     }
 
+    PLANO_EMPRESARIAL = {
+        'nome': 'Empresarial',
+        'preco': 39.90,
+        'limite_transacoes': float('inf'),  # Transações ilimitadas
+        'dashboard': 'completo',
+        'categorias': 'personalizadas e ilimitadas',
+        'usuarios': float('inf'),  # Usuários ilimitados
+        'perfil_empresarial': True,
+        'grupos': 'ilimitados',
+        'exportacao_dados': 'todos os formatos',
+        'lembretes_automaticos': True,
+        'relatorios_detalhados': True,
+        'api_integracao': True,
+        'integracao_google': True,
+        'suporte': 'prioritário'
+    }
     
     # URL base para o webhook (em produção)
     # Esta URL é usada para gerar o QR code e instruções de conexão

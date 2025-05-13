@@ -228,7 +228,13 @@
     color: white;
 }
 
-.profile-option:not(.active):hover {
+.profile-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f0f0f0;
+}
+
+.profile-option:not(.active):not(.disabled):hover {
     background-color: #f8f9fa;
 }
 {% endblock %}
@@ -248,9 +254,16 @@
         <div class="profile-option active" id="profile-personal">
             <i class="bi bi-person me-1"></i> Perfil Pessoal
         </div>
+        {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
         <div class="profile-option" id="profile-business">
             <i class="bi bi-building me-1"></i> Perfil Empresarial
         </div>
+        {% else %}
+        <div class="profile-option disabled">
+            <i class="bi bi-building me-1"></i> Perfil Empresarial
+            <span class="badge bg-warning ms-1" style="font-size: 8px;">Premium</span>
+        </div>
+        {% endif %}
     </div>
     
     <!-- Menu de navegação -->
@@ -446,7 +459,9 @@
                         <label for="divida-tipo-perfil" class="form-label">Perfil</label>
                         <select class="form-select" id="divida-tipo-perfil" name="tipo_perfil">
                             <option value="pessoal" selected>Pessoal</option>
+                            {% if usuario.plano == 'familia' or usuario.plano == 'empresarial' %}
                             <option value="empresarial">Empresarial</option>
+                            {% endif %}
                         </select>
                     </div>
                 </form>
@@ -639,12 +654,20 @@
             carregarDividas();
         });
         
-        document.getElementById('profile-business').addEventListener('click', function() {
-            perfilAtual = 'empresarial';
-            document.getElementById('profile-business').classList.add('active');
-            document.getElementById('profile-personal').classList.remove('active');
-            carregarDividas();
-        });
+        const profileBusiness = document.getElementById('profile-business');
+        if (profileBusiness) {
+            profileBusiness.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) {
+                    alert('O perfil empresarial está disponível apenas para os planos Família e Empresarial.');
+                    return;
+                }
+                
+                perfilAtual = 'empresarial';
+                document.getElementById('profile-business').classList.add('active');
+                document.getElementById('profile-personal').classList.remove('active');
+                carregarDividas();
+            });
+        }
         
         // Botão para salvar nova dívida
         document.getElementById('btn-salvar-divida').addEventListener('click', function() {
@@ -712,6 +735,32 @@
             
             // Registra o pagamento
             registrarPagamento(pagamento);
+        });
+        
+        // Botão para atualizar dívida
+        document.getElementById('btn-atualizar-divida').addEventListener('click', function() {
+            const form = document.getElementById('form-editar-divida');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Captura os dados do formulário
+            const formData = new FormData(form);
+            const divida = {};
+            const id = document.getElementById('editar-divida-id').value;
+            
+            formData.forEach((value, key) => {
+                if (['valor_total', 'valor_pago', 'parcelas_total', 'parcelas_pagas'].includes(key)) {
+                    divida[key] = parseFloat(value) || 0;
+                } else if (key !== 'id') {
+                    divida[key] = value;
+                }
+            });
+            
+            // Atualiza a dívida
+            atualizarDivida(id, divida);
         });
         
         // Carrega as dívidas iniciais
@@ -1066,8 +1115,83 @@
     
     // Função para abrir o modal de edição de dívida
     function abrirModalEditarDivida(dividaId) {
-        // Em uma implementação real, buscaria os dados da dívida da API
-        alert('Edição de dívida será implementada em breve.');
+        try {
+            // Em uma implementação real, buscaria os dados da dívida da API
+            // const response = await fetch(`/api/dividas/${dividaId}`);
+            // const divida = await response.json();
+            
+            // Dados de exemplo para demonstração
+            const dividas = [
+                {
+                    id: 1,
+                    nome: "Empréstimo Bancário",
+                    tipo: "emprestimo",
+                    valor_total: 10000.00,
+                    valor_pago: 2500.00,
+                    data_inicio: "2023-01-15",
+                    data_fim: "2024-01-15",
+                    taxa_juros: 1.99,
+                    parcelas_total: 12,
+                    parcelas_pagas: 3,
+                    status: "em_dia",
+                    credor: "Banco XYZ",
+                    tipo_perfil: "pessoal"
+                },
+                {
+                    id: 2,
+                    nome: "Cartão de Crédito",
+                    tipo: "cartao_credito",
+                    valor_total: 5000.00,
+                    valor_pago: 1000.00,
+                    data_inicio: "2023-03-10",
+                    data_fim: "2023-08-10",
+                    taxa_juros: 3.99,
+                    parcelas_total: 5,
+                    parcelas_pagas: 1,
+                    status: "em_dia",
+                    credor: "Banco ABC",
+                    tipo_perfil: "pessoal"
+                },
+                {
+                    id: 3,
+                    nome: "Financiamento de Equipamentos",
+                    tipo: "financiamento",
+                    valor_total: 25000.00,
+                    valor_pago: 5000.00,
+                    data_inicio: "2023-02-01",
+                    data_fim: "2024-02-01",
+                    taxa_juros: 1.5,
+                    parcelas_total: 12,
+                    parcelas_pagas: 2,
+                    status: "em_dia",
+                    credor: "Banco Empresarial",
+                    tipo_perfil: "empresarial"
+                }
+            ];
+            
+            const divida = dividas.find(d => d.id == dividaId);
+            
+            if (!divida) {
+                throw new Error('Dívida não encontrada');
+            }
+            
+            // Preenche o formulário
+            document.getElementById('editar-divida-id').value = divida.id;
+            document.getElementById('editar-divida-tipo').value = divida.tipo;
+            document.getElementById('editar-divida-nome').value = divida.nome;
+            document.getElementById('editar-divida-valor-total').value = divida.valor_total;
+            document.getElementById('editar-divida-valor-pago').value = divida.valor_pago;
+            document.getElementById('editar-divida-parcelas-total').value = divida.parcelas_total;
+            document.getElementById('editar-divida-parcelas-pagas').value = divida.parcelas_pagas;
+            
+            // Abre o modal
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarDivida'));
+            modal.show();
+            
+        } catch (error) {
+            console.error('Erro ao abrir modal de edição:', error);
+            alert('Erro ao carregar dados da dívida. Por favor, tente novamente.');
+        }
     }
     
     // Função para abrir o modal de registro de pagamento
@@ -1178,6 +1302,36 @@
         } catch (error) {
             console.error('Erro ao registrar pagamento:', error);
             alert('Erro ao registrar pagamento. Por favor, tente novamente.');
+        }
+    }
+    
+    // Função para atualizar uma dívida
+    async function atualizarDivida(id, divida) {
+        try {
+            // Em uma implementação real, enviaria para a API
+            // const response = await fetch(`/api/dividas/${id}`, {
+            //     method: 'PUT',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(divida)
+            // });
+            // const resultado = await response.json();
+            
+            // Simulação de sucesso
+            console.log('Dívida atualizada:', id, divida);
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarDivida'));
+            modal.hide();
+            
+            // Recarrega as dívidas
+            carregarDividas();
+            
+            // Feedback para o usuário
+            alert('Dívida atualizada com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro ao atualizar dívida:', error);
+            alert('Erro ao atualizar dívida. Por favor, tente novamente.');
         }
     }
 </script>
