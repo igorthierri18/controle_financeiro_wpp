@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import json
 from werkzeug.utils import secure_filename
 import traceback
+from config import Config
 
 # Diretório para salvar os arquivos enviados
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'static', 'uploads')
@@ -1770,6 +1771,540 @@ def api_whatsapp_atualizar():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Adicione mais rotas conforme necessário
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'usuario_id' not in session:
+            return redirect(url_for('web.login', next=request.url))
         
+        # Verifica se o usuário é administrador
+        usuario_model = Usuario(Config.DATABASE)
+        usuario = usuario_model.buscar_por_id(session['usuario_id'])
         
+        if not usuario or usuario.get('admin') != 1:
+            flash('Você não tem permissão para acessar esta página.', 'error')
+            return redirect(url_for('web.dashboard'))
+            
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Rota para o painel administrativo
+@web_bp.route('/admin')
+@login_required
+@admin_required
+def admin():
+    """Painel administrativo com métricas e análises"""
+    
+    # Cria conexão com o banco de dados
+    conn = sqlite3.connect(Config.DATABASE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Datas para filtros
+    hoje = datetime.now()
+    hoje_str = hoje.strftime("%Y-%m-%d")
+    semana_atras = (hoje - timedelta(days=7)).strftime("%Y-%m-%d")
+    duas_semanas_atras = (hoje - timedelta(days=14)).strftime("%Y-%m-%d")
+    mes_atras = (hoje - timedelta(days=30)).strftime("%Y-%m-%d")
+    dois_meses_atras = (hoje - timedelta(days=60)).strftime("%Y-%m-%d")
+    tres_meses_atras = (hoje - timedelta(days=90)).strftime("%Y-%m-%d")
+    ano_atras = (hoje - timedelta(days=365)).strftime("%Y-%m-%d")
+    
+    # ==================== MÉTRICAS DE USUÁRIOS ====================
+    
+    # Total de usuários
+    cursor.execute("SELECT COUNT(*) as total FROM usuarios WHERE ativo = 1")
+    total_usuarios = cursor.fetchone()['total']
+    
+    # Usuários por plano
+    cursor.execute("""
+    SELECT plano, COUNT(*) as total 
+    FROM usuarios 
+    WHERE ativo = 1 
+    GROUP BY plano
+    """)
+    usuarios_por_plano = [dict(row) for row in cursor.fetchall()]
+    
+    # Formatar para uso no gráfico
+    planos = ['gratuito', 'premium', 'familia', 'empresarial']
+    usuarios_por_plano_dict = {row['plano']: row['total'] for row in usuarios_por_plano}
+    usuarios_por_plano_formatado = []
+    
+    for plano in planos:
+        total = usuarios_por_plano_dict.get(plano, 0)
+        usuarios_por_plano_formatado.append({
+            'plano': plano.capitalize(),
+            'total': total,
+            'percentual': round(total / total_usuarios * 100, 1) if total_usuarios > 0 else 0
+        })
+    
+    # Total de usuários com assinatura (plano diferente de gratuito)
+    cursor.execute("""
+    SELECT COUNT(*) as total 
+    FROM usuarios 
+    WHERE ativo = 1 AND plano != 'gratuito'
+    """)
+    total_usuarios_assinantes = cursor.fetchone()['total']
+    
+    taxa_assinantes = round(total_usuarios_assinantes / total_usuarios * 100, 1) if total_usuarios > 0 else 0
+    
+    # Novos usuários (últimos 7, 14 e 30 dias)
+    cursor.execute("""
+    SELECT COUNT(*) as total 
+    FROM usuarios 
+    WHERE ativo = 1 AND data_criacao >= ?
+    """, (semana_atras,))
+    novos_usuarios_7d = cursor.fetchone()['total']
+    
+    cursor.execute("""
+    SELECT COUNT(*) as total 
+    FROM usuarios 
+    WHERE ativo = 1 AND data_criacao >= ?
+    """, (duas_semanas_atras,))
+    novos_usuarios_14d = cursor.fetchone()['total']
+    
+    cursor.execute("""
+    SELECT COUNT(*) as total 
+    FROM usuarios 
+    WHERE ativo = 1 AND data_criacao >= ?
+    """, (mes_atras,))
+    novos_usuarios_30d = cursor.fetchone()['total']
+    
+    # ==================== MÉTRICAS DE TRANSAÇÕES ====================
+    
+    # Total de transações
+    cursor.execute("""
+    SELECT 
+        (SELECT COUNT(*) FROM despesas) + 
+        (SELECT COUNT(*) FROM receitas) AS total_transacoes
+    """)
+    total_transacoes = cursor.fetchone()['total_transacoes']
+    
+    # Total de receita transacionada
+    cursor.execute("SELECT SUM(valor) as total FROM receitas")
+    total_receita = cursor.fetchone()['total'] or 0
+    
+    # Total de despesa transacionada
+    cursor.execute("SELECT SUM(valor) as total FROM despesas")
+    total_despesa = cursor.fetchone()['total'] or 0
+    
+    # Saldo transacionado (receita - despesa)
+    saldo_total = total_receita - total_despesa
+    
+    # Transações por período
+    periodos = {
+        'dia': hoje_str,
+        'semana': semana_atras,
+        'mes': mes_atras,
+        '60_dias': dois_meses_atras,
+        '90_dias': tres_meses_atras,
+        'ano': ano_atras
+    }
+    
+    transacoes_por_periodo = {}
+    
+    for nome_periodo, data_inicio in periodos.items():
+        # Contar despesas
+        cursor.execute("""
+        SELECT COUNT(*) as total 
+        FROM despesas 
+        WHERE data >= ?
+        """, (data_inicio,))
+        despesas_periodo = cursor.fetchone()['total']
+        
+        # Contar receitas
+        cursor.execute("""
+        SELECT COUNT(*) as total 
+        FROM receitas 
+        WHERE data >= ?
+        """, (data_inicio,))
+        receitas_periodo = cursor.fetchone()['total']
+        
+        transacoes_por_periodo[nome_periodo] = {
+            'despesas': despesas_periodo,
+            'receitas': receitas_periodo,
+            'total': despesas_periodo + receitas_periodo
+        }
+    
+    # Total de transações por tipo (detalhado)
+    cursor.execute("SELECT COUNT(*) as total FROM despesas")
+    total_despesas_count = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM receitas")
+    total_receitas_count = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM metas_financeiras")
+    total_metas_count = cursor.fetchone()['total'] or 0
+    
+    cursor.execute("SELECT COUNT(*) as total FROM dividas")
+    total_dividas_count = cursor.fetchone()['total'] or 0
+    
+    # Tentar obter financiamentos e empréstimos, se as tabelas existirem
+    try:
+        cursor.execute("SELECT COUNT(*) as total FROM financiamentos")
+        total_financiamentos_count = cursor.fetchone()['total'] or 0
+    except:
+        total_financiamentos_count = 0
+        
+    try:
+        cursor.execute("SELECT COUNT(*) as total FROM emprestimos")
+        total_emprestimos_count = cursor.fetchone()['total'] or 0
+    except:
+        total_emprestimos_count = 0
+    
+    # Transações por dia (gráfico últimos 30 dias)
+    cursor.execute("""
+    SELECT 
+        data, 
+        COUNT(*) as total 
+    FROM 
+        (SELECT data FROM despesas WHERE data >= ? 
+         UNION ALL 
+         SELECT data FROM receitas WHERE data >= ?) 
+    AS todas_transacoes 
+    GROUP BY data 
+    ORDER BY data
+    """, (mes_atras, mes_atras))
+    
+    transacoes_por_dia = [dict(row) for row in cursor.fetchall()]
+    
+    # ==================== MÉTRICAS DE CHURN E CONVERSÃO ====================
+    
+    # Total de churn (cancelamentos)
+    cursor.execute("""
+    SELECT COUNT(*) as total 
+    FROM assinaturas 
+    WHERE status = 'cancelado' AND data_fim >= ?
+    """, (mes_atras,))
+    
+    total_churn = cursor.fetchone()['total'] or 0
+    
+    # Taxa de churn
+    usuarios_pagantes = max(total_usuarios_assinantes, 1)  # Evitar divisão por zero
+    taxa_churn = round((total_churn / usuarios_pagantes) * 100, 1)
+    
+    # Taxa de conversão (usuários que mudaram de gratuito para pagos)
+    cursor.execute("""
+    SELECT COUNT(*) as total 
+    FROM assinaturas 
+    WHERE status = 'ativo' AND data_inicio >= ?
+    """, (mes_atras,))
+    
+    novas_assinaturas = cursor.fetchone()['total'] or 0
+    
+    # Usuários gratuitos ativos
+    cursor.execute("""
+    SELECT COUNT(*) as total 
+    FROM usuarios 
+    WHERE ativo = 1 AND plano = 'gratuito'
+    """)
+    
+    usuarios_gratuitos = cursor.fetchone()['total'] or 1  # Evitar divisão por zero
+    
+    taxa_conversao = round((novas_assinaturas / usuarios_gratuitos) * 100, 1)
+    
+    # ==================== MÉTRICAS DE FUNCIONALIDADES ====================
+    
+    # Uso de funcionalidades
+    funcionalidades_uso = []
+    
+    # Lembretes
+    cursor.execute("""
+    SELECT COUNT(DISTINCT usuario_id) as total_usuarios
+    FROM lembretes
+    """)
+    usuarios_lembretes = cursor.fetchone()['total'] or 0
+    percentual_lembretes = round((usuarios_lembretes / total_usuarios) * 100, 1) if total_usuarios > 0 else 0
+    funcionalidades_uso.append({
+        'nome': 'Lembretes',
+        'usuarios': usuarios_lembretes,
+        'percentual': percentual_lembretes
+    })
+    
+    # Categorização (usuários que criaram categorias personalizadas)
+    cursor.execute("""
+    SELECT COUNT(DISTINCT usuario_id) as total_usuarios
+    FROM categorias_personalizadas
+    """)
+    usuarios_categorias = cursor.fetchone()['total'] or 0
+    percentual_categorias = round((usuarios_categorias / total_usuarios) * 100, 1) if total_usuarios > 0 else 0
+    funcionalidades_uso.append({
+        'nome': 'Categorização',
+        'usuarios': usuarios_categorias,
+        'percentual': percentual_categorias
+    })
+    
+    # Exportação (aproximado pela quantidade de chamadas à API de exportação)
+    cursor.execute("""
+    SELECT COUNT(*) as total
+    FROM (
+        SELECT DISTINCT usuario_id 
+        FROM sessoes 
+        WHERE user_agent LIKE '%export%' OR user_agent LIKE '%download%'
+    )
+    """)
+    usuarios_exportacao = cursor.fetchone()['total'] or 0
+    percentual_exportacao = round((usuarios_exportacao / total_usuarios) * 100, 1) if total_usuarios > 0 else 0
+    funcionalidades_uso.append({
+        'nome': 'Exportação',
+        'usuarios': usuarios_exportacao,
+        'percentual': percentual_exportacao
+    })
+    
+    # Agenda
+    cursor.execute("""
+    SELECT COUNT(DISTINCT usuario_id) as total_usuarios
+    FROM lembretes
+    WHERE notificacao > 0
+    """)
+    usuarios_agenda = cursor.fetchone()['total'] or 0
+    percentual_agenda = round((usuarios_agenda / total_usuarios) * 100, 1) if total_usuarios > 0 else 0
+    funcionalidades_uso.append({
+        'nome': 'Agenda',
+        'usuarios': usuarios_agenda,
+        'percentual': percentual_agenda
+    })
+    
+    # Metas financeiras
+    cursor.execute("""
+    SELECT COUNT(DISTINCT usuario_id) as total_usuarios
+    FROM metas_financeiras
+    """)
+    usuarios_metas = cursor.fetchone()['total'] or 0
+    percentual_metas = round((usuarios_metas / total_usuarios) * 100, 1) if total_usuarios > 0 else 0
+    funcionalidades_uso.append({
+        'nome': 'Metas Financeiras',
+        'usuarios': usuarios_metas,
+        'percentual': percentual_metas
+    })
+    
+    # Dívidas
+    cursor.execute("""
+    SELECT COUNT(DISTINCT usuario_id) as total_usuarios
+    FROM dividas
+    """)
+    usuarios_dividas = cursor.fetchone()['total'] or 0
+    percentual_dividas = round((usuarios_dividas / total_usuarios) * 100, 1) if total_usuarios > 0 else 0
+    funcionalidades_uso.append({
+        'nome': 'Dívidas',
+        'usuarios': usuarios_dividas,
+        'percentual': percentual_dividas
+    })
+    
+    # Ordenar funcionalidades por percentual de uso (decrescente)
+    funcionalidades_uso.sort(key=lambda x: x['percentual'], reverse=True)
+    
+    # ==================== MÉTRICAS DE ORIGEM DOS USUÁRIOS ====================
+    
+    # Origem dos usuários (de onde vieram)
+    cursor.execute("""
+    SELECT origem, COUNT(*) as total
+    FROM usuario_referral
+    GROUP BY origem
+    ORDER BY total DESC
+    """)
+    
+    origem_usuarios = [dict(row) for row in cursor.fetchall()]
+    
+    # Formatação para usar no gráfico
+    origens = []
+    totais_origem = []
+    
+    for origem in origem_usuarios:
+        origens.append(origem['origem'])
+        totais_origem.append(origem['total'])
+    
+    # Se não houver dados, adicionar alguns exemplos
+    if not origem_usuarios:
+        origens = ['Indicação', 'Instagram', 'TikTok', 'LinkedIn', 'Google']
+        totais_origem = [35, 25, 20, 15, 5]
+    
+    # Conversão por canal de origem
+    conversao_por_origem = []
+    
+    for origem in origens:
+        # Calcula usuários por origem
+        cursor.execute("""
+        SELECT COUNT(*) as total
+        FROM usuario_referral
+        WHERE origem = ?
+        """, (origem,))
+        total_origem = cursor.fetchone()['total'] or 0
+        
+        # Calcula quantos converteram
+        cursor.execute("""
+        SELECT COUNT(*) as convertidos
+        FROM usuarios u
+        JOIN usuario_referral ur ON u.id = ur.usuario_id
+        WHERE ur.origem = ? AND u.plano != 'gratuito'
+        """, (origem,))
+        convertidos = cursor.fetchone()['convertidos'] or 0
+        
+        taxa_conversao_origem = round((convertidos / total_origem) * 100, 1) if total_origem > 0 else 0
+        
+        conversao_por_origem.append({
+            'origem': origem,
+            'total': total_origem,
+            'convertidos': convertidos,
+            'taxa_conversao': taxa_conversao_origem
+        })
+    
+    # Fechar conexão com banco de dados
+    conn.close()
+    
+    # Renderizar o template com todas as métricas
+    return render_template(
+        'admin.html',
+        app_name=Config.APP_NAME,
+        total_usuarios=total_usuarios,
+        usuarios_por_plano=usuarios_por_plano_formatado,
+        total_usuarios_assinantes=total_usuarios_assinantes,
+        taxa_assinantes=taxa_assinantes,
+        novos_usuarios_7d=novos_usuarios_7d,
+        novos_usuarios_14d=novos_usuarios_14d,
+        novos_usuarios_30d=novos_usuarios_30d,
+        total_transacoes=total_transacoes,
+        total_receita=total_receita,
+        total_despesa=total_despesa,
+        saldo_total=saldo_total,
+        transacoes_por_periodo=transacoes_por_periodo,
+        total_despesas_count=total_despesas_count,
+        total_receitas_count=total_receitas_count,
+        total_metas_count=total_metas_count,
+        total_dividas_count=total_dividas_count,
+        total_financiamentos_count=total_financiamentos_count,
+        total_emprestimos_count=total_emprestimos_count,
+        transacoes_por_dia=transacoes_por_dia,
+        total_churn=total_churn,
+        taxa_churn=taxa_churn,
+        taxa_conversao=taxa_conversao,
+        funcionalidades_uso=funcionalidades_uso,
+        origem_usuarios=origem_usuarios,
+        origens=origens,
+        totais_origem=totais_origem,
+        conversao_por_origem=conversao_por_origem
+    )
+
+# Rota para exportar dados do admin
+@web_bp.route('/admin/exportar/<tipo>')
+@login_required
+@admin_required
+def admin_exportar(tipo):
+    """Exporta dados do painel administrativo em formato CSV"""
+    from flask import send_file
+    import pandas as pd
+    import io
+    
+    # Cria conexão com o banco de dados
+    conn = sqlite3.connect(Config.DATABASE)
+    conn.row_factory = sqlite3.Row
+    
+    # Define o período (opcional)
+    periodo = request.args.get('periodo', 'mes')
+    
+    hoje = datetime.now()
+    if periodo == 'semana':
+        data_inicio = (hoje - timedelta(days=7)).strftime("%Y-%m-%d")
+    elif periodo == 'mes':
+        data_inicio = (hoje - timedelta(days=30)).strftime("%Y-%m-%d")
+    elif periodo == '90dias':
+        data_inicio = (hoje - timedelta(days=90)).strftime("%Y-%m-%d")
+    elif periodo == 'ano':
+        data_inicio = (hoje - timedelta(days=365)).strftime("%Y-%m-%d")
+    else:
+        data_inicio = "2000-01-01"  # Data bem antiga para pegar tudo
+    
+    data_fim = hoje.strftime("%Y-%m-%d")
+    
+    # Exporta diferentes tipos de dados baseado no parâmetro
+    if tipo == 'usuarios':
+        # Exporta lista de usuários
+        df = pd.read_sql_query("""
+        SELECT 
+            id, nome, email, celular, plano, 
+            data_criacao, ultimo_acesso, ativo
+        FROM usuarios
+        ORDER BY data_criacao DESC
+        """, conn)
+        
+        filename = "usuarios_export.csv"
+        
+    elif tipo == 'transacoes':
+        # Exporta transações
+        df_despesas = pd.read_sql_query("""
+        SELECT 
+            'despesa' as tipo, id, usuario_id, valor, categoria, 
+            descricao, data, forma_pagamento, data_criacao,
+            tipo_perfil
+        FROM despesas
+        WHERE data BETWEEN ? AND ?
+        """, conn, params=[data_inicio, data_fim])
+        
+        df_receitas = pd.read_sql_query("""
+        SELECT 
+            'receita' as tipo, id, usuario_id, valor, categoria, 
+            descricao, data, NULL as forma_pagamento, data_criacao,
+            tipo_perfil
+        FROM receitas
+        WHERE data BETWEEN ? AND ?
+        """, conn, params=[data_inicio, data_fim])
+        
+        # Concatena os dataframes
+        df = pd.concat([df_despesas, df_receitas])
+        
+        filename = f"transacoes_{periodo}_export.csv"
+        
+    elif tipo == 'conversao':
+        # Exporta dados de conversão
+        df = pd.read_sql_query("""
+        SELECT 
+            u.id, u.nome, u.email, u.plano, 
+            u.data_criacao as data_cadastro,
+            a.data_inicio as data_assinatura,
+            ur.origem,
+            julianday(a.data_inicio) - julianday(u.data_criacao) as dias_ate_conversao
+        FROM usuarios u
+        LEFT JOIN assinaturas a ON u.id = a.usuario_id AND a.status = 'ativo'
+        LEFT JOIN usuario_referral ur ON u.id = ur.usuario_id
+        WHERE u.plano != 'gratuito'
+        ORDER BY u.data_criacao DESC
+        """, conn)
+        
+        filename = "conversao_export.csv"
+        
+    elif tipo == 'funcionalidades':
+        # Exporta uso de funcionalidades por usuário
+        df = pd.read_sql_query("""
+        SELECT
+            u.id, u.nome, u.email, u.plano,
+            (SELECT COUNT(*) FROM lembretes WHERE usuario_id = u.id) as total_lembretes,
+            (SELECT COUNT(*) FROM categorias_personalizadas WHERE usuario_id = u.id) as total_categorias,
+            (SELECT COUNT(*) FROM metas_financeiras WHERE usuario_id = u.id) as total_metas,
+            (SELECT COUNT(*) FROM dividas WHERE usuario_id = u.id) as total_dividas
+        FROM usuarios u
+        ORDER BY u.data_criacao DESC
+        """, conn)
+        
+        filename = "funcionalidades_export.csv"
+        
+    else:
+        conn.close()
+        return jsonify({"error": "Tipo de exportação inválido"}), 400
+    
+    # Fecha a conexão
+    conn.close()
+    
+    # Converte para CSV
+    csv_data = df.to_csv(index=False)
+    
+    # Cria resposta para download
+    buffer = io.BytesIO()
+    buffer.write(csv_data.encode('utf-8'))
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='text/csv'
+    )

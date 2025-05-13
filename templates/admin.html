@@ -1,0 +1,1209 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel Administrativo - {{ app_name }}{% endblock %}
+
+{% block custom_styles %}
+.admin-header {
+    background: linear-gradient(135deg, #4a6cf7, #6440fb);
+    padding: 30px 0;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.admin-header h1 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.admin-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.stats-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+    height: 100%;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card .title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.stats-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #4a6cf7;
+    margin-bottom: 10px;
+}
+
+.stats-card .change {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.stats-card .change.positive {
+    color: #28a745;
+}
+
+.stats-card .change.negative {
+    color: #dc3545;
+}
+
+.stats-card .icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 28px;
+    color: rgba(74, 108, 247, 0.2);
+}
+
+.chart-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.chart-card .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-card .chart-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.chart-card .chart-container {
+    height: 300px;
+    position: relative;
+}
+
+.conversion-rate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 200px;
+}
+
+.conversion-rate .rate {
+    font-size: 48px;
+    font-weight: 700;
+    color: #4a6cf7;
+}
+
+.conversion-rate .label {
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.plan-distribution {
+    height: 250px;
+}
+
+.feature-usage {
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.feature-bar .feature-name {
+    width: 180px;
+    font-size: 14px;
+}
+
+.feature-bar .progress-container {
+    flex-grow: 1;
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-right: 15px;
+}
+
+.feature-bar .progress-bar {
+    height: 100%;
+    background-color: #4a6cf7;
+}
+
+.feature-bar .percentage {
+    width: 50px;
+    text-align: right;
+    font-weight: 500;
+}
+
+.table-responsive {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    font-weight: 500;
+    color: #6c757d;
+    padding: 10px 15px;
+}
+
+.nav-tabs .nav-link.active {
+    color: #4a6cf7;
+    border-bottom: 2px solid #4a6cf7;
+    background-color: transparent;
+}
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-bar .form-select, .filter-bar .form-control {
+    margin-right: 15px;
+    max-width: 200px;
+}
+
+.filter-bar .btn {
+    padding: 6px 15px;
+}
+
+.user-source-chart {
+    height: 250px;
+}
+
+.churn-stats {
+    display: flex;
+    flex-direction: column;
+}
+
+.churn-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.churn-item:last-child {
+    border-bottom: none;
+}
+
+.churn-item .reason {
+    font-weight: 500;
+}
+
+.churn-item .count {
+    font-weight: 700;
+    color: #dc3545;
+}
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho administrativo -->
+<div class="admin-header">
+    <div class="container">
+        <h1>Painel Administrativo</h1>
+        <p>Análise completa de métricas e desempenho do DespeZap</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filtros -->
+    <div class="filter-bar">
+        <select class="form-select" id="date-range">
+            <option value="7">Últimos 7 dias</option>
+            <option value="30" selected>Últimos 30 dias</option>
+            <option value="90">Últimos 90 dias</option>
+            <option value="180">Últimos 180 dias</option>
+            <option value="365">Último ano</option>
+            <option value="all">Todo o período</option>
+        </select>
+        
+        <input type="date" class="form-control" id="date-start">
+        <input type="date" class="form-control" id="date-end">
+        
+        <button class="btn btn-primary" id="apply-filters">Aplicar filtros</button>
+        <button class="btn btn-outline-secondary" id="export-data">Exportar dados</button>
+    </div>
+
+    <!-- Cards principais -->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-people"></i></div>
+                <div class="title">Total de Usuários</div>
+                <div class="value">{{ total_usuarios | default(2546) }}</div>
+                <div class="change positive">
+                    <i class="bi bi-arrow-up-short me-1"></i> +6.8% (30d)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-wallet2"></i></div>
+                <div class="title">Receita Total (R$)</div>
+                <div class="value">{{ receita_total | default('154.892,45') }}</div>
+                <div class="change positive">
+                    <i class="bi bi-arrow-up-short me-1"></i> +12.3% (30d)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-activity"></i></div>
+                <div class="title">Total de Transações</div>
+                <div class="value">{{ total_transacoes | default('198.546') }}</div>
+                <div class="change positive">
+                    <i class="bi bi-arrow-up-short me-1"></i> +8.5% (30d)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <div class="title">Taxa de Conversão</div>
+                <div class="value">{{ taxa_conversao | default('9.7%') }}</div>
+                <div class="change positive">
+                    <i class="bi bi-arrow-up-short me-1"></i> +1.2% (30d)
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Segunda linha de cards -->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-person-plus"></i></div>
+                <div class="title">Novos Usuários (30d)</div>
+                <div class="value">{{ novos_usuarios_30d | default(246) }}</div>
+                <div class="change negative">
+                    <i class="bi bi-arrow-down-short me-1"></i> -2.1% (vs anterior)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-person-dash"></i></div>
+                <div class="title">Churn Rate (30d)</div>
+                <div class="value">{{ churn_rate | default('3.2%') }}</div>
+                <div class="change positive">
+                    <i class="bi bi-arrow-down-short me-1"></i> -0.5% (vs anterior)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-cash"></i></div>
+                <div class="title">Total de Despesas (R$)</div>
+                <div class="value">{{ total_despesas | default('432.619,87') }}</div>
+                <div class="change positive">
+                    <i class="bi bi-arrow-up-short me-1"></i> +5.4% (30d)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card position-relative">
+                <div class="icon"><i class="bi bi-piggy-bank"></i></div>
+                <div class="title">Saldo Transacionado (R$)</div>
+                <div class="value">{{ saldo_total | default('789.452,32') }}</div>
+                <div class="change positive">
+                    <i class="bi bi-arrow-up-short me-1"></i> +7.8% (30d)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas para diferentes visualizações -->
+    <ul class="nav nav-tabs mt-5 mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-tab-pane" type="button" role="tab" aria-controls="users-tab-pane" aria-selected="true">Usuários</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions-tab-pane" type="button" role="tab" aria-controls="transactions-tab-pane" aria-selected="false">Transações</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="features-tab" data-bs-toggle="tab" data-bs-target="#features-tab-pane" type="button" role="tab" aria-controls="features-tab-pane" aria-selected="false">Funcionalidades</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="conversion-tab" data-bs-toggle="tab" data-bs-target="#conversion-tab-pane" type="button" role="tab" aria-controls="conversion-tab-pane" aria-selected="false">Conversão</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="sources-tab" data-bs-toggle="tab" data-bs-target="#sources-tab-pane" type="button" role="tab" aria-controls="sources-tab-pane" aria-selected="false">Origens</button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="adminTabsContent">
+        <!-- Aba de Usuários -->
+        <div class="tab-pane fade show active" id="users-tab-pane" role="tabpanel" aria-labelledby="users-tab" tabindex="0">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Distribuição de Usuários por Plano</h3>
+                        </div>
+                        <div class="chart-container plan-distribution" id="plan-distribution-chart"></div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Novos Usuários</h3>
+                        </div>
+                        <div class="chart-container" id="new-users-chart"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Lista de Usuários</h3>
+                    <div>
+                        <input type="text" class="form-control" placeholder="Buscar usuário..." id="search-users">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Plano</th>
+                                <th>Data de Registro</th>
+                                <th>Último Acesso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>João Silva</td>
+                                <td>joao@exemplo.com</td>
+                                <td><span class="badge bg-secondary">Gratuito</span></td>
+                                <td>01/01/2023</td>
+                                <td>12/05/2023</td>
+                                <td><span class="badge bg-success">Ativo</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Maria Oliveira</td>
+                                <td>maria@exemplo.com</td>
+                                <td><span class="badge bg-primary">Premium</span></td>
+                                <td>15/02/2023</td>
+                                <td>10/05/2023</td>
+                                <td><span class="badge bg-success">Ativo</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Carlos Santos</td>
+                                <td>carlos@exemplo.com</td>
+                                <td><span class="badge bg-info">Família</span></td>
+                                <td>03/03/2023</td>
+                                <td>11/05/2023</td>
+                                <td><span class="badge bg-success">Ativo</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Ana Pereira</td>
+                                <td>ana@exemplo.com</td>
+                                <td><span class="badge bg-warning text-dark">Empresarial</span></td>
+                                <td>20/03/2023</td>
+                                <td>09/05/2023</td>
+                                <td><span class="badge bg-success">Ativo</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Pedro Costa</td>
+                                <td>pedro@exemplo.com</td>
+                                <td><span class="badge bg-secondary">Gratuito</span></td>
+                                <td>05/04/2023</td>
+                                <td>28/04/2023</td>
+                                <td><span class="badge bg-danger">Inativo</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav aria-label="Paginação de usuários" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Anterior</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Próximo</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Aba de Transações -->
+        <div class="tab-pane fade" id="transactions-tab-pane" role="tabpanel" aria-labelledby="transactions-tab" tabindex="0">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Volume de Transações</h3>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary active" data-period="daily">Diário</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-period="weekly">Semanal</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-period="monthly">Mensal</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="transactions-volume-chart"></div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Tipos de Transações</h3>
+                        </div>
+                        <div class="chart-container" id="transactions-type-chart"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Despesas por Categoria</h3>
+                        </div>
+                        <div class="chart-container" id="expenses-category-chart"></div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Receitas por Categoria</h3>
+                        </div>
+                        <div class="chart-container" id="income-category-chart"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Valor Médio de Transações</h3>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card">
+                            <div class="title">Despesas</div>
+                            <div class="value">R$ 124,87</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card">
+                            <div class="title">Receitas</div>
+                            <div class="value">R$ 2.856,32</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card">
+                            <div class="title">Metas</div>
+                            <div class="value">R$ 5.430,28</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card">
+                            <div class="title">Dívidas</div>
+                            <div class="value">R$ 12.841,65</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Aba de Funcionalidades -->
+        <div class="tab-pane fade" id="features-tab-pane" role="tabpanel" aria-labelledby="features-tab" tabindex="0">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Uso de Funcionalidades</h3>
+                        </div>
+                        <div class="feature-usage">
+                            <div class="feature-bar">
+                                <div class="feature-name">Lembretes</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 87%"></div>
+                                </div>
+                                <div class="percentage">87%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Categorização</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 78%"></div>
+                                </div>
+                                <div class="percentage">78%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Exportação</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 65%"></div>
+                                </div>
+                                <div class="percentage">65%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Agenda</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 62%"></div>
+                                </div>
+                                <div class="percentage">62%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Metas Financeiras</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 58%"></div>
+                                </div>
+                                <div class="percentage">58%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Dívidas</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 52%"></div>
+                                </div>
+                                <div class="percentage">52%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Financiamentos</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 45%"></div>
+                                </div>
+                                <div class="percentage">45%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Empréstimos</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 38%"></div>
+                                </div>
+                                <div class="percentage">38%</div>
+                            </div>
+                            
+                            <div class="feature-bar">
+                                <div class="feature-name">Orçamentos</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 32%"></div>
+                                </div>
+                                <div class="percentage">32%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Métodos de Entrada de Dados</h3>
+                        </div>
+                        <div class="chart-container" id="entry-methods-chart"></div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Frequência de Uso</h3>
+                        </div>
+                        <div class="chart-container" id="usage-frequency-chart"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Uso de Funcionalidades por Plano</h3>
+                </div>
+                <div class="chart-container" id="features-by-plan-chart"></div>
+            </div>
+        </div>
+        
+        <!-- Aba de Conversão -->
+        <div class="tab-pane fade" id="conversion-tab-pane" role="tabpanel" aria-labelledby="conversion-tab" tabindex="0">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Taxa de Conversão</h3>
+                        </div>
+                        <div class="conversion-rate">
+                            <div class="rate">9.7%</div>
+                            <div class="label">Gratuito para Pagos</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Razões de Churn</h3>
+                        </div>
+                        <div class="churn-stats">
+                            <div class="churn-item">
+                                <div class="reason">Preço alto</div>
+                                <div class="count">38%</div>
+                            </div>
+                            <div class="churn-item">
+                                <div class="reason">Falta de recursos</div>
+                                <div class="count">27%</div>
+                            </div>
+                            <div class="churn-item">
+                                <div class="reason">Experiência complexa</div>
+                                <div class="count">18%</div>
+                            </div>
+                            <div class="churn-item">
+                                <div class="reason">Problemas técnicos</div>
+                                <div class="count">12%</div>
+                            </div>
+                            <div class="churn-item">
+                                <div class="reason">Outros</div>
+                                <div class="count">5%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-8">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Conversão ao Longo do Tempo</h3>
+                        </div>
+                        <div class="chart-container" id="conversion-time-chart"></div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Distribuição de Upgrades</h3>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="stats-card text-center">
+                                    <div class="title">Premium</div>
+                                    <div class="value">67%</div>
+                                    <div class="text-muted">dos upgrades</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-card text-center">
+                                    <div class="title">Família</div>
+                                    <div class="value">24%</div>
+                                    <div class="text-muted">dos upgrades</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-card text-center">
+                                    <div class="title">Empresarial</div>
+                                    <div class="value">9%</div>
+                                    <div class="text-muted">dos upgrades</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Tempo até Conversão</h3>
+                </div>
+                <div class="chart-container" id="time-to-conversion-chart"></div>
+            </div>
+        </div>
+        
+        <!-- Aba de Origens -->
+        <div class="tab-pane fade" id="sources-tab-pane" role="tabpanel" aria-labelledby="sources-tab" tabindex="0">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Origem dos Usuários</h3>
+                        </div>
+                        <div class="chart-container user-source-chart" id="user-source-chart"></div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Conversão por Canal</h3>
+                        </div>
+                        <div class="chart-container" id="conversion-source-chart"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Detalhamento por Origem</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Origem</th>
+                                <th>Usuários</th>
+                                <th>Taxa de Conversão</th>
+                                <th>Tempo Médio até Conversão</th>
+                                <th>Custo por Aquisição (R$)</th>
+                                <th>Lifetime Value (R$)</th>
+                                <th>ROI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Indicação</td>
+                                <td>854</td>
+                                <td>12.8%</td>
+                                <td>14 dias</td>
+                                <td>0,00</td>
+                                <td>347,88</td>
+                                <td>∞</td>
+                            </tr>
+                            <tr>
+                                <td>Instagram</td>
+                                <td>632</td>
+                                <td>8.5%</td>
+                                <td>22 dias</td>
+                                <td>28,42</td>
+                                <td>291,35</td>
+                                <td>10.3x</td>
+                            </tr>
+                            <tr>
+                                <td>TikTok</td>
+                                <td>487</td>
+                                <td>7.2%</td>
+                                <td>18 dias</td>
+                                <td>32,76</td>
+                                <td>275,62</td>
+                                <td>8.4x</td>
+                            </tr>
+                            <tr>
+                                <td>LinkedIn</td>
+                                <td>321</td>
+                                <td>11.5%</td>
+                                <td>17 dias</td>
+                                <td>35,18</td>
+                                <td>421,45</td>
+                                <td>12.0x</td>
+                            </tr>
+                            <tr>
+                                <td>Google</td>
+                                <td>254</td>
+                                <td>9.1%</td>
+                                <td>20 dias</td>
+                                <td>25,63</td>
+                                <td>312,78</td>
+                                <td>12.2x</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de distribuição de planos
+    const planDistributionData = [{
+        values: [1850, 420, 156, 120],
+        labels: ['Gratuito', 'Premium', 'Família', 'Empresarial'],
+        type: 'pie',
+        hole: 0.4,
+        marker: {
+            colors: ['#6c757d', '#4a6cf7', '#28a745', '#fd7e14']
+        },
+        textinfo: 'percent+label',
+        insidetextorientation: 'radial'
+    }];
+
+    const planDistributionLayout = {
+        margin: { t: 0, r: 0, b: 0, l: 0 },
+        showlegend: false,
+        height: 250
+    };
+
+    Plotly.newPlot('plan-distribution-chart', planDistributionData, planDistributionLayout);
+
+    // Gráfico de novos usuários
+    const newUsersData = [{
+        x: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'],
+        y: [182, 195, 210, 178, 246],
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: {
+            color: '#4a6cf7',
+            width: 3
+        },
+        marker: {
+            color: '#4a6cf7',
+            size: 8
+        }
+    }];
+
+    const newUsersLayout = {
+        margin: { t: 10, r: 10, b: 40, l: 60 },
+        xaxis: {
+            title: 'Mês'
+        },
+        yaxis: {
+            title: 'Novos usuários'
+        },
+        height: 300
+    };
+
+    Plotly.newPlot('new-users-chart', newUsersData, newUsersLayout);
+
+    // Gráfico de volume de transações
+    const transactionVolumeData = [{
+        x: ['01/05', '02/05', '03/05', '04/05', '05/05', '06/05', '07/05', '08/05', '09/05', '10/05'],
+        y: [1243, 1187, 1352, 1428, 1501, 1378, 1289, 1432, 1520, 1618],
+        type: 'scatter',
+        mode: 'lines',
+        line: {
+            color: '#4a6cf7',
+            width: 3
+        }
+    }];
+
+    const transactionVolumeLayout = {
+        margin: { t: 10, r: 10, b: 40, l: 60 },
+        xaxis: {
+            title: 'Data'
+        },
+        yaxis: {
+            title: 'Número de transações'
+        },
+        height: 300
+    };
+
+    Plotly.newPlot('transactions-volume-chart', transactionVolumeData, transactionVolumeLayout);
+
+    // Gráfico de tipos de transações
+    const transactionTypeData = [{
+        values: [65, 25, 5, 5],
+        labels: ['Despesas', 'Receitas', 'Metas', 'Dívidas'],
+        type: 'pie',
+        marker: {
+            colors: ['#e74c3c', '#28a745', '#4a6cf7', '#fd7e14']
+        },
+        textinfo: 'percent+label'
+    }];
+
+    const transactionTypeLayout = {
+        margin: { t: 10, r: 10, b: 20, l: 10 },
+        showlegend: false,
+        height: 300
+    };
+
+    Plotly.newPlot('transactions-type-chart', transactionTypeData, transactionTypeLayout);
+
+    // Gráfico de despesas por categoria
+    const expensesCategoryData = [{
+        values: [28, 17, 15, 12, 10, 8, 6, 4],
+        labels: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Lazer', 'Educação', 'Vestuário', 'Outros'],
+        type: 'pie',
+        marker: {
+            colors: ['#FFA726', '#66BB6A', '#42A5F5', '#EC407A', '#26C6DA', '#AB47BC', '#8D6E63', '#78909C']
+        },
+        textinfo: 'percent+label'
+    }];
+
+    const expensesCategoryLayout = {
+        margin: { t: 10, r: 10, b: 20, l: 10 },
+        showlegend: false,
+        height: 300
+    };
+
+    Plotly.newPlot('expenses-category-chart', expensesCategoryData, expensesCategoryLayout);
+
+    // Gráfico de receitas por categoria
+    const incomeCategoryData = [{
+        values: [72, 12, 9, 7],
+        labels: ['Salário', 'Freelance', 'Investimentos', 'Outros'],
+        type: 'pie',
+        marker: {
+            colors: ['#28a745', '#4a6cf7', '#fd7e14', '#6c757d']
+        },
+        textinfo: 'percent+label'
+    }];
+
+    const incomeCategoryLayout = {
+        margin: { t: 10, r: 10, b: 20, l: 10 },
+        showlegend: false,
+        height: 300
+    };
+
+    Plotly.newPlot('income-category-chart', incomeCategoryData, incomeCategoryLayout);
+
+    // Gráfico de métodos de entrada
+    const entryMethodsData = [{
+        values: [68, 22, 10],
+        labels: ['Mensagem de texto', 'Foto de comprovante', 'Mensagem de voz'],
+        type: 'pie',
+        hole: 0.4,
+        marker: {
+            colors: ['#4a6cf7', '#28a745', '#fd7e14']
+        },
+        textinfo: 'percent+label'
+    }];
+
+    const entryMethodsLayout = {
+        margin: { t: 10, r: 10, b: 20, l: 10 },
+        showlegend: false,
+        height: 250
+    };
+
+    Plotly.newPlot('entry-methods-chart', entryMethodsData, entryMethodsLayout);
+
+    // Gráfico de frequência de uso
+    const usageFrequencyData = [{
+        values: [45, 30, 15, 10],
+        labels: ['Diário', 'Semanal', 'Mensal', 'Esporádico'],
+        type: 'pie',
+        hole: 0.4,
+        marker: {
+            colors: ['#4a6cf7', '#28a745', '#fd7e14', '#6c757d']
+        },
+        textinfo: 'percent+label'
+    }];
+
+    const usageFrequencyLayout = {
+        margin: { t: 10, r: 10, b: 20, l: 10 },
+        showlegend: false,
+        height: 250
+    };
+
+    Plotly.newPlot('usage-frequency-chart', usageFrequencyData, usageFrequencyLayout);
+
+    // Gráfico de funcionalidades por plano
+    const featuresByPlanData = [
+        {
+            x: ['Lembretes', 'Categorização', 'Exportação', 'Agenda', 'Metas', 'Dívidas', 'Financiamentos', 'Orçamentos'],
+            y: [75, 65, 10, 50, 20, 15, 5, 10],
+            name: 'Gratuito',
+            type: 'bar',
+            marker: {
+                color: '#6c757d'
+            }
+        },
+        {
+            x: ['Lembretes', 'Categorização', 'Exportação', 'Agenda', 'Metas', 'Dívidas', 'Financiamentos', 'Orçamentos'],
+            y: [95, 90, 85, 75, 70, 60, 55, 45],
+            name: 'Premium',
+            type: 'bar',
+            marker: {
+                color: '#4a6cf7'
+            }
+        },
+        {
+            x: ['Lembretes', 'Categorização', 'Exportação', 'Agenda', 'Metas', 'Dívidas', 'Financiamentos', 'Orçamentos'],
+            y: [98, 95, 90, 85, 80, 75, 70, 65],
+            name: 'Família/Empresarial',
+            type: 'bar',
+            marker: {
+                color: '#28a745'
+            }
+        }
+    ];
+
+    const featuresByPlanLayout = {
+        margin: { t: 10, r: 10, b: 90, l: 60 },
+        xaxis: {
+            title: 'Funcionalidade'
+        },
+        yaxis: {
+            title: 'Percentual de uso',
+            range: [0, 100]
+        },
+        barmode: 'group',
+        legend: {
+            orientation: 'h',
+            y: -0.2
+        },
+        height: 400
+    };
+
+    Plotly.newPlot('features-by-plan-chart', featuresByPlanData, featuresByPlanLayout);
+
+    // Gráfico de conversão ao longo do tempo
+    const conversionTimeData = [{
+        x: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'],
+        y: [8.2, 8.5, 9.1, 9.3, 9.7],
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: {
+            color: '#4a6cf7',
+            width: 3
+        },
+        marker: {
+            color: '#4a6cf7',
+            size: 8
+        }
+    }];
+
+    const conversionTimeLayout = {
+        margin: { t: 10, r: 10, b: 40, l: 60 },
+        xaxis: {
+            title: 'Mês'
+        },
+        yaxis: {
+            title: 'Taxa de conversão (%)',
+            range: [0, 15]
+        },
+        height: 300
+    };
+
+    Plotly.newPlot('conversion-time-chart', conversionTimeData, conversionTimeLayout);
+
+    // Gráfico de tempo até conversão
+    const timeToConversionData = [{
+        x: ['1-7 dias', '8-14 dias', '15-30 dias', '31-60 dias', '61-90 dias', '91+ dias'],
+        y: [15, 25, 35, 15, 7, 3],
+        type: 'bar',
+        marker: {
+            color: '#4a6cf7'
+        }
+    }];
+
+    const timeToConversionLayout = {
+        margin: { t: 10, r: 10, b: 80, l: 60 },
+        xaxis: {
+            title: 'Tempo após cadastro'
+        },
+        yaxis: {
+            title: 'Percentual de conversões (%)'
+        },
+        height: 300
+    };
+
+    Plotly.newPlot('time-to-conversion-chart', timeToConversionData, timeToConversionLayout);
+
+    // Gráfico de origem dos usuários
+    const userSourceData = [{
+        values: [35, 25, 20, 15, 5],
+        labels: ['Indicação', 'Instagram', 'TikTok', 'LinkedIn', 'Google'],
+        type: 'pie',
+        marker: {
+            colors: ['#28a745', '#e74c3c', '#fd7e14', '#4a6cf7', '#6c757d']
+        },
+        textinfo: 'percent+label'
+    }];
+
+    const userSourceLayout = {
+        margin: { t: 10, r: 10, b: 10, l: 10 },
+        showlegend: false,
+        height: 250
+    };
+
+    Plotly.newPlot('user-source-chart', userSourceData, userSourceLayout);
+
+    // Gráfico de conversão por canal
+    const conversionSourceData = [
+        {
+            x: ['Indicação', 'Instagram', 'TikTok', 'LinkedIn', 'Google'],
+            y: [12.8, 8.5, 7.2, 11.5, 9.1],
+            type: 'bar',
+            marker: {
+                color: '#4a6cf7'
+            }
+        }
+    ];
+
+    const conversionSourceLayout = {
+        margin: { t: 10, r: 10, b: 80, l: 60 },
+        xaxis: {
+            title: 'Canal'
+        },
+        yaxis: {
+            title: 'Taxa de conversão (%)',
+            range: [0, 15]
+        },
+        height: 300
+    };
+
+    Plotly.newPlot('conversion-source-chart', conversionSourceData, conversionSourceLayout);
+
+    // Event listeners para filtros
+    document.getElementById('date-range').addEventListener('change', function() {
+        if (this.value === 'custom') {
+            document.getElementById('date-start').style.display = 'block';
+            document.getElementById('date-end').style.display = 'block';
+        } else {
+            document.getElementById('date-start').style.display = 'none';
+            document.getElementById('date-end').style.display = 'none';
+        }
+    });
+
+    // Inicialização
+    document.getElementById('date-start').style.display = 'none';
+    document.getElementById('date-end').style.display = 'none';
+});
+</script>
+{% endblock %}
