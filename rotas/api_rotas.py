@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from datetime import datetime, timedelta
-from database.supabase_models import Usuario, Despesa, Receita
+from database.models import Usuario, Despesa, Receita
 from config import Config
 import pandas as pd
 import json
