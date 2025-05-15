@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from datetime import datetime, timedelta
-from database.models import Usuario, Despesa, Receita
+from database.models import Usuario, Despesa, Receita, Divida, Orcamento, PagamentoFixo, Membro, CategoriaPersonalizada, Lembrete, TextProcessor, MetaFinanceira
 from config import Config
 import pandas as pd
 import json
@@ -9,6 +9,7 @@ import os
 import tempfile
 from werkzeug.utils import secure_filename
 import sqlite3
+from functools import wraps
 
 # Criação do blueprint
 api_bp = Blueprint('api', __name__)
@@ -2700,3 +2701,23 @@ def get_grafico_comparativo():
     }
     
     return jsonify({'data': dados_plotly, 'layout': layout_plotly})
+
+def api_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'usuario_id' not in session:
+            return jsonify({"error": "Não autorizado"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Rota para buscar dívidas
+@api_bp.route('/dividas')
+@api_login_required
+def get_dividas():
+    usuario_id = session.get('usuario_id')
+    tipo_perfil = request.args.get('tipo_perfil', 'pessoal')
+
+    divida_model = Divida(Config.DATABASE)
+    dividas = divida_model.buscar(usuario_id=usuario_id, tipo_perfil=tipo_perfil)
+
+    return jsonify(dividas)

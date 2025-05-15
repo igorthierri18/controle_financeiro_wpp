@@ -610,6 +610,7 @@
     // Variáveis globais
     let perfilAtual = 'pessoal';
     let dividaParaExcluir = null;
+    let rendaMensal = 0;
     
     // Ícones para tipos de dívida
     const debtIcons = {
@@ -650,18 +651,14 @@
         document.getElementById('profile-personal').addEventListener('click', function() {
             perfilAtual = 'pessoal';
             document.getElementById('profile-personal').classList.add('active');
-            document.getElementById('profile-business').classList.remove('active');
+            const profileBusiness = document.getElementById('profile-business');
+            if (profileBusiness) profileBusiness.classList.remove('active');
             carregarDividas();
         });
         
         const profileBusiness = document.getElementById('profile-business');
-        if (profileBusiness) {
+        if (profileBusiness && !profileBusiness.classList.contains('disabled')) {
             profileBusiness.addEventListener('click', function() {
-                if (this.classList.contains('disabled')) {
-                    alert('O perfil empresarial está disponível apenas para os planos Família e Empresarial.');
-                    return;
-                }
-                
                 perfilAtual = 'empresarial';
                 document.getElementById('profile-business').classList.add('active');
                 document.getElementById('profile-personal').classList.remove('active');
@@ -763,6 +760,9 @@
             atualizarDivida(id, divida);
         });
         
+        // Busca a renda mensal do usuário
+        buscarRendaMensal();
+        
         // Carrega as dívidas iniciais
         carregarDividas();
     });
@@ -788,68 +788,45 @@
         return (fim.getFullYear() - inicio.getFullYear()) * 12 + fim.getMonth() - inicio.getMonth();
     }
     
+    // Função para buscar a renda mensal do usuário
+    async function buscarRendaMensal() {
+        try {
+            const response = await fetch('/api/usuario/renda');
+            const data = await response.json();
+            
+            if (data.success) {
+                rendaMensal = data.renda || 0;
+            }
+        } catch (error) {
+            console.error('Erro ao buscar renda mensal:', error);
+        }
+    }
+    
     // Função para carregar as dívidas
     async function carregarDividas() {
         try {
-            // Em uma implementação real, buscaria da API
-            // const response = await fetch(`/api/dividas?tipo_perfil=${perfilAtual}`);
-            // const dividas = await response.json();
+            // Mostra indicador de carregamento
+            document.getElementById('all-debts-list').innerHTML = `
+                <div class="col-12 text-center my-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando dívidas...</p>
+                </div>
+            `;
             
-            // Dados de exemplo para demonstração
-            const dividas = [
-                {
-                    id: 1,
-                    nome: "Empréstimo Bancário",
-                    tipo: "emprestimo",
-                    valor_total: 10000.00,
-                    valor_pago: 2500.00,
-                    data_inicio: "2023-01-15",
-                    data_fim: "2024-01-15",
-                    taxa_juros: 1.99,
-                    parcelas_total: 12,
-                    parcelas_pagas: 3,
-                    status: "em_dia",
-                    credor: "Banco XYZ",
-                    tipo_perfil: "pessoal"
-                },
-                {
-                    id: 2,
-                    nome: "Cartão de Crédito",
-                    tipo: "cartao_credito",
-                    valor_total: 5000.00,
-                    valor_pago: 1000.00,
-                    data_inicio: "2023-03-10",
-                    data_fim: "2023-08-10",
-                    taxa_juros: 3.99,
-                    parcelas_total: 5,
-                    parcelas_pagas: 1,
-                    status: "em_dia",
-                    credor: "Banco ABC",
-                    tipo_perfil: "pessoal"
-                },
-                {
-                    id: 3,
-                    nome: "Financiamento de Equipamentos",
-                    tipo: "financiamento",
-                    valor_total: 25000.00,
-                    valor_pago: 5000.00,
-                    data_inicio: "2023-02-01",
-                    data_fim: "2024-02-01",
-                    taxa_juros: 1.5,
-                    parcelas_total: 12,
-                    parcelas_pagas: 2,
-                    status: "em_dia",
-                    credor: "Banco Empresarial",
-                    tipo_perfil: "empresarial"
-                }
-            ];
+            // Busca dados da API
+            const response = await fetch(`/api/dividas?tipo_perfil=${perfilAtual}`);
             
-            // Filtra pelo perfil atual
-            const dividasFiltradas = dividas.filter(d => d.tipo_perfil === perfilAtual);
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+            
+            const dividas = await response.json();
             
             // Atualiza a interface
-            renderizarDividas(dividasFiltradas);
-            atualizarResumo(dividasFiltradas);
+            renderizarDividas(dividas);
+            atualizarResumo(dividas);
             
             // Filtra novamente baseado na aba ativa
             const tipoAtivo = document.querySelector('#debt-type-tabs .nav-link.active').id.replace('-tab', '');
@@ -1038,9 +1015,8 @@
             }
         });
         
-        // Calcula comprometimento (exemplo: baseado em R$ 5000 de renda mensal)
-        const rendaMensal = 5000; // Em uma implementação real, usaria a renda do usuário
-        const comprometimento = (parcelasMensais / rendaMensal) * 100;
+        // Calcula comprometimento baseado na renda mensal do usuário
+        const comprometimento = rendaMensal > 0 ? (parcelasMensais / rendaMensal) * 100 : 0;
         
         // Atualiza os valores na tela
         document.getElementById('total-dividas').textContent = formatarMoeda(totalDividas);
@@ -1114,66 +1090,26 @@
     }
     
     // Função para abrir o modal de edição de dívida
-    function abrirModalEditarDivida(dividaId) {
+    async function abrirModalEditarDivida(dividaId) {
         try {
-            // Em uma implementação real, buscaria os dados da dívida da API
-            // const response = await fetch(`/api/dividas/${dividaId}`);
-            // const divida = await response.json();
+            // Mostrar indicador de carregamento no botão
+            const botaoEditar = document.querySelector(`.btn-editar-divida[data-id="${dividaId}"]`);
+            const textoOriginal = botaoEditar.innerHTML;
+            botaoEditar.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Carregando...`;
+            botaoEditar.disabled = true;
             
-            // Dados de exemplo para demonstração
-            const dividas = [
-                {
-                    id: 1,
-                    nome: "Empréstimo Bancário",
-                    tipo: "emprestimo",
-                    valor_total: 10000.00,
-                    valor_pago: 2500.00,
-                    data_inicio: "2023-01-15",
-                    data_fim: "2024-01-15",
-                    taxa_juros: 1.99,
-                    parcelas_total: 12,
-                    parcelas_pagas: 3,
-                    status: "em_dia",
-                    credor: "Banco XYZ",
-                    tipo_perfil: "pessoal"
-                },
-                {
-                    id: 2,
-                    nome: "Cartão de Crédito",
-                    tipo: "cartao_credito",
-                    valor_total: 5000.00,
-                    valor_pago: 1000.00,
-                    data_inicio: "2023-03-10",
-                    data_fim: "2023-08-10",
-                    taxa_juros: 3.99,
-                    parcelas_total: 5,
-                    parcelas_pagas: 1,
-                    status: "em_dia",
-                    credor: "Banco ABC",
-                    tipo_perfil: "pessoal"
-                },
-                {
-                    id: 3,
-                    nome: "Financiamento de Equipamentos",
-                    tipo: "financiamento",
-                    valor_total: 25000.00,
-                    valor_pago: 5000.00,
-                    data_inicio: "2023-02-01",
-                    data_fim: "2024-02-01",
-                    taxa_juros: 1.5,
-                    parcelas_total: 12,
-                    parcelas_pagas: 2,
-                    status: "em_dia",
-                    credor: "Banco Empresarial",
-                    tipo_perfil: "empresarial"
-                }
-            ];
+            // Busca os dados da dívida da API
+            const response = await fetch(`/api/dividas/${dividaId}`);
             
-            const divida = dividas.find(d => d.id == dividaId);
-            
-            if (!divida) {
-                throw new Error('Dívida não encontrada');
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
             }
+            
+            const divida = await response.json();
+            
+            // Restaura o botão
+            botaoEditar.innerHTML = textoOriginal;
+            botaoEditar.disabled = false;
             
             // Preenche o formulário
             document.getElementById('editar-divida-id').value = divida.id;
@@ -1191,6 +1127,13 @@
         } catch (error) {
             console.error('Erro ao abrir modal de edição:', error);
             alert('Erro ao carregar dados da dívida. Por favor, tente novamente.');
+            
+            // Restaura o botão em caso de erro
+            const botaoEditar = document.querySelector(`.btn-editar-divida[data-id="${dividaId}"]`);
+            if (botaoEditar) {
+                botaoEditar.innerHTML = `<i class="bi bi-pencil"></i> Editar`;
+                botaoEditar.disabled = false;
+            }
         }
     }
     
@@ -1210,16 +1153,28 @@
     // Função para criar uma nova dívida
     async function criarDivida(divida) {
         try {
-            // Em uma implementação real, enviaria para a API
-            // const response = await fetch('/api/dividas', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(divida)
-            // });
-            // const resultado = await response.json();
+            // Mostra indicador de carregamento no botão
+            const botaoSalvar = document.getElementById('btn-salvar-divida');
+            const textoOriginal = botaoSalvar.innerHTML;
+            botaoSalvar.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...`;
+            botaoSalvar.disabled = true;
             
-            // Simulação de sucesso
-            console.log('Dívida criada:', divida);
+            // Envia para a API
+            const response = await fetch('/api/dividas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(divida)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+            
+            const resultado = await response.json();
+            
+            // Restaura o botão
+            botaoSalvar.innerHTML = textoOriginal;
+            botaoSalvar.disabled = false;
             
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalAddDivida'));
@@ -1232,25 +1187,42 @@
             carregarDividas();
             
             // Feedback para o usuário
-            alert('Dívida adicionada com sucesso!');
+            mostrarAlerta('success', 'Dívida adicionada com sucesso!');
             
         } catch (error) {
             console.error('Erro ao criar dívida:', error);
-            alert('Erro ao adicionar dívida. Por favor, tente novamente.');
+            mostrarAlerta('danger', 'Erro ao adicionar dívida. Por favor, tente novamente.');
+            
+            // Restaura o botão
+            const botaoSalvar = document.getElementById('btn-salvar-divida');
+            botaoSalvar.innerHTML = `Adicionar Dívida`;
+            botaoSalvar.disabled = false;
         }
     }
     
     // Função para excluir uma dívida
     async function excluirDivida(id) {
         try {
-            // Em uma implementação real, enviaria para a API
-            // const response = await fetch(`/api/dividas/${id}`, {
-            //     method: 'DELETE'
-            // });
-            // const resultado = await response.json();
+            // Mostra indicador de carregamento no botão
+            const botaoExcluir = document.getElementById('btn-confirmar-exclusao');
+            const textoOriginal = botaoExcluir.innerHTML;
+            botaoExcluir.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Excluindo...`;
+            botaoExcluir.disabled = true;
             
-            // Simulação de sucesso
-            console.log('Dívida excluída:', id);
+            // Envia para a API
+            const response = await fetch(`/api/dividas/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+            
+            const resultado = await response.json();
+            
+            // Restaura o botão
+            botaoExcluir.innerHTML = textoOriginal;
+            botaoExcluir.disabled = false;
             
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
@@ -1260,11 +1232,16 @@
             carregarDividas();
             
             // Feedback para o usuário
-            alert('Dívida excluída com sucesso!');
+            mostrarAlerta('success', 'Dívida excluída com sucesso!');
             
         } catch (error) {
             console.error('Erro ao excluir dívida:', error);
-            alert('Erro ao excluir dívida. Por favor, tente novamente.');
+            mostrarAlerta('danger', 'Erro ao excluir dívida. Por favor, tente novamente.');
+            
+            // Restaura o botão
+            const botaoExcluir = document.getElementById('btn-confirmar-exclusao');
+            botaoExcluir.innerHTML = `Excluir`;
+            botaoExcluir.disabled = false;
             
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmExcluir'));
@@ -1275,16 +1252,28 @@
     // Função para registrar um pagamento
     async function registrarPagamento(pagamento) {
         try {
-            // Em uma implementação real, enviaria para a API
-            // const response = await fetch('/api/dividas/pagamento', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(pagamento)
-            // });
-            // const resultado = await response.json();
+            // Mostra indicador de carregamento no botão
+            const botaoPagamento = document.getElementById('btn-confirmar-pagamento');
+            const textoOriginal = botaoPagamento.innerHTML;
+            botaoPagamento.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registrando...`;
+            botaoPagamento.disabled = true;
             
-            // Simulação de sucesso
-            console.log('Pagamento registrado:', pagamento);
+            // Envia para a API
+            const response = await fetch('/api/dividas/pagamento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pagamento)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+            
+            const resultado = await response.json();
+            
+            // Restaura o botão
+            botaoPagamento.innerHTML = textoOriginal;
+            botaoPagamento.disabled = false;
             
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalRegistrarPagamento'));
@@ -1297,27 +1286,44 @@
             carregarDividas();
             
             // Feedback para o usuário
-            alert('Pagamento registrado com sucesso!');
+            mostrarAlerta('success', 'Pagamento registrado com sucesso!');
             
         } catch (error) {
             console.error('Erro ao registrar pagamento:', error);
-            alert('Erro ao registrar pagamento. Por favor, tente novamente.');
+            mostrarAlerta('danger', 'Erro ao registrar pagamento. Por favor, tente novamente.');
+            
+            // Restaura o botão
+            const botaoPagamento = document.getElementById('btn-confirmar-pagamento');
+            botaoPagamento.innerHTML = `Registrar Pagamento`;
+            botaoPagamento.disabled = false;
         }
     }
     
     // Função para atualizar uma dívida
     async function atualizarDivida(id, divida) {
         try {
-            // Em uma implementação real, enviaria para a API
-            // const response = await fetch(`/api/dividas/${id}`, {
-            //     method: 'PUT',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(divida)
-            // });
-            // const resultado = await response.json();
+            // Mostra indicador de carregamento no botão
+            const botaoAtualizar = document.getElementById('btn-atualizar-divida');
+            const textoOriginal = botaoAtualizar.innerHTML;
+            botaoAtualizar.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...`;
+            botaoAtualizar.disabled = true;
             
-            // Simulação de sucesso
-            console.log('Dívida atualizada:', id, divida);
+            // Envia para a API
+            const response = await fetch(`/api/dividas/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(divida)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+            
+            const resultado = await response.json();
+            
+            // Restaura o botão
+            botaoAtualizar.innerHTML = textoOriginal;
+            botaoAtualizar.disabled = false;
             
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarDivida'));
@@ -1327,12 +1333,41 @@
             carregarDividas();
             
             // Feedback para o usuário
-            alert('Dívida atualizada com sucesso!');
+            mostrarAlerta('success', 'Dívida atualizada com sucesso!');
             
         } catch (error) {
             console.error('Erro ao atualizar dívida:', error);
-            alert('Erro ao atualizar dívida. Por favor, tente novamente.');
+            mostrarAlerta('danger', 'Erro ao atualizar dívida. Por favor, tente novamente.');
+            
+            // Restaura o botão
+            const botaoAtualizar = document.getElementById('btn-atualizar-divida');
+            botaoAtualizar.innerHTML = `Salvar Alterações`;
+            botaoAtualizar.disabled = false;
         }
+    }
+    
+    // Função para mostrar alertas temporários
+    function mostrarAlerta(tipo, mensagem) {
+        // Cria o elemento de alerta
+        const alerta = document.createElement('div');
+        alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        alerta.setAttribute('role', 'alert');
+        alerta.style.zIndex = '9999';
+        alerta.innerHTML = `
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        `;
+        
+        // Adiciona ao corpo do documento
+        document.body.appendChild(alerta);
+        
+        // Remove depois de 5 segundos
+        setTimeout(() => {
+            alerta.classList.remove('show');
+            setTimeout(() => {
+                alerta.remove();
+            }, 300);
+        }, 5000);
     }
 </script>
 {% endblock %}
