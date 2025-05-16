@@ -282,22 +282,47 @@ def cadastro():
         
         if usuario_id:
             try:
+                conn = sqlite3.connect(Config.DATABASE)
+                cursor = conn.cursor()
+                
                 # Registra a origem (referral)
                 if origem:
-                    conn = sqlite3.connect(Config.DATABASE)
-                    cursor = conn.cursor()
-                    
                     data_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     cursor.execute(
                         "INSERT INTO usuario_referral (usuario_id, origem, data_registro) VALUES (?, ?, ?)",
                         (usuario_id, origem, data_registro)
                     )
-                    
-                    conn.commit()
-                    conn.close()
                 
-                # Cria um perfil padrão para o usuário
-                usuario_model.criar_perfil_padrao(usuario_id)
+                # Cria categorias padrão para o usuário
+                categorias_padrao = [
+                    ('Alimentação', 'despesa', '#FF6B6B', 'bi-shop'),
+                    ('Transporte', 'despesa', '#4ECDC4', 'bi-bus-front'),
+                    ('Moradia', 'despesa', '#45B7D1', 'bi-house'),
+                    ('Saúde', 'despesa', '#96CEB4', 'bi-heart-pulse'),
+                    ('Lazer', 'despesa', '#FFEAA7', 'bi-camera'),
+                    ('Educação', 'despesa', '#DDA0DD', 'bi-book'),
+                    ('Roupas', 'despesa', '#F39C12', 'bi-bag'),
+                    ('Outros Gastos', 'despesa', '#95A5A6', 'bi-three-dots'),
+                    ('Salário', 'receita', '#27AE60', 'bi-briefcase'),
+                    ('Freelance', 'receita', '#3498DB', 'bi-laptop'),
+                    ('Investimentos', 'receita', '#9B59B6', 'bi-graph-up-arrow'),
+                    ('Outros Ganhos', 'receita', '#1ABC9C', 'bi-plus-circle')
+                ]
+                
+                for nome_cat, tipo, cor, icone in categorias_padrao:
+                    cursor.execute("""
+                        INSERT INTO categorias (usuario_id, nome, tipo, cor, icone)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (usuario_id, nome_cat, tipo, cor, icone))
+                
+                # Atualiza a coluna origem na tabela usuarios
+                cursor.execute(
+                    "UPDATE usuarios SET origem = ? WHERE id = ?",
+                    (origem, usuario_id)
+                )
+                
+                conn.commit()
+                conn.close()
                 
                 # Aplica cupom se fornecido
                 if cupom and hasattr(Config, 'APLICAR_CUPOM_FUNC'):
@@ -310,9 +335,15 @@ def cadastro():
                 
                 # Cria a sessão e redireciona para o dashboard
                 session['usuario_id'] = usuario_id
+                flash('Conta criada com sucesso! Bem-vindo ao Despezap!', 'success')
                 return redirect(url_for('web.dashboard'))
+                
             except Exception as e:
-                flash(f'Erro ao registrar dados adicionais: {e}', 'error')
+                flash(f'Erro ao configurar sua conta: {str(e)}', 'error')
+                # Mesmo com erro nas configurações extras, o usuário foi criado
+                # então vamos fazer login para evitar problemas
+                session['usuario_id'] = usuario_id
+                return redirect(url_for('web.dashboard'))
         else:
             flash('Erro ao criar usuário. Tente novamente.', 'error')
     

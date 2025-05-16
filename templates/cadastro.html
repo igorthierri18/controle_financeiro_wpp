@@ -3,150 +3,523 @@
 {% block title %}Cadastro - {{ app_name }}{% endblock %}
 
 {% block custom_styles %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 body {
-    background: linear-gradient(135deg, #28a745, #218838);
+    background: linear-gradient(135deg, #26983F, #1a7c33);
     min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+}
+
+/* Elementos removidos - ocultos */
+.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom {
+    display: none !important;
+}
+
+.container {
+    padding: 20px;
+    max-width: 1600px;
+}
+
+.hero-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+}
+
+.signup-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    height: 90vh;
+    max-height: 800px;
+    min-height: 600px;
+}
+
+.row.g-0 {
+    height: 100%;
+}
+
+.col-lg-6 {
+    height: 100%;
+}
+
+.signup-left {
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    color: white;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.signup-left::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.05"/><circle cx="10" cy="60" r="1" fill="white" opacity="0.05"/><circle cx="90" cy="30" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.signup-left-content {
+    position: relative;
+    z-index: 1;
+}
+
+.signup-left h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.signup-left p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.highlight-price {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 24px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.highlight-price .price-text {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 4px;
+}
+
+.highlight-price .price-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.testimonial {
+    margin-top: 32px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.testimonial-avatar {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin: 0 auto 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
 }
 
-.card {
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+.testimonial p {
+    font-size: 0.9rem;
+    font-style: italic;
+    margin: 0;
 }
 
-.card-header {
-    background-color: #fff;
-    border-bottom: 1px solid #eee;
-    padding: 20px;
+.testimonial-author {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 8px;
+}
+
+.signup-right {
+    padding: 40px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.signup-header {
     text-align: center;
+    margin-bottom: 32px;
 }
 
-.card-header h1 {
-    color: #28a745;
+.logo-container {
+    margin-bottom: 20px;
+}
+
+.logo-manual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background-color: #26983F;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo-icon::before {
+    content: '$';
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.logo-text {
     font-size: 24px;
-    margin-bottom: 0;
+    font-weight: 700;
+    color: #374151;
+    margin: 0;
 }
 
-.card-body {
-    padding: 30px;
+.signup-header h2 {
+    color: #111827;
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.signup-header p {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+/* Ajustes para mobile - manter campos empilhados */
+@media (max-width: 767.98px) {
+    .row .col-md-6 {
+        margin-bottom: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
 }
 
 .form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-control, .form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: #26983F;
+    box-shadow: 0 0 0 3px rgba(38, 152, 63, 0.1);
+}
+
+.form-text {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.form-check {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #26983F;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.form-check-label {
+    font-size: 0.9rem;
+    color: #374151;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.form-check-label a {
+    color: #26983F;
+    text-decoration: none;
     font-weight: 500;
 }
 
-.form-control {
-    padding: 12px;
-    border-radius: 10px;
+.form-check-label a:hover {
+    text-decoration: underline;
 }
 
-.btn-success {
-    padding: 12px;
-    border-radius: 10px;
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
     font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(38, 152, 63, 0.2);
 }
 
-.text-separator {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 20px 0;
-    color: #6c757d;
-}
-
-.text-separator::before,
-.text-separator::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.text-separator span {
-    padding: 0 10px;
-}
-
-.navbar {
-    display: none;
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1a7c33, #155c27);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(38, 152, 63, 0.3);
 }
 
 .alert {
-    border-radius: 10px;
+    border-radius: 12px;
+    border: none;
+    padding: 12px 16px;
+    margin-bottom: 20px;
 }
 
-.intl-tel-input {
-    width: 100%;
+.alert-danger {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border-left: 4px solid #dc2626;
+}
+
+.modal-content {
+    border-radius: 16px;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 20px 24px 16px;
+}
+
+.modal-body {
+    padding: 24px;
+    line-height: 1.6;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 16px 24px 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .signup-card {
+        max-width: 95%;
+        margin: 20px;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .signup-card {
+        border-radius: 0;
+        margin: 0;
+        min-height: 100vh;
+        height: auto;
+    }
+    
+    .hero-container {
+        padding: 0;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .signup-left {
+        order: 2;
+        padding: 30px 20px;
+        height: auto;
+    }
+    
+    .signup-right {
+        order: 1;
+        padding: 30px 20px;
+        height: auto;
+    }
+    
+    .signup-left h1 {
+        font-size: 2rem;
+    }
+    
+    .logo-text {
+        font-size: 20px;
+    }
+    
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .logo-icon::before {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .signup-left,
+    .signup-right {
+        padding: 20px 15px;
+    }
+    
+    .signup-left h1 {
+        font-size: 1.8rem;
+    }
 }
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card">
-                <div class="card-header">
-                    <h1>{{ app_name }}</h1>
+    <div class="hero-container">
+        <div class="signup-card">
+            <div class="row g-0">
+                <div class="col-lg-6">
+                    <div class="signup-left">
+                        <div class="signup-left-content">
+                            <h1>Chega de Excel.</h1>
+                            <p>Comece hoje organizando sua vida financeira!</p>
+                            
+                            <div class="highlight-price">
+                                <div class="price-text">Mais barato que</div>
+                                <div class="price-value">🍿 Netflix</div>
+                            </div>
+                            
+                            <div class="testimonial">
+                                <div class="testimonial-avatar">JS</div>
+                                <p>"O controle financeiro pelo WhatsApp mudou minha vida financeira completamente!"</p>
+                                <div class="testimonial-author">- João Silva</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Mensagens de erro/sucesso -->
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                <div class="col-lg-6">
+                    <div class="signup-right">
+                        <div class="signup-header">
+                            <div class="logo-container">
+                                <div class="logo-manual">
+                                    <div class="logo-icon"></div>
+                                    <h1 class="logo-text">despezap</h1>
                                 </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <h2 class="text-center mb-4">Criar uma Conta</h2>
-                    
-                    <form method="POST" action="{{ url_for('web.cadastro') }}">
-                        <div class="mb-3">
-                            <label for="nome" class="form-label">Nome completo</label>
-                            <input type="text" class="form-control" id="nome" name="nome" required>
+                            </div>
+                            <h2>Criar uma Conta</h2>
+                            <p>Já é membro? <a href="{{ url_for('web.login') }}" style="color: #26983F; font-weight: 500;">Entre aqui</a></p>
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="celular" class="form-label">Celular (WhatsApp)</label>
-                            <input type="tel" class="form-control" id="celular" name="celular" required>
-                            <div class="form-text">Este deve ser o mesmo número que você usará no WhatsApp.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="senha" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="senha" name="senha" required minlength="6">
-                        </div>
-                        <div class="mb-3">
-                            <label for="confirma_senha" class="form-label">Confirme a senha</label>
-                            <input type="password" class="form-control" id="confirma_senha" name="confirma_senha" required minlength="6">
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="termos" name="termos" required>
-                            <label class="form-check-label" for="termos">
-                                Concordo com os <a href="#" data-bs-toggle="modal" data-bs-target="#modalTermos">Termos de Uso</a> e <a href="#" data-bs-toggle="modal" data-bs-target="#modalPrivacidade">Política de Privacidade</a>
-                            </label>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Criar Conta</button>
-                        </div>
-                    </form>
-                    
-                    <div class="text-separator">
-                        <span>ou</span>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('web.login') }}" class="btn btn-outline-success">Já tenho uma conta</a>
-                    </div>
-                    
-                    <div class="text-center mt-3">
-                        <a href="{{ url_for('web.index') }}" class="text-decoration-none">Voltar à página inicial</a>
+                        
+                        <!-- Mensagens de erro/sucesso -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form method="POST" action="{{ url_for('web.cadastro') }}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="nome" class="form-label">Nome completo</label>
+                                        <input type="text" class="form-control" id="nome" name="nome" required placeholder="João Silva">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" required placeholder="joao@exemplo.com">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="celular" class="form-label">Celular (WhatsApp)</label>
+                                        <input type="tel" class="form-control" id="celular" name="celular" required placeholder="(11) 99999-9999">
+                                        <div class="form-text">Este deve ser o mesmo número que você usará no WhatsApp.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="origem" class="form-label">Como conheceu nossa plataforma?</label>
+                                        <select class="form-select" id="origem" name="origem" required>
+                                            <option value="">Selecione uma opção</option>
+                                            <option value="indicacao">Indicação de amigo/conhecido</option>
+                                            <option value="tiktok">TikTok</option>
+                                            <option value="instagram">Instagram</option>
+                                            <option value="youtube">YouTube</option>
+                                            <option value="google">Busca no Google</option>
+                                            <option value="facebook">Facebook</option>
+                                            <option value="blog">Blog/Artigo</option>
+                                            <option value="podcast">Podcast</option>
+                                            <option value="outro">Outro</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="senha" class="form-label">Senha</label>
+                                        <input type="password" class="form-control" id="senha" name="senha" required minlength="6" placeholder="••••••••">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="confirma_senha" class="form-label">Confirme a senha</label>
+                                        <input type="password" class="form-control" id="confirma_senha" name="confirma_senha" required minlength="6" placeholder="••••••••">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="termos" name="termos" required>
+                                <label class="form-check-label" for="termos">
+                                    Concordo com os <a href="#" data-bs-toggle="modal" data-bs-target="#modalTermos">Termos de Uso</a> e <a href="#" data-bs-toggle="modal" data-bs-target="#modalPrivacidade">Política de Privacidade</a>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                Criar conta
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -168,7 +541,7 @@ body {
                 <p>Ao utilizar o {{ app_name }}, você concorda com estes termos. Por favor, leia-os cuidadosamente.</p>
                 
                 <h6>1. Aceitação dos Termos</h6>
-                <p>Ao acessar ou usar o {{ app_name }}, você concorda em cumprir estes Termos de Uso e todas as leis e regulamentos aplicáveis. Se você não concordar com algum destes termos, você está proibido de usar o serviço.</p>
+                <p>Ao acessar ou usar o {{ app_name }}, você concorda em cumprir estes Termos de Uso e todas as leis e regulamentos aplicáveis.</p>
                 
                 <h6>2. Uso do Serviço</h6>
                 <p>O {{ app_name }} é um serviço de controle financeiro que permite o registro e análise de despesas e receitas através do WhatsApp e interface web.</p>
@@ -179,20 +552,11 @@ body {
                 <h6>4. Privacidade</h6>
                 <p>O uso do {{ app_name }} está sujeito à nossa Política de Privacidade, que descreve como coletamos, usamos e compartilhamos suas informações pessoais.</p>
                 
-                <h6>5. Conteúdo do Usuário</h6>
-                <p>Você mantém todos os direitos sobre os dados que você envia, publica ou exibe no ou através do {{ app_name }}.</p>
-                
-                <h6>6. Modificações do Serviço</h6>
-                <p>Reservamo-nos o direito de modificar ou descontinuar o serviço a qualquer momento.</p>
-                
-                <h6>7. Limitação de Responsabilidade</h6>
+                <h6>5. Limitação de Responsabilidade</h6>
                 <p>O {{ app_name }} não será responsável por quaisquer perdas ou danos resultantes do uso do serviço.</p>
-                
-                <h6>8. Lei Aplicável</h6>
-                <p>Estes termos serão regidos e interpretados de acordo com as leis do Brasil.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Entendi</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
             </div>
         </div>
     </div>
@@ -212,28 +576,19 @@ body {
                 <p>Esta Política de Privacidade descreve como suas informações pessoais são coletadas, usadas e compartilhadas quando você utiliza o {{ app_name }}.</p>
                 
                 <h6>1. Informações que coletamos</h6>
-                <p>Coletamos informações que você nos fornece, como nome, endereço de e-mail e número de telefone. Também coletamos informações sobre suas transações financeiras registradas através do serviço.</p>
+                <p>Coletamos informações que você nos fornece, como nome, endereço de e-mail e número de telefone.</p>
                 
                 <h6>2. Como usamos suas informações</h6>
                 <p>Usamos as informações para fornecer, manter e melhorar nossos serviços, comunicar-nos com você e personalizar sua experiência.</p>
                 
                 <h6>3. Compartilhamento de informações</h6>
-                <p>Não vendemos ou compartilhamos suas informações pessoais com terceiros para fins de marketing. Podemos compartilhar com prestadores de serviços que nos ajudam a operar o {{ app_name }}.</p>
+                <p>Não vendemos ou compartilhamos suas informações pessoais com terceiros para fins de marketing.</p>
                 
                 <h6>4. Segurança</h6>
                 <p>Adotamos medidas razoáveis para proteger suas informações contra acesso não autorizado, alteração, divulgação ou destruição.</p>
-                
-                <h6>5. Seus direitos</h6>
-                <p>Você tem o direito de acessar, corrigir ou excluir suas informações pessoais a qualquer momento.</p>
-                
-                <h6>6. Alterações a esta política</h6>
-                <p>Podemos atualizar esta política de privacidade periodicamente. Notificaremos você sobre alterações significativas.</p>
-                
-                <h6>7. Contato</h6>
-                <p>Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Entendi</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
             </div>
         </div>
     </div>
@@ -241,11 +596,16 @@ body {
 {% endblock %}
 
 {% block scripts %}
-<!-- Script para validar o formulário e formatar o número de telefone -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css">
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Remove qualquer elemento de navegação que possa aparecer
+        const navElements = document.querySelectorAll('.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom');
+        navElements.forEach(element => {
+            element.remove();
+        });
+        
         // Inicializa o campo de telefone internacional
         const input = document.querySelector("#celular");
         const iti = window.intlTelInput(input, {
