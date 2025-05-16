@@ -448,8 +448,50 @@ class Usuario:
     def __init__(self, db_path):
         self.db_path = db_path
     
+    def criar_tabela(self):
+        """Cria a tabela de usuários se não existir"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Cria a tabela com todas as colunas necessárias
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            celular TEXT UNIQUE NOT NULL,
+            nome TEXT,
+            email TEXT,
+            senha TEXT,
+            plano TEXT DEFAULT 'gratuito',
+            origens TEXT,
+            renda REAL,
+            admin INTEGER DEFAULT 0,
+            data_criacao TEXT,
+            ultimo_acesso TEXT
+        )
+        ''')
+        
+        # Verifica se todas as colunas necessárias existem e adiciona se necessário
+        cursor.execute("PRAGMA table_info(usuarios)")
+        colunas_existentes = [row[1] for row in cursor.fetchall()]
+        
+        # Adiciona colunas que não existem
+        if 'renda' not in colunas_existentes:
+            cursor.execute('ALTER TABLE usuarios ADD COLUMN renda REAL')
+        
+        if 'admin' not in colunas_existentes:
+            cursor.execute('ALTER TABLE usuarios ADD COLUMN admin INTEGER DEFAULT 0')
+        
+        if 'origens' not in colunas_existentes:
+            cursor.execute('ALTER TABLE usuarios ADD COLUMN origens TEXT')
+        
+        conn.commit()
+        conn.close()
+    
     def criar(self, celular, nome=None, email=None, senha=None):
         """Cria um novo usuário"""
+        # Garante que a tabela existe
+        self.criar_tabela()
+        
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -468,6 +510,9 @@ class Usuario:
     
     def buscar_por_celular(self, celular):
         """Busca um usuário pelo número de celular"""
+        # Garante que a tabela existe
+        self.criar_tabela()
+        
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -481,6 +526,9 @@ class Usuario:
     
     def buscar_por_id(self, usuario_id):
         """Busca um usuário pelo ID"""
+        # Garante que a tabela existe
+        self.criar_tabela()
+        
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -494,6 +542,9 @@ class Usuario:
     
     def buscar_por_email(self, email):
         """Busca um usuário pelo email"""
+        # Garante que a tabela existe
+        self.criar_tabela()
+        
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -505,7 +556,7 @@ class Usuario:
         
         return dict(usuario) if usuario else None
     
-    def atualizar(self, usuario_id, nome=None, email=None, senha=None, plano=None):
+    def atualizar(self, usuario_id, nome=None, email=None, senha=None, plano=None, renda=None):
         """Atualiza os dados de um usuário"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -529,6 +580,10 @@ class Usuario:
         if plano is not None:
             campos.append("plano = ?")
             valores.append(plano)
+        
+        if renda is not None:
+            campos.append("renda = ?")
+            valores.append(renda)
         
         # Adiciona o ID do usuário aos valores
         valores.append(usuario_id)
@@ -590,11 +645,6 @@ class Usuario:
         
         return token
     
-        # Modificação para init_db: adicione coluna admin na tabela usuarios
-        cursor.execute('ALTER TABLE usuarios ADD COLUMN admin INTEGER DEFAULT 0')
-
-    # Métodos adicionais para a classe Usuario:
-
     def definir_admin(self, usuario_id, admin=True):
         """
         Define um usuário como administrador
@@ -626,6 +676,9 @@ class Usuario:
         Returns:
             list: Lista de usuários administradores
         """
+        # Garante que a tabela existe
+        self.criar_tabela()
+        
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -656,6 +709,39 @@ class Usuario:
         conn.close()
         
         return result is not None and result[0] == 1
+    
+    def obter_renda(self, usuario_id):
+        """
+        Obtém a renda mensal de um usuário
+        
+        Args:
+            usuario_id: ID do usuário
+            
+        Returns:
+            float: Valor da renda ou None se não informada
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT renda FROM usuarios WHERE id = ?", (usuario_id,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        return result[0] if result and result[0] is not None else None
+    
+    def definir_renda(self, usuario_id, renda):
+        """
+        Define a renda mensal de um usuário
+        
+        Args:
+            usuario_id: ID do usuário
+            renda: Valor da renda mensal
+            
+        Returns:
+            bool: True se bem-sucedido
+        """
+        return self.atualizar(usuario_id, renda=renda)
     
 class PagamentoFixo:
     """Classe para gerenciar pagamentos fixos"""
@@ -3126,13 +3212,21 @@ class Divida:
             taxa_juros REAL,
             parcelas_total INTEGER,
             parcelas_pagas INTEGER DEFAULT 0,
-            status TEXT,
+            status TEXT DEFAULT 'em_dia',
             credor TEXT,
+            tipo TEXT DEFAULT 'outros',
             tipo_perfil TEXT DEFAULT 'pessoal',
             data_criacao TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
         ''')
+        
+        # Verifica se a coluna 'tipo' existe, se não adiciona
+        cursor.execute("PRAGMA table_info(dividas)")
+        colunas = [row[1] for row in cursor.fetchall()]
+        
+        if 'tipo' not in colunas:
+            cursor.execute('ALTER TABLE dividas ADD COLUMN tipo TEXT DEFAULT "outros"')
         
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS divida_pagamentos (
@@ -3140,17 +3234,25 @@ class Divida:
             divida_id INTEGER NOT NULL,
             valor REAL NOT NULL,
             data TEXT NOT NULL,
+            tipo TEXT DEFAULT 'parcela',
             observacao TEXT,
             data_criacao TEXT,
             FOREIGN KEY (divida_id) REFERENCES dividas (id)
         )
         ''')
         
+        # Verifica se a coluna 'tipo' existe na tabela de pagamentos
+        cursor.execute("PRAGMA table_info(divida_pagamentos)")
+        colunas_pagamentos = [row[1] for row in cursor.fetchall()]
+        
+        if 'tipo' not in colunas_pagamentos:
+            cursor.execute('ALTER TABLE divida_pagamentos ADD COLUMN tipo TEXT DEFAULT "parcela"')
+        
         conn.commit()
         conn.close()
     
     def criar(self, usuario_id, nome, valor_total, data_inicio, data_fim=None, 
-             taxa_juros=None, parcelas_total=None, credor=None, tipo_perfil='pessoal'):
+             taxa_juros=None, parcelas_total=None, credor=None, tipo_perfil='pessoal', tipo='outros'):
         """Cria uma nova dívida"""
         self.criar_tabela()  # Garante que a tabela existe
         
@@ -3162,11 +3264,11 @@ class Divida:
         cursor.execute('''
         INSERT INTO dividas
         (usuario_id, nome, valor_total, valor_pago, data_inicio, data_fim, taxa_juros, 
-        parcelas_total, parcelas_pagas, status, credor, tipo_perfil, data_criacao)
-        VALUES (?, ?, ?, 0, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+        parcelas_total, parcelas_pagas, status, credor, tipo, tipo_perfil, data_criacao)
+        VALUES (?, ?, ?, 0, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)
         ''', (
             usuario_id, nome, valor_total, data_inicio, data_fim, taxa_juros,
-            parcelas_total, 'em_dia', credor, tipo_perfil, data_criacao
+            parcelas_total, 'em_dia', credor, tipo, tipo_perfil, data_criacao
         ))
         
         conn.commit()
@@ -3175,7 +3277,7 @@ class Divida:
         
         return divida_id
     
-    def buscar(self, usuario_id, tipo_perfil=None, status=None):
+    def buscar(self, usuario_id, tipo_perfil=None, status=None, tipo=None):
         """Busca dívidas do usuário com filtros opcionais"""
         self.criar_tabela()  # Garante que a tabela existe
         
@@ -3193,6 +3295,10 @@ class Divida:
         if status:
             query += " AND status = ?"
             params.append(status)
+            
+        if tipo:
+            query += " AND tipo = ?"
+            params.append(tipo)
         
         query += " ORDER BY data_fim ASC"
         
@@ -3204,6 +3310,8 @@ class Divida:
     
     def buscar_por_id(self, divida_id):
         """Busca uma dívida pelo ID"""
+        self.criar_tabela()  # Garante que a tabela existe
+        
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -3223,7 +3331,7 @@ class Divida:
         campos_permitidos = [
             'nome', 'valor_total', 'valor_pago', 'data_inicio', 'data_fim',
             'taxa_juros', 'parcelas_total', 'parcelas_pagas', 'status', 
-            'credor', 'tipo_perfil'
+            'credor', 'tipo', 'tipo_perfil'
         ]
         
         # Filtra apenas os campos válidos
@@ -3262,7 +3370,7 @@ class Divida:
         
         return rows_affected > 0
     
-    def registrar_pagamento(self, divida_id, valor, data=None, observacao=None):
+    def registrar_pagamento(self, divida_id, valor, data=None, observacao=None, tipo='parcela'):
         """Registra um pagamento para uma dívida"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -3275,9 +3383,9 @@ class Divida:
         # Registra o pagamento
         cursor.execute('''
         INSERT INTO divida_pagamentos
-        (divida_id, valor, data, observacao, data_criacao)
-        VALUES (?, ?, ?, ?, ?)
-        ''', (divida_id, valor, data, observacao, data_criacao))
+        (divida_id, valor, data, tipo, observacao, data_criacao)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (divida_id, valor, data, tipo, observacao, data_criacao))
         
         # Atualiza a dívida
         cursor.execute('''

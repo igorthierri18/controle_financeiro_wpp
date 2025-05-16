@@ -9,7 +9,7 @@ body {
     background: linear-gradient(135deg, #26983F, #1a7c33);
     min-height: 100vh;
     font-family: 'Inter', sans-serif;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 /* Elementos removidos - ocultos */
@@ -37,8 +37,8 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
-    height: 85vh;
-    max-height: 800px;
+    height: 82vh;
+    max-height: 750px;
     min-height: 600px;
 }
 
@@ -140,7 +140,7 @@ body {
 .login-right {
     padding: 50px;
     height: 100%;
-    overflow-y: auto;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -305,32 +305,9 @@ body {
     text-decoration: underline;
 }
 
+/* Ocultar security-info apenas no desktop para evitar duplicação */
 .security-info {
-    background: rgba(38, 152, 63, 0.1);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    margin-top: 32px;
-    border: 1px solid rgba(38, 152, 63, 0.2);
-}
-
-.security-icon {
-    font-size: 1.5rem;
-    margin-bottom: 8px;
-}
-
-.security-info h4 {
-    color: #26983F;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.security-info p {
-    color: #6b7280;
-    font-size: 0.85rem;
-    margin: 0;
-    line-height: 1.4;
+    display: none;
 }
 
 .alert {
@@ -362,6 +339,10 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    body {
+        overflow: auto;
+    }
+    
     .login-card {
         border-radius: 15px;
         margin: 20px;
@@ -387,6 +368,7 @@ body {
         padding: 30px;
         height: auto;
         background: transparent;
+        overflow: visible;
     }
     
     .login-header h2,
@@ -453,10 +435,34 @@ body {
         color: #374151;
     }
     
+    /* Mostrar security-info apenas no mobile */
     .security-info {
+        display: block;
         background: rgba(38, 152, 63, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin-top: 32px;
         border: 1px solid rgba(38, 152, 63, 0.2);
-        margin-top: 20px;
+    }
+    
+    .security-icon {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+    
+    .security-info h4 {
+        color: #26983F;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    
+    .security-info p {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin: 0;
+        line-height: 1.4;
     }
     
     .alert {

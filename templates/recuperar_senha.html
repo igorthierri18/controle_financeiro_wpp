@@ -3,134 +3,527 @@
 {% block title %}Recuperar Senha - {{ app_name }}{% endblock %}
 
 {% block custom_styles %}
-body {
-    background: linear-gradient(135deg, #28a745, #218838);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-.card {
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+body {
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
     overflow: hidden;
 }
 
-.card-header {
-    background-color: #fff;
-    border-bottom: 1px solid #eee;
+/* Elementos removidos - ocultos */
+.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom {
+    display: none !important;
+}
+
+.container {
     padding: 20px;
+    max-width: 1600px;
+}
+
+.hero-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+}
+
+.recovery-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    height: 80vh;
+    max-height: 750px;
+    min-height: 600px;
+}
+
+.row.g-0 {
+    height: 100%;
+}
+
+.col-lg-6 {
+    height: 100%;
+}
+
+.recovery-left {
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    color: white;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.recovery-left::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.05"/><circle cx="10" cy="60" r="1" fill="white" opacity="0.05"/><circle cx="90" cy="30" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.recovery-left-content {
+    position: relative;
+    z-index: 1;
+}
+
+.recovery-left h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.recovery-left p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.security-feature {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+}
+
+.security-icon {
+    color: white;
+    margin-right: 15px;
+    font-size: 1.5rem;
+}
+
+.security-text h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.security-text p {
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.security-info {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 28px;
+    margin-top: 40px;
     text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.card-header h1 {
-    color: #28a745;
+.security-info h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+.security-info p {
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.recovery-right {
+    padding: 60px;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.recovery-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.logo-container {
+    margin-bottom: 28px;
+}
+
+.logo-manual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background-color: #26983F;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo-icon::before {
+    content: '$';
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.logo-text {
     font-size: 24px;
-    margin-bottom: 0;
+    font-weight: 700;
+    color: #374151;
+    margin: 0;
 }
 
-.card-body {
-    padding: 30px;
+.recovery-header h2 {
+    color: #111827;
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.recovery-header p {
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 40px;
 }
 
 .form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #374151;
     font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .form-control {
-    padding: 12px;
-    border-radius: 10px;
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: white;
 }
 
-.btn-success {
-    padding: 12px;
-    border-radius: 10px;
+.form-control:focus {
+    outline: none;
+    border-color: #26983F;
+    box-shadow: 0 0 0 3px rgba(38, 152, 63, 0.1);
+}
+
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
     font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(38, 152, 63, 0.2);
+    color: white;
 }
 
-.text-separator {
-    display: flex;
-    align-items: center;
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1a7c33, #155c27);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(38, 152, 63, 0.3);
+}
+
+.back-links {
     text-align: center;
-    margin: 20px 0;
-    color: #6c757d;
+    margin-top: 40px;
 }
 
-.text-separator::before,
-.text-separator::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #dee2e6;
+.back-links p {
+    color: #6b7280;
+    margin-bottom: 8px;
 }
 
-.text-separator span {
-    padding: 0 10px;
+.back-links a {
+    color: #26983F;
+    text-decoration: none;
+    font-weight: 500;
 }
 
-.navbar {
-    display: none;
+.back-links a:hover {
+    text-decoration: underline;
 }
 
 .alert {
-    border-radius: 10px;
-}
-
-.card-intro {
-    text-align: center;
+    border-radius: 12px;
+    border: none;
+    padding: 12px 16px;
     margin-bottom: 20px;
 }
 
-.card-intro img {
-    max-width: 80px;
-    margin-bottom: 15px;
+.alert-danger {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border-left: 4px solid #dc2626;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    border-left: 4px solid #16a34a;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .recovery-card {
+        max-width: 95%;
+        margin: 20px;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        overflow: auto;
+    }
+    
+    .recovery-card {
+        border-radius: 15px;
+        margin: 20px;
+        height: auto;
+        max-height: none;
+        min-height: auto;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hero-container {
+        padding: 20px;
+        height: 100vh;
+        align-items: center;
+    }
+    
+    .recovery-left {
+        display: none;
+    }
+    
+    .recovery-right {
+        order: 1;
+        padding: 30px;
+        height: auto;
+        background: transparent;
+        overflow: visible;
+    }
+    
+    .recovery-header h2,
+    .recovery-header p,
+    .logo-text {
+        color: #374151;
+    }
+    
+    .logo-icon {
+        background-color: #26983F;
+    }
+    
+    .logo-icon::before {
+        color: white;
+    }
+    
+    .form-label {
+        color: #374151;
+    }
+    
+    .form-control {
+        background-color: white;
+        border: 1.5px solid #e5e7eb;
+    }
+    
+    .form-control:focus {
+        background-color: white;
+        border-color: #26983F;
+        box-shadow: 0 0 0 3px rgba(38, 152, 63, 0.1);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #26983F, #1a7c33);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1a7c33, #155c27);
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .back-links a {
+        color: #26983F;
+    }
+    
+    .alert {
+        background-color: #fef2f2;
+        color: #dc2626;
+        border-left: 4px solid #dc2626;
+    }
+    
+    .alert-success {
+        background-color: #f0fdf4;
+        color: #16a34a;
+        border-left: 4px solid #16a34a;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .hero-container {
+        padding: 15px;
+    }
+    
+    .recovery-card {
+        margin: 15px;
+        border-radius: 12px;
+    }
+    
+    .recovery-right {
+        padding: 25px 20px;
+    }
+    
+    .recovery-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .logo-text {
+        font-size: 20px;
+    }
+    
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .logo-icon::before {
+        font-size: 16px;
+    }
 }
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card">
-                <div class="card-header">
-                    <h1>{{ app_name }}</h1>
-                </div>
-                <div class="card-body">
-                    <!-- Mensagens de erro/sucesso -->
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    <div class="hero-container">
+        <div class="recovery-card">
+            <div class="row g-0">
+                <div class="col-lg-6">
+                    <div class="recovery-left">
+                        <div class="recovery-left-content">
+                            <h1>Esqueceu sua senha?</h1>
+                            <p>Não se preocupe! Vamos ajudar você a recuperar o acesso à sua conta rapidamente.</p>
+                            
+                            <div class="security-feature">
+                                <i class="bi bi-shield-lock security-icon"></i>
+                                <div class="security-text">
+                                    <h3>Processo Seguro</h3>
+                                    <p>Link de recuperação válido por apenas 1 hora</p>
                                 </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <div class="card-intro">
-                        <img src="https://cdn-icons-png.flaticon.com/512/6195/6195700.png" alt="ícone recuperação de senha">
-                        <h2 class="mb-4">Recuperar Senha</h2>
-                        <p class="text-muted">Informe seu email para receber instruções de recuperação de senha</p>
+                            </div>
+                            
+                            <div class="security-feature">
+                                <i class="bi bi-envelope-check security-icon"></i>
+                                <div class="security-text">
+                                    <h3>Verificação por Email</h3>
+                                    <p>Enviamos instruções direto para seu email</p>
+                                </div>
+                            </div>
+                            
+                            <div class="security-feature">
+                                <i class="bi bi-key security-icon"></i>
+                                <div class="security-text">
+                                    <h3>Nova Senha Segura</h3>
+                                    <p>Defina uma nova senha forte e segura</p>
+                                </div>
+                            </div>
+                            
+                            <div class="security-info">
+                                <h3>🔐 Dados Protegidos</h3>
+                                <p>Suas informações financeiras continuam seguras durante todo o processo</p>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <form method="POST" action="{{ url_for('web.recuperar_senha') }}">
-                        <div class="mb-4">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required placeholder="seu@email.com">
+                </div>
+                <div class="col-lg-6">
+                    <div class="recovery-right">
+                        <div class="recovery-header">
+                            <div class="logo-container">
+                                <div class="logo-manual">
+                                    <div class="logo-icon"></div>
+                                    <h1 class="logo-text">despezap</h1>
+                                </div>
+                            </div>
+                            <h2>Recuperar Senha</h2>
+                            <p>Informe seu email cadastrado e enviaremos instruções para redefinir sua senha.</p>
                         </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Enviar Instruções</button>
+                        
+                        <!-- Mensagens de erro/sucesso -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form method="POST" action="{{ url_for('web.recuperar_senha') }}">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email cadastrado</label>
+                                <input type="email" class="form-control" id="email" name="email" required placeholder="seu@email.com" autocomplete="email">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                Enviar Instruções
+                            </button>
+                        </form>
+                        
+                        <div class="back-links">
+                            <p>Lembrou da sua senha? <a href="{{ url_for('web.login') }}">Fazer login</a></p>
+                            <a href="{{ url_for('web.index') }}">Voltar à página inicial</a>
                         </div>
-                    </form>
-                    
-                    <div class="text-center mt-4">
-                        <p>Lembrou sua senha? <a href="{{ url_for('web.login') }}" class="text-decoration-none fw-bold">Faça login</a></p>
-                        <a href="{{ url_for('web.index') }}" class="text-decoration-none">Voltar à página inicial</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove qualquer elemento de navegação que possa aparecer
+        const navElements = document.querySelectorAll('.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom');
+        navElements.forEach(element => {
+            element.remove();
+        });
+    });
+</script>
 {% endblock %}

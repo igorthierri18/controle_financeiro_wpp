@@ -1,3 +1,4 @@
+```html
 {% extends 'base.html' %}
 
 {% block title %}Meu Perfil - {{ app_name }}{% endblock %}
@@ -323,6 +324,14 @@
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-md-4">
+                                        <p class="form-label">Renda mensal</p>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p>{% if usuario.renda %}R$ {{ "%.2f"|format(usuario.renda) }}{% else %}Não informada{% endif %}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
                                         <p class="form-label">Data de cadastro</p>
                                     </div>
                                     <div class="col-md-8">
@@ -345,6 +354,14 @@
                                     <label for="celular" class="form-label">Celular (WhatsApp)</label>
                                     <input type="tel" class="form-control" id="celular" name="celular" value="{{ usuario.celular }}" readonly>
                                     <div class="form-text">O número de WhatsApp não pode ser alterado. Entre em contato com o suporte se precisar mudar.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="renda" class="form-label">Renda mensal</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" id="renda" name="renda" step="0.01" min="0" value="{{ usuario.renda }}">
+                                    </div>
+                                    <div class="form-text">Informar sua renda ajuda a calcular melhores orçamentos e limites de gastos.</div>
                                 </div>
                                 <div class="d-flex justify-content-end">
                                     <button type="button" class="btn btn-outline-secondary me-2" id="btn-cancelar-edicao">Cancelar</button>
@@ -836,3 +853,4 @@
     });
 </script>
 {% endblock %}
+```

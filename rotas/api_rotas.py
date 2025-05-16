@@ -10,6 +10,7 @@ import tempfile
 from werkzeug.utils import secure_filename
 import sqlite3
 from functools import wraps
+import traceback
 
 # Criação do blueprint
 api_bp = Blueprint('api', __name__)
@@ -2711,13 +2712,267 @@ def api_login_required(f):
     return decorated_function
 
 # Rota para buscar dívidas
-@api_bp.route('/dividas')
+@api_bp.route('/dividas', methods=['GET'])
 @api_login_required
-def get_dividas():
-    usuario_id = session.get('usuario_id')
-    tipo_perfil = request.args.get('tipo_perfil', 'pessoal')
+def listar_dividas():
+    """Lista todas as dívidas do usuário"""
+    try:
+        usuario_id = session.get('usuario_id')
+        tipo_perfil = request.args.get('tipo_perfil', 'pessoal')
+        
+        divida_model = Divida(Config.DATABASE)
+        dividas = divida_model.buscar(usuario_id, tipo_perfil=tipo_perfil)
+        
+        return jsonify(dividas), 200
+        
+    except Exception as e:
+        print(f"Erro ao listar dívidas: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Erro interno do servidor'}), 500
 
-    divida_model = Divida(Config.DATABASE)
-    dividas = divida_model.buscar(usuario_id=usuario_id, tipo_perfil=tipo_perfil)
+@api_bp.route('/dividas', methods=['POST'])
+@api_login_required
+def criar_divida():
+    """Cria uma nova dívida"""
+    try:
+        usuario_id = session.get('usuario_id')
+        dados = request.get_json()
+        
+        # Validações básicas
+        if not dados.get('nome'):
+            return jsonify({'error': 'Nome da dívida é obrigatório'}), 400
+        
+        if not dados.get('valor_total') or float(dados.get('valor_total', 0)) <= 0:
+            return jsonify({'error': 'Valor total deve ser maior que zero'}), 400
+        
+        if not dados.get('data_inicio'):
+            return jsonify({'error': 'Data de início é obrigatória'}), 400
+        
+        # Dados da dívida
+        divida_data = {
+            'usuario_id': usuario_id,
+            'nome': dados.get('nome'),
+            'valor_total': float(dados.get('valor_total', 0)),
+            'valor_pago': float(dados.get('valor_pago', 0)),
+            'data_inicio': dados.get('data_inicio'),
+            'data_fim': dados.get('data_fim'),
+            'taxa_juros': float(dados.get('taxa_juros', 0)) if dados.get('taxa_juros') else None,
+            'parcelas_total': int(dados.get('parcelas_total', 1)) if dados.get('parcelas_total') else None,
+            'parcelas_pagas': int(dados.get('parcelas_pagas', 0)),
+            'credor': dados.get('credor'),
+            'tipo_perfil': dados.get('tipo_perfil', 'pessoal'),
+            'tipo': dados.get('tipo', 'outros')  # Para categorizar o tipo de dívida
+        }
+        
+        divida_model = Divida(Config.DATABASE)
+        
+        # Primeiro, precisamos modificar a classe Divida para aceitar o tipo
+        # Por enquanto, vamos criar sem o tipo e depois atualizar
+        divida_id = divida_model.criar(
+            usuario_id=divida_data['usuario_id'],
+            nome=divida_data['nome'],
+            valor_total=divida_data['valor_total'],
+            data_inicio=divida_data['data_inicio'],
+            data_fim=divida_data['data_fim'],
+            taxa_juros=divida_data['taxa_juros'],
+            parcelas_total=divida_data['parcelas_total'],
+            credor=divida_data['credor'],
+            tipo_perfil=divida_data['tipo_perfil']
+        )
+        
+        # Atualizar com os dados adicionais (incluindo valor_pago, parcelas_pagas e tipo)
+        divida_model.atualizar(
+            divida_id,
+            valor_pago=divida_data['valor_pago'],
+            parcelas_pagas=divida_data['parcelas_pagas'],
+            tipo=divida_data['tipo']
+        )
+        
+        return jsonify({'id': divida_id, 'message': 'Dívida criada com sucesso'}), 201
+        
+    except Exception as e:
+        print(f"Erro ao criar dívida: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Erro interno do servidor'}), 500
 
-    return jsonify(dividas)
+@api_bp.route('/dividas/<int:divida_id>', methods=['GET'])
+@api_login_required
+def obter_divida(divida_id):
+    """Obtém uma dívida específica"""
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        divida_model = Divida(Config.DATABASE)
+        divida = divida_model.buscar_por_id(divida_id)
+        
+        if not divida:
+            return jsonify({'error': 'Dívida não encontrada'}), 404
+        
+        # Verifica se a dívida pertence ao usuário logado
+        if divida['usuario_id'] != usuario_id:
+            return jsonify({'error': 'Acesso negado'}), 403
+        
+        return jsonify(divida), 200
+        
+    except Exception as e:
+        print(f"Erro ao obter dívida: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Erro interno do servidor'}), 500
+
+@api_bp.route('/dividas/<int:divida_id>', methods=['PUT'])
+@api_login_required
+def atualizar_divida(divida_id):
+    """Atualiza uma dívida"""
+    try:
+        usuario_id = session.get('usuario_id')
+        dados = request.get_json()
+        
+        divida_model = Divida(Config.DATABASE)
+        divida = divida_model.buscar_por_id(divida_id)
+        
+        if not divida:
+            return jsonify({'error': 'Dívida não encontrada'}), 404
+        
+        # Verifica se a dívida pertence ao usuário logado
+        if divida['usuario_id'] != usuario_id:
+            return jsonify({'error': 'Acesso negado'}), 403
+        
+        # Prepara os dados para atualização
+        dados_atualizacao = {}
+        
+        # Lista de campos que podem ser atualizados
+        campos_permitidos = [
+            'nome', 'valor_total', 'valor_pago', 'data_inicio', 'data_fim',
+            'taxa_juros', 'parcelas_total', 'parcelas_pagas', 'credor', 'tipo'
+        ]
+        
+        for campo in campos_permitidos:
+            if campo in dados:
+                if campo in ['valor_total', 'valor_pago', 'taxa_juros']:
+                    dados_atualizacao[campo] = float(dados[campo])
+                elif campo in ['parcelas_total', 'parcelas_pagas']:
+                    dados_atualizacao[campo] = int(dados[campo])
+                else:
+                    dados_atualizacao[campo] = dados[campo]
+        
+        # Atualiza status se a dívida foi quitada
+        if 'valor_pago' in dados_atualizacao and 'valor_total' in dados_atualizacao:
+            if dados_atualizacao['valor_pago'] >= dados_atualizacao['valor_total']:
+                dados_atualizacao['status'] = 'quitada'
+            else:
+                dados_atualizacao['status'] = 'em_dia'
+        
+        # Realiza a atualização
+        divida_model.atualizar(divida_id, **dados_atualizacao)
+        
+        return jsonify({'message': 'Dívida atualizada com sucesso'}), 200
+        
+    except Exception as e:
+        print(f"Erro ao atualizar dívida: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Erro interno do servidor'}), 500
+
+@api_bp.route('/dividas/<int:divida_id>', methods=['DELETE'])
+@api_login_required
+def excluir_divida(divida_id):
+    """Exclui uma dívida"""
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        divida_model = Divida(Config.DATABASE)
+        divida = divida_model.buscar_por_id(divida_id)
+        
+        if not divida:
+            return jsonify({'error': 'Dívida não encontrada'}), 404
+        
+        # Verifica se a dívida pertence ao usuário logado
+        if divida['usuario_id'] != usuario_id:
+            return jsonify({'error': 'Acesso negado'}), 403
+        
+        # Exclui a dívida
+        excluida = divida_model.excluir(divida_id)
+        
+        if excluida:
+            return jsonify({'message': 'Dívida excluída com sucesso'}), 200
+        else:
+            return jsonify({'error': 'Erro ao excluir dívida'}), 500
+        
+    except Exception as e:
+        print(f"Erro ao excluir dívida: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Erro interno do servidor'}), 500
+
+@api_bp.route('/dividas/pagamento', methods=['POST'])
+@api_login_required
+def registrar_pagamento():
+    """Registra um pagamento para uma dívida"""
+    try:
+        usuario_id = session.get('usuario_id')
+        dados = request.get_json()
+        
+        divida_id = dados.get('divida_id')
+        valor = float(dados.get('valor', 0))
+        data = dados.get('data')
+        observacao = dados.get('observacao')
+        tipo_pagamento = dados.get('tipo', 'parcela')
+        
+        if not divida_id:
+            return jsonify({'error': 'ID da dívida é obrigatório'}), 400
+        
+        if valor <= 0:
+            return jsonify({'error': 'Valor deve ser maior que zero'}), 400
+        
+        divida_model = Divida(Config.DATABASE)
+        divida = divida_model.buscar_por_id(divida_id)
+        
+        if not divida:
+            return jsonify({'error': 'Dívida não encontrada'}), 404
+        
+        # Verifica se a dívida pertence ao usuário logado
+        if divida['usuario_id'] != usuario_id:
+            return jsonify({'error': 'Acesso negado'}), 403
+        
+        # Registra o pagamento
+        pagamento_id = divida_model.registrar_pagamento(
+            divida_id=divida_id,
+            valor=valor,
+            data=data,
+            observacao=f"{tipo_pagamento}: {observacao}" if observacao else tipo_pagamento
+        )
+        
+        return jsonify({
+            'id': pagamento_id,
+            'message': 'Pagamento registrado com sucesso'
+        }), 201
+        
+    except Exception as e:
+        print(f"Erro ao registrar pagamento: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Erro interno do servidor'}), 500
+
+@api_bp.route('/usuario/renda', methods=['GET'])
+@api_login_required
+def obter_renda_usuario():
+    """Obtém a renda mensal do usuário para cálculo de comprometimento"""
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        usuario_model = Usuario(Config.DATABASE)
+        usuario = usuario_model.buscar_por_id(usuario_id)
+        
+        if not usuario:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+        
+        # Assumindo que existe um campo 'renda_mensal' na tabela de usuários
+        # Se não existir, você pode retornar 0 ou implementar uma tabela separada para rendas
+        renda = usuario.get('renda_mensal', 0)
+        
+        return jsonify({
+            'success': True,
+            'renda': float(renda) if renda else 0
+        }), 200
+        
+    except Exception as e:
+        print(f"Erro ao obter renda do usuário: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Erro interno do servidor'}), 500

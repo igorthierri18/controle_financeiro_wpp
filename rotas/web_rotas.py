@@ -167,6 +167,7 @@ def recuperar_senha():
         # Para simplificar, apenas exibimos uma mensagem de sucesso
         
         flash('Enviamos instruções para recuperar sua senha. Por favor, verifique seu email.', 'success')
+        return render_template('recuperar_senha.html', app_name=Config.APP_NAME)
     
     return render_template('recuperar_senha.html', app_name=Config.APP_NAME)
 
@@ -398,11 +399,22 @@ def atualizar_perfil():
     # Obtém os dados do formulário
     nome = request.form.get('nome')
     email = request.form.get('email')
+    renda = request.form.get('renda')
     
     # Validações básicas
     if not nome or not email:
         flash('Por favor, preencha todos os campos obrigatórios.', 'error')
         return redirect(url_for('web.perfil'))
+    
+    # Converte renda para float se fornecida
+    if renda:
+        try:
+            renda = float(renda)
+        except ValueError:
+            flash('Valor de renda inválido.', 'error')
+            return redirect(url_for('web.perfil'))
+    else:
+        renda = None
     
     # Verifica se o email já está em uso por outro usuário
     usuario_model = Usuario(Config.DATABASE)
@@ -413,7 +425,7 @@ def atualizar_perfil():
         return redirect(url_for('web.perfil'))
     
     # Atualiza os dados do usuário
-    usuario_model.atualizar(usuario_id, nome=nome, email=email)
+    usuario_model.atualizar(usuario_id, nome=nome, email=email, renda=renda)
     
     flash('Perfil atualizado com sucesso!', 'success')
     return redirect(url_for('web.perfil'))
