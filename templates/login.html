@@ -3,214 +3,623 @@
 {% block title %}Login - {{ app_name }}{% endblock %}
 
 {% block custom_styles %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 body {
-    background: linear-gradient(135deg, #28a745, #218838);
+    background: linear-gradient(135deg, #26983F, #1a7c33);
     min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+}
+
+/* Elementos removidos - ocultos */
+.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom {
+    display: none !important;
+}
+
+.container {
+    padding: 20px;
+    max-width: 1600px;
+}
+
+.hero-container {
+    height: 100vh;
     display: flex;
     align-items: center;
+    padding: 15px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    height: 85vh;
+    max-height: 800px;
+    min-height: 600px;
+}
+
+.row.g-0 {
+    height: 100%;
+}
+
+.col-lg-6 {
+    height: 100%;
+}
+
+.login-left {
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    color: white;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.login-left::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.05"/><circle cx="10" cy="60" r="1" fill="white" opacity="0.05"/><circle cx="90" cy="30" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.login-left-content {
+    position: relative;
+    z-index: 1;
+}
+
+.login-left h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.login-left p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.feature-icon {
+    color: white;
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.feature-text {
+    font-size: 0.95rem;
+}
+
+.welcome-back {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 40px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.welcome-back h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+.welcome-back p {
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.login-right {
+    padding: 50px;
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
 }
 
-.card {
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-.card-header {
-    background-color: #fff;
-    border-bottom: 1px solid #eee;
-    padding: 20px;
+.login-header {
     text-align: center;
+    margin-bottom: 40px;
 }
 
-.card-header h1 {
-    color: #28a745;
+.logo-container {
+    margin-bottom: 24px;
+}
+
+.logo-manual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background-color: #26983F;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo-icon::before {
+    content: '$';
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.logo-text {
     font-size: 24px;
+    font-weight: 700;
+    color: #374151;
+    margin: 0;
+}
+
+.login-header h2 {
+    color: #111827;
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.tagline {
+    color: #6b7280;
+    font-size: 1rem;
+    font-weight: 500;
     margin-bottom: 0;
 }
 
-.card-body {
-    padding: 30px;
+.login-header p {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 24px;
 }
 
 .form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #374151;
     font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .form-control {
-    padding: 12px;
-    border-radius: 10px;
-}
-
-.btn-success {
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-.text-separator {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 20px 0;
-    color: #6c757d;
-}
-
-.text-separator::before,
-.text-separator::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.text-separator span {
-    padding: 0 10px;
-}
-
-.navbar {
-    display: none;
-}
-
-.alert {
-    border-radius: 10px;
-}
-
-.card-intro {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.card-intro img {
-    max-width: 80px;
-    margin-bottom: 15px;
-}
-
-.social-login {
-    margin-bottom: 20px;
-}
-
-.social-login .btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 10px;
+    padding: 12px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #26983F;
+    box-shadow: 0 0 0 3px rgba(38, 152, 63, 0.1);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #26983F;
+}
+
+.form-check-label {
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.forgot-password {
+    color: #26983F;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+    color: #1a7c33;
+}
+
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(38, 152, 63, 0.2);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1a7c33, #155c27);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(38, 152, 63, 0.3);
+}
+
+.login-options {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.signup-link {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.signup-link a {
+    color: #26983F;
+    text-decoration: none;
     font-weight: 500;
 }
 
-.social-login .btn i {
-    margin-right: 10px;
-    font-size: 18px;
+.signup-link a:hover {
+    text-decoration: underline;
 }
 
-.btn-google {
-    background-color: #fff;
-    color: #555;
-    border: 1px solid #ddd;
+.security-info {
+    background: rgba(38, 152, 63, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 32px;
+    border: 1px solid rgba(38, 152, 63, 0.2);
 }
 
-.btn-google:hover {
-    background-color: #f8f9fa;
-    color: #333;
+.security-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
 }
 
-.btn-facebook {
-    background-color: #3b5998;
-    color: white;
+.security-info h4 {
+    color: #26983F;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.security-info p {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.alert {
+    border-radius: 12px;
     border: none;
+    padding: 12px 16px;
+    margin-bottom: 20px;
 }
 
-.btn-facebook:hover {
-    background-color: #344e86;
-    color: white;
+.alert-danger {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border-left: 4px solid #dc2626;
 }
 
-.btn-apple {
-    background-color: #000;
-    color: white;
-    border: none;
+.alert-success {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    border-left: 4px solid #16a34a;
 }
 
-.btn-apple:hover {
-    background-color: #333;
-    color: white;
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .login-card {
+        max-width: 95%;
+        margin: 20px;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-card {
+        border-radius: 15px;
+        margin: 20px;
+        height: auto;
+        max-height: none;
+        min-height: auto;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hero-container {
+        padding: 20px;
+        height: 100vh;
+        align-items: center;
+    }
+    
+    .login-left {
+        display: none;
+    }
+    
+    .login-right {
+        order: 1;
+        padding: 30px;
+        height: auto;
+        background: transparent;
+    }
+    
+    .login-header h2,
+    .login-header p,
+    .logo-text {
+        color: #374151;
+    }
+    
+    .tagline {
+        color: #6b7280;
+    }
+    
+    .logo-icon {
+        background-color: #26983F;
+    }
+    
+    .logo-icon::before {
+        color: white;
+    }
+    
+    .form-label {
+        color: #374151;
+    }
+    
+    .form-control {
+        background-color: white;
+        border: 1.5px solid #e5e7eb;
+    }
+    
+    .form-control:focus {
+        background-color: white;
+        border-color: #26983F;
+        box-shadow: 0 0 0 3px rgba(38, 152, 63, 0.1);
+    }
+    
+    .form-check-label {
+        color: #374151;
+    }
+    
+    .forgot-password {
+        color: #26983F;
+    }
+    
+    .forgot-password:hover {
+        color: #1a7c33;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #26983F, #1a7c33);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1a7c33, #155c27);
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .signup-link a {
+        color: #26983F;
+    }
+    
+    .signup-link p {
+        color: #374151;
+    }
+    
+    .security-info {
+        background: rgba(38, 152, 63, 0.1);
+        border: 1px solid rgba(38, 152, 63, 0.2);
+        margin-top: 20px;
+    }
+    
+    .alert {
+        background-color: #fef2f2;
+        color: #dc2626;
+        border-left: 4px solid #dc2626;
+    }
+    
+    .alert-success {
+        background-color: #f0fdf4;
+        color: #16a34a;
+        border-left: 4px solid #16a34a;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .hero-container {
+        padding: 15px;
+    }
+    
+    .login-card {
+        margin: 15px;
+        border-radius: 12px;
+    }
+    
+    .login-right {
+        padding: 25px 20px;
+    }
+    
+    .login-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .tagline {
+        font-size: 0.9rem;
+    }
+    
+    .logo-text {
+        font-size: 20px;
+    }
+    
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .logo-icon::before {
+        font-size: 16px;
+    }
 }
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card">
-                <div class="card-header">
-                    <h1>{{ app_name }}</h1>
-                </div>
-                <div class="card-body">
-                    <!-- Mensagens de erro/sucesso -->
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <div class="card-intro">
-                        <img src="https://cdn-icons-png.flaticon.com/512/2037/2037710.png" alt="ícone login">
-                        <h2 class="mb-4">Bem-vindo(a) de volta!</h2>
-                        <p class="text-muted">Faça login para acessar seu controle financeiro</p>
-                    </div>
-                    
-                    <form method="POST" action="{{ url_for('web.login') }}">
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required placeholder="seu@email.com">
-                        </div>
-                        <div class="mb-3">
-                            <label for="senha" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="senha" name="senha" required placeholder="••••••••">
-                        </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="lembrar" name="lembrar">
-                                <label class="form-check-label" for="lembrar">Lembrar de mim</label>
+    <div class="hero-container">
+        <div class="login-card">
+            <div class="row g-0">
+                <div class="col-lg-6">
+                    <div class="login-left">
+                        <div class="login-left-content">
+                            <h1>Bem-vindo de volta!</h1>
+                            <p>Acesse sua conta e continue organizando suas finanças de forma simples e intuitiva.</p>
+                            
+                            <ul class="feature-list">
+                                <li class="feature-item">
+                                    <i class="bi bi-whatsapp feature-icon"></i>
+                                    <span class="feature-text">Controle direto pelo WhatsApp</span>
+                                </li>
+                                <li class="feature-item">
+                                    <i class="bi bi-graph-up feature-icon"></i>
+                                    <span class="feature-text">Relatórios instantâneos</span>
+                                </li>
+                                <li class="feature-item">
+                                    <i class="bi bi-tags feature-icon"></i>
+                                    <span class="feature-text">Categorização automática</span>
+                                </li>
+                                <li class="feature-item">
+                                    <i class="bi bi-shield-check feature-icon"></i>
+                                    <span class="feature-text">Dados seguros e criptografados</span>
+                                </li>
+                            </ul>
+                            
+                            <div class="welcome-back">
+                                <h3>💰 Seus dados estão seguros</h3>
+                                <p>Criptografia de ponta a ponta para proteger suas informações financeiras</p>
                             </div>
-                            <a href="{{ url_for('web.recuperar_senha') if 'web.recuperar_senha' in url_for.__globals__ else '#' }}" class="text-decoration-none">Esqueceu a senha?</a>
                         </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Entrar</button>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="login-right">
+                        <div class="login-header">
+                            <div class="logo-container">
+                                <div class="logo-manual">
+                                    <div class="logo-icon"></div>
+                                    <h1 class="logo-text">despezap</h1>
+                                </div>
+                            </div>
+                            <h2>Bem-vindo de volta!</h2>
+                            <p class="tagline">Excel 🤢? despezap 😎</p>
                         </div>
-                    </form>
-                    
-                    <div class="text-separator">
-                        <span>ou</span>
-                    </div>
-                    
-                    <div class="social-login">
-                        <button type="button" class="btn btn-google">
-                            <i class="bi bi-google"></i> Entrar com Google
-                        </button>
-                        <button type="button" class="btn btn-facebook">
-                            <i class="bi bi-facebook"></i> Entrar com Facebook
-                        </button>
-                        <button type="button" class="btn btn-apple">
-                            <i class="bi bi-apple"></i> Entrar com Apple
-                        </button>
-                    </div>
-                    
-                    <div class="text-center mt-3">
-                        <p>Ainda não tem uma conta? <a href="{{ url_for('web.cadastro') }}" class="text-decoration-none fw-bold">Criar uma conta</a></p>
-                        <a href="{{ url_for('web.index') }}" class="text-decoration-none">Voltar à página inicial</a>
+                        
+                        <!-- Mensagens de erro/sucesso -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{% if category == 'error' %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form method="POST" action="{{ url_for('web.login') }}">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required placeholder="seu@email.com" autocomplete="email">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="senha" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="senha" name="senha" required placeholder="••••••••" autocomplete="current-password">
+                            </div>
+                            
+                            <div class="login-options" style="justify-content: flex-start;">
+                                <a href="{{ url_for('web.recuperar_senha') if 'web.recuperar_senha' in url_for.__globals__ else '#' }}" class="forgot-password">Esqueceu a senha?</a>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                Entrar
+                            </button>
+                        </form>
+                        
+                        <div class="signup-link">
+                            <p>Primeira vez aqui?<br><a href="{{ url_for('web.cadastro') }}">Criar conta gratuita</a></p>
+                        </div>
+                        
+                        <div class="security-info">
+                            <div class="security-icon">🔒</div>
+                            <h4>Seus dados estão seguros</h4>
+                            <p>Criptografia de ponta a ponta para proteger suas informações financeiras</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove qualquer elemento de navegação que possa aparecer
+        const navElements = document.querySelectorAll('.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom');
+        navElements.forEach(element => {
+            element.remove();
+        });
+    });
+</script>
 {% endblock %}
