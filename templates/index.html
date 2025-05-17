@@ -502,6 +502,257 @@
         .hero-card {
             animation: fadeInUp 0.8s ease;
         }
+
+        /* CORREÇÕES ANTERIORES PARA O LAYOUT MOBILE */
+        
+        /* Ajustes na altura do card principal */
+        @media (max-width: 768px) {
+            .hero-card {
+                height: auto;
+                min-height: 100vh; /* Garantir altura mínima */
+            }
+            
+            .hero-container {
+                height: auto;
+                min-height: 100vh;
+                padding: 20px;
+            }
+            
+            /* Aumentar espaço do conteúdo rotativo */
+            .rotating-content {
+                padding: 30px;
+                margin-top: 30px;
+                min-height: 420px; /* Aumentado para dar mais espaço */
+            }
+            
+            /* Melhorar espaçamento do conteúdo interno */
+            .content-section {
+                width: calc(100% - 60px);
+            }
+            
+            /* Mais espaço entre os itens de benefício */
+            .benefit-item {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+            
+            /* Ajustar espaçamento do cabeçalho da seção */
+            .content-section h2 {
+                margin-bottom: 25px;
+            }
+        }
+
+        /* Ajustes específicos para telas muito pequenas */
+        @media (max-width: 576px) {
+            /* Dar mais espaço para a logo */
+            .logo-container {
+                margin-bottom: 25px;
+                padding-top: 15px;
+            }
+            
+            /* Melhorar a visualização do texto da logo */
+            .logo-text {
+                font-size: 24px; /* Aumentar tamanho da fonte */
+            }
+            
+            /* Aumentar tamanho do ícone da logo */
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+            }
+            
+            /* Melhorar o tamanho do símbolo $ */
+            .logo-icon::before {
+                font-size: 20px;
+            }
+            
+            /* Ajustar o subtitle */
+            .logo-subtitle {
+                font-size: 0.85rem;
+                margin: 10px auto;
+                padding: 0 10px;
+                max-width: 280px;
+                white-space: normal; /* Permitir quebra de linha */
+            }
+            
+            /* Dar mais espaço ao conteúdo rotativo */
+            .rotating-content {
+                padding: 20px;
+                min-height: 400px;
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
+            
+            /* Ajustar o tamanho e espaçamento dos itens */
+            .benefit-item {
+                padding: 10px;
+                margin-bottom: 12px;
+            }
+            
+            .benefit-text {
+                font-size: 0.85rem;
+                line-height: 1.5;
+            }
+            
+            /* Melhorar o espaçamento do rodapé de segurança */
+            .security-highlight {
+                padding: 15px;
+                margin-top: 20px;
+            }
+            
+            /* Adicionar um pouco de margem na seção de conteúdo */
+            .content-section {
+                margin-top: 10px;
+            }
+            
+            /* Ajustar os indicadores de seção */
+            .section-indicator {
+                bottom: 15px;
+            }
+            
+            .indicator-dot {
+                width: 10px;
+                height: 10px;
+                margin: 0 5px;
+            }
+        }
+
+        /* Correção específica para o QR code */
+        @media (max-width: 576px) {
+            .qr-container {
+                margin-top: 10px;
+                margin-bottom: 25px;
+                padding: 15px 10px;
+            }
+            
+            .qr-code {
+                max-width: 130px;
+            }
+        }
+
+        /* Garantir que o layout não quebre em telefones muito pequenos */
+        @media (max-width: 360px) {
+            .logo-text {
+                font-size: 22px;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-cta {
+                max-width: 200px;
+                width: 100%;
+            }
+            
+            .rotating-content {
+                min-height: 380px;
+            }
+        }
+
+        /* NOVAS CORREÇÕES PARA ESPAÇAMENTO DOS TÍTULOS DE SEÇÃO */
+        
+        /* Ajustes gerais para o conteúdo rotativo */
+        .rotating-content {
+            padding: 40px 30px !important;
+            margin-top: 30px !important;
+            margin-bottom: 30px !important;
+        }
+
+        /* Espaçamento maior para os títulos de seção */
+        .content-section h2 {
+            margin-bottom: 30px !important;
+            padding-top: 15px !important;
+            padding-bottom: 15px !important;
+            font-size: 1.5rem !important;
+        }
+
+        /* Mais espaço entre os itens de benefício */
+        .benefit-item {
+            margin-bottom: 20px !important;
+            padding: 15px !important;
+        }
+
+        /* Melhor posicionamento do conteúdo na seção */
+        .content-section {
+            top: 48% !important;
+            margin-top: 0 !important;
+            padding-top: 20px !important;
+        }
+
+        /* Ajustar posição dos indicadores */
+        .section-indicator {
+            bottom: 30px !important;
+        }
+
+        /* Espaçamento específico para títulos em telas pequenas */
+        @media (max-width: 576px) {
+            .rotating-content {
+                min-height: 480px !important;
+                padding: 30px 20px !important;
+            }
+            
+            .content-section {
+                width: calc(100% - 40px) !important;
+            }
+            
+            .content-section h2 {
+                margin-top: 20px !important;
+                margin-bottom: 25px !important;
+                font-size: 1.4rem !important;
+                padding: 10px 5px !important;
+                background-color: rgba(255,255,255,0.5);
+                border-radius: 10px;
+            }
+            
+            .benefit-item {
+                margin-bottom: 16px !important;
+                padding: 12px !important;
+            }
+            
+            /* Dar mais espaço para o texto dentro dos itens */
+            .benefit-text {
+                line-height: 1.6 !important;
+                font-size: 0.9rem !important;
+            }
+            
+            /* Melhorar a visibilidade do ícone */
+            .benefit-icon {
+                font-size: 1.3rem !important;
+                margin-right: 15px !important;
+            }
+            
+            /* Aumentar o espaço para o highlight de segurança */
+            .security-highlight {
+                margin-top: 25px !important;
+                padding: 18px !important;
+            }
+            
+            /* Ajustar a posição dos indicadores */
+            .section-indicator {
+                bottom: 20px !important;
+            }
+            
+            /* Aumentar o tamanho dos indicadores para melhor usabilidade */
+            .indicator-dot {
+                width: 12px !important;
+                height: 12px !important;
+                margin: 0 8px !important;
+            }
+        }
+
+        /* Ajustes para telas muito pequenas */
+        @media (max-width: 360px) {
+            .rotating-content {
+                min-height: 520px !important;
+            }
+            
+            /* Reduzir ligeiramente o tamanho da fonte para caber melhor */
+            .benefit-text {
+                font-size: 0.85rem !important;
+            }
+        }
     </style>
 </head>
 <body>

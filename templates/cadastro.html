@@ -341,48 +341,84 @@ body {
     }
 }
 
-/* Responsive Design */
+/* Responsive Design - CORREÇÕES */
 @media (max-width: 768px) {
     .signup-card {
-        border-radius: 0;
-        margin: 0;
-        min-height: 100vh;
+        border-radius: 24px; /* Mantém bordas arredondadas como no desktop */
+        margin: 15px auto;
         height: auto;
+        min-height: auto; /* Remove altura mínima fixa */
+        max-height: none; /* Remove altura máxima para evitar cortes */
     }
     
     .hero-container {
-        padding: 0;
+        padding: 15px;
         height: auto;
         min-height: 100vh;
+        align-items: flex-start; /* Alinha ao topo para evitar cortes */
+        padding-top: 20px;
+        padding-bottom: 20px;
     }
     
     .signup-left {
         order: 2;
         padding: 30px 20px;
         height: auto;
+        border-radius: 0 0 24px 24px; /* Arredonda apenas cantos inferiores */
     }
     
     .signup-right {
         order: 1;
         padding: 30px 20px;
         height: auto;
+        max-height: none; /* Permite que cresça quanto necessário */
+        overflow-y: visible; /* Evita scroll dentro da div */
+        border-radius: 24px 24px 0 0; /* Arredonda apenas cantos superiores */
     }
     
     .signup-left h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        margin-top: 5px;
     }
     
     .logo-text {
-        font-size: 20px;
+        font-size: 22px;
     }
     
-    .logo-icon {
-        width: 28px;
-        height: 28px;
+    .row.g-0 {
+        height: auto; /* Permite que cresça conforme conteúdo */
     }
     
-    .logo-icon::before {
-        font-size: 16px;
+    .col-lg-6 {
+        height: auto; /* Permite que cresça conforme conteúdo */
+    }
+    
+    /* Melhorar espaçamento dos campos do formulário */
+    .form-group {
+        margin-bottom: 22px;
+    }
+    
+    /* Ajustar espaçamento interno dos inputs */
+    .form-control, .form-select {
+        padding: 12px;
+        font-size: 16px; /* Tamanho ideal para evitar zoom no iOS */
+    }
+    
+    /* Espaçamento melhor para o checkbox de termos */
+    .form-check {
+        margin-bottom: 25px;
+        margin-top: 10px;
+    }
+    
+    /* Botão com mais espaço abaixo */
+    .btn-primary {
+        margin-bottom: 10px;
+    }
+    
+    /* Ajuste na altura do container para evitar problemas de scroll */
+    html, body {
+        height: auto;
+        min-height: 100%;
     }
 }
 
@@ -391,14 +427,86 @@ body {
         padding: 10px;
     }
     
+    .signup-card {
+        margin: 10px;
+        border-radius: 20px; /* Ligeiramente menor para telas muito pequenas */
+    }
+    
     .signup-left,
     .signup-right {
-        padding: 20px 15px;
+        padding: 25px 20px;
+    }
+    
+    .signup-left {
+        padding-top: 20px;
+        padding-bottom: 30px;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .signup-right {
+        padding-top: 25px;
+        border-radius: 20px 20px 0 0;
     }
     
     .signup-left h1 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
     }
+    
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .logo-container {
+        margin-bottom: 15px;
+    }
+    
+    .signup-header h2 {
+        font-size: 1.6rem;
+        margin-bottom: 5px;
+    }
+    
+    /* Espaçamento vertical entre os campos */
+    .form-group {
+        margin-bottom: 18px;
+    }
+    
+    /* Ajustar o tamanho da fonte para melhor legibilidade */
+    .form-label {
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+    }
+    
+    /* Aumentar o tamanho do texto do formulário */
+    .form-control, .form-select {
+        font-size: 16px; /* Evita zoom no iOS */
+    }
+    
+    /* Melhorar a visualização dos elementos do formulário */
+    .form-text {
+        margin-top: 5px;
+        font-size: 0.85rem;
+    }
+    
+    /* Certificar-se de que o valor "selecione uma opção" seja visível */
+    select.form-select option {
+        font-size: 16px;
+    }
+    
+    /* Melhorar a visualização do componente de telefone internacional */
+    .iti {
+        width: 100%;
+    }
+}
+
+/* Estilos específicos para o componente de telefone internacional */
+.iti {
+    width: 100%;
+    display: block;
+}
+
+.iti__flag-container {
+    z-index: 10;
 }
 {% endblock %}
 
