@@ -2719,9 +2719,11 @@ def listar_dividas():
     try:
         usuario_id = session.get('usuario_id')
         tipo_perfil = request.args.get('tipo_perfil', 'pessoal')
+        status = request.args.get('status')
+        tipo = request.args.get('tipo')
         
         divida_model = Divida(Config.DATABASE)
-        dividas = divida_model.buscar(usuario_id, tipo_perfil=tipo_perfil)
+        dividas = divida_model.buscar(usuario_id, tipo_perfil=tipo_perfil, status=status, tipo=tipo)
         
         return jsonify(dividas), 200
         
@@ -2761,13 +2763,12 @@ def criar_divida():
             'parcelas_pagas': int(dados.get('parcelas_pagas', 0)),
             'credor': dados.get('credor'),
             'tipo_perfil': dados.get('tipo_perfil', 'pessoal'),
-            'tipo': dados.get('tipo', 'outros')  # Para categorizar o tipo de dívida
+            'tipo': dados.get('tipo', 'outros')
         }
         
         divida_model = Divida(Config.DATABASE)
         
-        # Primeiro, precisamos modificar a classe Divida para aceitar o tipo
-        # Por enquanto, vamos criar sem o tipo e depois atualizar
+        # Cria a dívida com todos os dados
         divida_id = divida_model.criar(
             usuario_id=divida_data['usuario_id'],
             nome=divida_data['nome'],
@@ -2777,23 +2778,24 @@ def criar_divida():
             taxa_juros=divida_data['taxa_juros'],
             parcelas_total=divida_data['parcelas_total'],
             credor=divida_data['credor'],
-            tipo_perfil=divida_data['tipo_perfil']
-        )
-        
-        # Atualizar com os dados adicionais (incluindo valor_pago, parcelas_pagas e tipo)
-        divida_model.atualizar(
-            divida_id,
-            valor_pago=divida_data['valor_pago'],
-            parcelas_pagas=divida_data['parcelas_pagas'],
+            tipo_perfil=divida_data['tipo_perfil'],
             tipo=divida_data['tipo']
         )
+        
+        # Atualiza com os dados adicionais se necessário (valor_pago, parcelas_pagas)
+        if divida_data['valor_pago'] > 0 or divida_data['parcelas_pagas'] > 0:
+            divida_model.atualizar(
+                divida_id,
+                valor_pago=divida_data['valor_pago'],
+                parcelas_pagas=divida_data['parcelas_pagas']
+            )
         
         return jsonify({'id': divida_id, 'message': 'Dívida criada com sucesso'}), 201
         
     except Exception as e:
         print(f"Erro ao criar dívida: {str(e)}")
         print(traceback.format_exc())
-        return jsonify({'error': 'Erro interno do servidor'}), 500
+        return jsonify({'error': str(e) or 'Erro interno do servidor'}), 500
 
 @api_bp.route('/dividas/<int:divida_id>', methods=['GET'])
 @api_login_required
@@ -2843,7 +2845,7 @@ def atualizar_divida(divida_id):
         # Lista de campos que podem ser atualizados
         campos_permitidos = [
             'nome', 'valor_total', 'valor_pago', 'data_inicio', 'data_fim',
-            'taxa_juros', 'parcelas_total', 'parcelas_pagas', 'credor', 'tipo'
+            'taxa_juros', 'parcelas_total', 'parcelas_pagas', 'credor', 'tipo', 'status'
         ]
         
         for campo in campos_permitidos:
@@ -2855,9 +2857,16 @@ def atualizar_divida(divida_id):
                 else:
                     dados_atualizacao[campo] = dados[campo]
         
-        # Atualiza status se a dívida foi quitada
-        if 'valor_pago' in dados_atualizacao and 'valor_total' in dados_atualizacao:
-            if dados_atualizacao['valor_pago'] >= dados_atualizacao['valor_total']:
+        # Atualiza status automaticamente se a dívida foi quitada
+        if 'valor_pago' in dados_atualizacao and 'valor_total' in dados:
+            valor_total = float(dados['valor_total'])
+            if dados_atualizacao['valor_pago'] >= valor_total:
+                dados_atualizacao['status'] = 'quitada'
+            else:
+                dados_atualizacao['status'] = 'em_dia'
+        elif 'valor_pago' in dados_atualizacao:
+            valor_total = divida['valor_total']
+            if dados_atualizacao['valor_pago'] >= valor_total:
                 dados_atualizacao['status'] = 'quitada'
             else:
                 dados_atualizacao['status'] = 'em_dia'
@@ -2865,12 +2874,14 @@ def atualizar_divida(divida_id):
         # Realiza a atualização
         divida_model.atualizar(divida_id, **dados_atualizacao)
         
-        return jsonify({'message': 'Dívida atualizada com sucesso'}), 200
+        # Retorna a dívida atualizada
+        divida_atualizada = divida_model.buscar_por_id(divida_id)
+        return jsonify(divida_atualizada), 200
         
     except Exception as e:
         print(f"Erro ao atualizar dívida: {str(e)}")
         print(traceback.format_exc())
-        return jsonify({'error': 'Erro interno do servidor'}), 500
+        return jsonify({'error': str(e) or 'Erro interno do servidor'}), 500
 
 @api_bp.route('/dividas/<int:divida_id>', methods=['DELETE'])
 @api_login_required
@@ -2900,7 +2911,7 @@ def excluir_divida(divida_id):
     except Exception as e:
         print(f"Erro ao excluir dívida: {str(e)}")
         print(traceback.format_exc())
-        return jsonify({'error': 'Erro interno do servidor'}), 500
+        return jsonify({'error': str(e) or 'Erro interno do servidor'}), 500
 
 @api_bp.route('/dividas/pagamento', methods=['POST'])
 @api_login_required
@@ -2937,18 +2948,23 @@ def registrar_pagamento():
             divida_id=divida_id,
             valor=valor,
             data=data,
-            observacao=f"{tipo_pagamento}: {observacao}" if observacao else tipo_pagamento
+            observacao=observacao,
+            tipo=tipo_pagamento
         )
+        
+        # Obtém a dívida atualizada após o pagamento
+        divida_atualizada = divida_model.buscar_por_id(divida_id)
         
         return jsonify({
             'id': pagamento_id,
-            'message': 'Pagamento registrado com sucesso'
+            'message': 'Pagamento registrado com sucesso',
+            'divida': divida_atualizada
         }), 201
         
     except Exception as e:
         print(f"Erro ao registrar pagamento: {str(e)}")
         print(traceback.format_exc())
-        return jsonify({'error': 'Erro interno do servidor'}), 500
+        return jsonify({'error': str(e) or 'Erro interno do servidor'}), 500
 
 @api_bp.route('/usuario/renda', methods=['GET'])
 @api_login_required
@@ -2963,8 +2979,7 @@ def obter_renda_usuario():
         if not usuario:
             return jsonify({'error': 'Usuário não encontrado'}), 404
         
-        # Assumindo que existe um campo 'renda_mensal' na tabela de usuários
-        # Se não existir, você pode retornar 0 ou implementar uma tabela separada para rendas
+        # Tenta obter a renda_mensal do usuário
         renda = usuario.get('renda_mensal', 0)
         
         return jsonify({
@@ -2975,4 +2990,5 @@ def obter_renda_usuario():
     except Exception as e:
         print(f"Erro ao obter renda do usuário: {str(e)}")
         print(traceback.format_exc())
-        return jsonify({'error': 'Erro interno do servidor'}), 500
+        return jsonify({'error': str(e) or 'Erro interno do servidor'}), 500
+

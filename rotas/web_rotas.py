@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import json
 from werkzeug.utils import secure_filename
 import traceback
+from config import Config
 
 # Diretório para salvar os arquivos enviados
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'static', 'uploads')
@@ -1428,52 +1429,11 @@ def dividas():
     usuario_model = Usuario(Config.DATABASE)
     usuario = usuario_model.buscar_por_id(usuario_id)
     
-    # Em uma implementação real, buscaria as dívidas do banco de dados
-    # Aqui usamos dados simulados
-    dividas = [
-        {
-            'id': 1,
-            'nome': 'Empréstimo Bancário',
-            'valor_total': 10000.00,
-            'valor_pago': 2500.00,
-            'data_inicio': '2025-01-15',
-            'data_fim': '2026-01-15',
-            'taxa_juros': 1.99,
-            'parcelas_total': 12,
-            'parcelas_pagas': 3,
-            'status': 'em_dia',
-            'credor': 'Banco XYZ',
-            'tipo_perfil': 'pessoal'
-        },
-        {
-            'id': 2,
-            'nome': 'Cartão de Crédito',
-            'valor_total': 5000.00,
-            'valor_pago': 1000.00,
-            'data_inicio': '2025-03-10',
-            'data_fim': '2025-08-10',
-            'taxa_juros': 3.99,
-            'parcelas_total': 5,
-            'parcelas_pagas': 1,
-            'status': 'em_dia',
-            'credor': 'Banco ABC',
-            'tipo_perfil': 'pessoal'
-        },
-        {
-            'id': 3,
-            'nome': 'Financiamento de Equipamentos',
-            'valor_total': 25000.00,
-            'valor_pago': 5000.00,
-            'data_inicio': '2025-02-01',
-            'data_fim': '2026-02-01',
-            'taxa_juros': 1.5,
-            'parcelas_total': 12,
-            'parcelas_pagas': 2,
-            'status': 'em_dia',
-            'credor': 'Banco Empresarial',
-            'tipo_perfil': 'empresarial'
-        }
-    ]
+    # Cria instância do modelo de dívida
+    divida_model = Divida(Config.DATABASE)
+    
+    # Por padrão, busca dívidas do tipo pessoal
+    dividas = divida_model.buscar(usuario_id, tipo_perfil='pessoal')
     
     return render_template(
         'dividas.html',
@@ -1487,33 +1447,258 @@ def dividas():
 @login_required
 def adicionar_divida():
     """Adicionar uma nova dívida"""
-    # Em uma implementação real, salvaria no banco de dados
-    flash('Dívida adicionada com sucesso!', 'success')
+    from config import Config
+    
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        # Extrai dados do formulário
+        nome = request.form.get('nome')
+        valor_total = float(request.form.get('valor_total', 0))
+        valor_pago = float(request.form.get('valor_pago', 0))
+        data_inicio = request.form.get('data_inicio')
+        data_fim = request.form.get('data_fim')
+        taxa_juros = float(request.form.get('taxa_juros', 0)) if request.form.get('taxa_juros') else None
+        parcelas_total = int(request.form.get('parcelas_total', 1)) if request.form.get('parcelas_total') else None
+        parcelas_pagas = int(request.form.get('parcelas_pagas', 0))
+        credor = request.form.get('credor')
+        tipo_perfil = request.form.get('tipo_perfil', 'pessoal')
+        tipo = request.form.get('tipo', 'outros')
+        
+        # Validações básicas
+        if not nome:
+            flash('Nome da dívida é obrigatório', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        if valor_total <= 0:
+            flash('Valor total deve ser maior que zero', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        if not data_inicio:
+            flash('Data de início é obrigatória', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        # Cria o modelo de dívida
+        divida_model = Divida(Config.DATABASE)
+        
+        # Cria a dívida
+        divida_id = divida_model.criar(
+            usuario_id=usuario_id,
+            nome=nome,
+            valor_total=valor_total,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            taxa_juros=taxa_juros,
+            parcelas_total=parcelas_total,
+            credor=credor,
+            tipo_perfil=tipo_perfil,
+            tipo=tipo
+        )
+        
+        # Atualiza os dados adicionais (valor_pago, parcelas_pagas)
+        if valor_pago > 0 or parcelas_pagas > 0:
+            divida_model.atualizar(
+                divida_id,
+                valor_pago=valor_pago,
+                parcelas_pagas=parcelas_pagas
+            )
+        
+        flash('Dívida adicionada com sucesso!', 'success')
+        
+    except Exception as e:
+        print(f"Erro ao adicionar dívida: {str(e)}")
+        flash('Erro ao adicionar dívida. Por favor, tente novamente.', 'danger')
+    
     return redirect(url_for('web.dividas'))
 
 @web_bp.route('/dividas/editar/<int:divida_id>', methods=['POST'])
 @login_required
 def editar_divida(divida_id):
     """Editar uma dívida"""
-    # Em uma implementação real, atualizaria no banco de dados
-    flash('Dívida atualizada com sucesso!', 'success')
+    from config import Config
+    
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        # Extrai dados do formulário
+        nome = request.form.get('nome')
+        valor_total = float(request.form.get('valor_total', 0))
+        valor_pago = float(request.form.get('valor_pago', 0))
+        data_inicio = request.form.get('data_inicio')
+        data_fim = request.form.get('data_fim')
+        taxa_juros = float(request.form.get('taxa_juros', 0)) if request.form.get('taxa_juros') else None
+        parcelas_total = int(request.form.get('parcelas_total', 1)) if request.form.get('parcelas_total') else None
+        parcelas_pagas = int(request.form.get('parcelas_pagas', 0))
+        credor = request.form.get('credor')
+        tipo = request.form.get('tipo', 'outros')
+        
+        # Validações básicas
+        if not nome:
+            flash('Nome da dívida é obrigatório', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        if valor_total <= 0:
+            flash('Valor total deve ser maior que zero', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        # Cria o modelo de dívida
+        divida_model = Divida(Config.DATABASE)
+        
+        # Verifica se a dívida existe e pertence ao usuário
+        divida = divida_model.buscar_por_id(divida_id)
+        
+        if not divida:
+            flash('Dívida não encontrada', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        if divida['usuario_id'] != usuario_id:
+            flash('Você não tem permissão para editar esta dívida', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        # Prepara status baseado no valor pago
+        status = 'quitada' if valor_pago >= valor_total else 'em_dia'
+        
+        # Atualiza a dívida
+        divida_model.atualizar(
+            divida_id,
+            nome=nome,
+            valor_total=valor_total,
+            valor_pago=valor_pago,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            taxa_juros=taxa_juros,
+            parcelas_total=parcelas_total,
+            parcelas_pagas=parcelas_pagas,
+            credor=credor,
+            tipo=tipo,
+            status=status
+        )
+        
+        flash('Dívida atualizada com sucesso!', 'success')
+        
+    except Exception as e:
+        print(f"Erro ao editar dívida: {str(e)}")
+        flash('Erro ao atualizar dívida. Por favor, tente novamente.', 'danger')
+    
     return redirect(url_for('web.dividas'))
 
 @web_bp.route('/dividas/excluir/<int:divida_id>', methods=['POST'])
 @login_required
 def excluir_divida(divida_id):
     """Excluir uma dívida"""
-    # Em uma implementação real, excluiria do banco de dados
-    flash('Dívida excluída com sucesso!', 'success')
+    from config import Config
+    
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        # Cria o modelo de dívida
+        divida_model = Divida(Config.DATABASE)
+        
+        # Verifica se a dívida existe e pertence ao usuário
+        divida = divida_model.buscar_por_id(divida_id)
+        
+        if not divida:
+            flash('Dívida não encontrada', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        if divida['usuario_id'] != usuario_id:
+            flash('Você não tem permissão para excluir esta dívida', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        # Exclui a dívida
+        excluida = divida_model.excluir(divida_id)
+        
+        if excluida:
+            flash('Dívida excluída com sucesso!', 'success')
+        else:
+            flash('Erro ao excluir dívida', 'danger')
+        
+    except Exception as e:
+        print(f"Erro ao excluir dívida: {str(e)}")
+        flash('Erro ao excluir dívida. Por favor, tente novamente.', 'danger')
+    
     return redirect(url_for('web.dividas'))
 
 @web_bp.route('/dividas/registrar_pagamento/<int:divida_id>', methods=['POST'])
 @login_required
 def registrar_pagamento_divida(divida_id):
     """Registrar um pagamento de parcela de dívida"""
-    # Em uma implementação real, registraria o pagamento no banco de dados
-    flash('Pagamento registrado com sucesso!', 'success')
+    from config import Config
+    
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        # Extrai dados do formulário
+        valor = float(request.form.get('valor', 0))
+        data = request.form.get('data')
+        tipo = request.form.get('tipo', 'parcela')
+        observacao = request.form.get('observacao')
+        
+        # Validações básicas
+        if valor <= 0:
+            flash('Valor do pagamento deve ser maior que zero', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        # Cria o modelo de dívida
+        divida_model = Divida(Config.DATABASE)
+        
+        # Verifica se a dívida existe e pertence ao usuário
+        divida = divida_model.buscar_por_id(divida_id)
+        
+        if not divida:
+            flash('Dívida não encontrada', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        if divida['usuario_id'] != usuario_id:
+            flash('Você não tem permissão para registrar pagamentos nesta dívida', 'danger')
+            return redirect(url_for('web.dividas'))
+        
+        # Registra o pagamento
+        pagamento_id = divida_model.registrar_pagamento(
+            divida_id=divida_id,
+            valor=valor,
+            data=data,
+            observacao=observacao,
+            tipo=tipo
+        )
+        
+        flash('Pagamento registrado com sucesso!', 'success')
+        
+    except Exception as e:
+        print(f"Erro ao registrar pagamento: {str(e)}")
+        flash('Erro ao registrar pagamento. Por favor, tente novamente.', 'danger')
+    
     return redirect(url_for('web.dividas'))
+
+@web_bp.route('/api/usuario/perfil', methods=['GET'])
+@login_required
+def obter_perfil_usuario():
+    """Obtém informações básicas do perfil do usuário"""
+    from config import Config
+    
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        usuario_model = Usuario(Config.DATABASE)
+        usuario = usuario_model.buscar_por_id(usuario_id)
+        
+        if not usuario:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+        
+        # Retorna informações básicas do perfil
+        resposta = {
+            'id': usuario.get('id'),
+            'nome': usuario.get('nome'),
+            'email': usuario.get('email'),
+            'plano': usuario.get('plano', 'gratuito'),
+            'renda_mensal': float(usuario.get('renda_mensal', 0)) if usuario.get('renda_mensal') else 0
+        }
+        
+        return jsonify(resposta), 200
+        
+    except Exception as e:
+        print(f"Erro ao obter perfil do usuário: {str(e)}")
+        return jsonify({'error': 'Erro interno do servidor'}), 500
 
 # Rota para Financiamentos
 @web_bp.route('/financiamentos')
@@ -1813,6 +1998,200 @@ def api_whatsapp_atualizar():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Adicione mais rotas conforme necessário
-        
-        
+@web_bp.route('/notificacoes')
+def notificacoes():
+    # Se o usuário não estiver logado, redireciona para a página inicial
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    return render_template('notificacoes.html')
+
+# API de Notificações
+
+# Rota para obter todas as notificações do usuário
+@web_bp.route('/api/notifications')
+def get_notifications():
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    user_id = session['usuario_id']
+    filter_type = request.args.get('filter', 'all')
+    is_read = None
+    if filter_type == 'unread':
+        is_read = False
+        filter_type = None
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Buscar notificações usando a classe Notificacao
+    notifications = Notificacao.get_for_user(
+        user_id=user_id,
+        filter_type=filter_type,
+        is_read=is_read,
+        page=page,
+        per_page=per_page
+    )
+    
+    # Contar o total de notificações para paginação
+    total = Notificacao.count_for_user(
+        user_id=user_id,
+        filter_type=filter_type,
+        is_read=is_read
+    )
+    
+    # Contar notificações não lidas
+    unread_count = Notificacao.count_for_user(
+        user_id=user_id,
+        is_read=False
+    )
+    
+    return jsonify({
+        'notifications': [n.to_dict() for n in notifications],
+        'pagination': {
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'pages': (total + per_page - 1) // per_page
+        },
+        'unread_count': unread_count
+    })
+
+# Rota para marcar uma notificação como lida
+@web_bp.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+def mark_as_read(notification_id):
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    user_id = session['usuario_id']
+    
+    # Buscar a notificação e verificar se pertence ao usuário
+    notification = Notificacao.get_by_id(notification_id, user_id)
+    
+    if not notification:
+        return jsonify({'error': 'Notification not found'}), 404
+    
+    # Marcar como lida
+    if notification.mark_as_read():
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Failed to mark notification as read'}), 500
+
+# Rota para marcar todas as notificações como lidas
+@web_bp.route('/api/notifications/mark-all-read', methods=['POST'])
+def mark_all_as_read():
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    user_id = session['usuario_id']
+    filter_type = request.json.get('filter', None) if request.json else None
+    
+    # Marcar todas como lidas
+    if Notificacao.mark_all_as_read(user_id, filter_type):
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Failed to mark notifications as read'}), 500
+
+# Rota para excluir uma notificação
+@web_bp.route('/api/notifications/<int:notification_id>', methods=['DELETE'])
+def delete_notification(notification_id):
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    user_id = session['usuario_id']
+    
+    # Buscar a notificação e verificar se pertence ao usuário
+    notification = Notificacao.get_by_id(notification_id, user_id)
+    
+    if not notification:
+        return jsonify({'error': 'Notification not found'}), 404
+    
+    # Excluir a notificação
+    if notification.delete():
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Failed to delete notification'}), 500
+
+# Rota para criar uma nova notificação (uso interno ou para testes)
+@web_bp.route('/api/notifications', methods=['POST'])
+def create_notification():
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    user_id = session['usuario_id']
+    data = request.json
+    
+    required_fields = ['type', 'title', 'description']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'Missing required field: {field}'}), 400
+    
+    # Criar nova notificação
+    notification = Notificacao(
+        user_id=user_id,
+        type=data['type'],
+        title=data['title'],
+        description=data['description'],
+        icon=data.get('icon'),
+        icon_color=data.get('icon_color'),
+        icon_bg=data.get('icon_bg'),
+        action_url=data.get('action_url'),
+        action_text=data.get('action_text'),
+        metadata=data.get('metadata', {})
+    )
+    
+    if notification.save():
+        return jsonify(notification.to_dict())
+    else:
+        return jsonify({'error': 'Failed to create notification'}), 500
+
+# Rota para obter a contagem de notificações não lidas
+@web_bp.route('/api/notifications/unread-count')
+def get_unread_count():
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    user_id = session['usuario_id']
+    
+    # Contar notificações não lidas
+    count = Notificacao.count_for_user(
+        user_id=user_id,
+        is_read=False
+    )
+    
+    return jsonify({'unread_count': count})
+
+# Rota para executar ação em uma notificação
+@web_bp.route('/api/notifications/<int:notification_id>/action', methods=['POST'])
+def execute_notification_action(notification_id):
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    user_id = session['usuario_id']
+    action_data = request.json or {}
+    
+    # Buscar a notificação
+    notification = Notificacao.get_by_id(notification_id, user_id)
+    
+    if not notification:
+        return jsonify({'error': 'Notification not found'}), 404
+    
+    # Marcar como lida independentemente da ação
+    notification.mark_as_read()
+    
+    # Resposta básica
+    response = {
+        'success': True,
+        'message': f"Ação '{notification.action_text}' executada com sucesso",
+        'notification': notification.to_dict()
+    }
+    
+    # Processamento específico por tipo
+    if notification.type == 'lembrete' and notification.metadata.get('transaction_id') and 'mark_as_paid' in action_data:
+        # Aqui você implementaria a lógica para marcar a transação como paga
+        # transaction = Transaction.get_by_id(notification.metadata.get('transaction_id'))
+        # if transaction:
+        #     transaction.mark_as_paid()
+        #     response['message'] = 'Pagamento registrado com sucesso'
+        pass
+    
+    return jsonify(response)

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Notificações</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill me-2">
+                        <i class="bi bi-check-all"></i> Marcar todas como lidas
+                    </button>
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-filter"></i> Filtrar
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><a class="dropdown-item" href="?filter=all">Todas</a></li>
+                            <li><a class="dropdown-item" href="?filter=unread">Não lidas</a></li>
+                            <li><a class="dropdown-item" href="?filter=transacoes">Transações</a></li>
+                            <li><a class="dropdown-item" href="?filter=lembretes">Lembretes</a></li>
+                            <li><a class="dropdown-item" href="?filter=sistema">Sistema</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="p-4">
+                    <ul class="notification-list">
+                        <!-- Notificação não lida - Transação -->
+                        <li class="notification-item unread">
+                            <div class="notification-item-content">
+                                <div class="notification-icon">
+                                    <i class="bi bi-cash-coin"></i>
+                                </div>
+                                <div>
+                                    <h6 class="notification-title">Nova transação registrada via WhatsApp</h6>
+                                    <p class="notification-desc">Despesa de R$ 89,90 em "Alimentação" foi registrada com sucesso.</p>
+                                    <span class="notification-time">Hoje, 14:35</span>
+                                    <div class="notification-actions">
+                                        <button class="btn btn-sm btn-outline-primary notification-btn-sm">Ver detalhes</button>
+                                        <button class="btn btn-sm btn-outline-secondary notification-btn-sm">Marcar como lida</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <!-- Notificação não lida - Lembrete -->
+                        <li class="notification-item unread">
+                            <div class="notification-item-content">
+                                <div class="notification-icon" style="background-color: #e3f2fd; color: #0d6efd;">
+                                    <i class="bi bi-alarm"></i>
+                                </div>
+                                <div>
+                                    <h6 class="notification-title">Lembrete de pagamento</h6>
+                                    <p class="notification-desc">Conta de energia elétrica vence amanhã. Valor: R$ 235,45</p>
+                                    <span class="notification-time">Hoje, 10:00</span>
+                                    <div class="notification-actions">
+                                        <button class="btn btn-sm btn-outline-primary notification-btn-sm">Marcar como paga</button>
+                                        <button class="btn btn-sm btn-outline-secondary notification-btn-sm">Marcar como lida</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <!-- Notificação não lida - Sistema -->
+                        <li class="notification-item unread">
+                            <div class="notification-item-content">
+                                <div class="notification-icon" style="background-color: #fff3cd; color: #ffc107;">
+                                    <i class="bi bi-rocket-takeoff"></i>
+                                </div>
+                                <div>
+                                    <h6 class="notification-title">Nova funcionalidade disponível</h6>
+                                    <p class="notification-desc">Agora você pode sincronizar suas despesas com Google Sheets. Experimente agora!</p>
+                                    <span class="notification-time">Ontem, 16:20</span>
+                                    <div class="notification-actions">
+                                        <button class="btn btn-sm btn-outline-primary notification-btn-sm">Explorar</button>
+                                        <button class="btn btn-sm btn-outline-secondary notification-btn-sm">Marcar como lida</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <!-- Notificação já lida - Transação -->
+                        <li class="notification-item">
+                            <div class="notification-item-content">
+                                <div class="notification-icon">
+                                    <i class="bi bi-cash-coin"></i>
+                                </div>
+                                <div>
+                                    <h6 class="notification-title">Transação registrada via WhatsApp</h6>
+                                    <p class="notification-desc">Despesa de R$ 150,00 em "Transporte" foi registrada com sucesso.</p>
+                                    <span class="notification-time">15/05/2025, 09:12</span>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <!-- Notificação já lida - Meta atingida -->
+                        <li class="notification-item">
+                            <div class="notification-item-content">
+                                <div class="notification-icon" style="background-color: #d1e7dd; color: #198754;">
+                                    <i class="bi bi-trophy"></i>
+                                </div>
+                                <div>
+                                    <h6 class="notification-title">Meta de economia atingida! 🎉</h6>
+                                    <p class="notification-desc">Você atingiu sua meta de economia para o mês. Continue assim!</p>
+                                    <span class="notification-time">10/05/2025, 23:59</span>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <!-- Notificação já lida - Sistema -->
+                        <li class="notification-item">
+                            <div class="notification-item-content">
+                                <div class="notification-icon" style="background-color: #f8d7da; color: #dc3545;">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h6 class="notification-title">Alerta de orçamento</h6>
+                                    <p class="notification-desc">Você já utilizou 85% do orçamento mensal para "Alimentação".</p>
+                                    <span class="notification-time">08/05/2025, 14:30</span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <button class="btn btn-outline-primary rounded-pill">
+                    <i class="bi bi-arrow-down"></i> Carregar mais
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Marcar notificação como lida
+        const markAsReadButtons = document.querySelectorAll('.notification-btn-sm:nth-child(2)');
+        markAsReadButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const notificationItem = this.closest('.notification-item');
+                notificationItem.classList.remove('unread');
+                this.parentElement.remove(); // Remove os botões de ação
+                
+                // Aqui você pode fazer uma chamada AJAX para atualizar o status da notificação no servidor
+                // fetch('/api/notifications/mark-as-read', { method: 'POST', body: JSON.stringify({id: notificationId}) });
+            });
+        });
+        
+        // Botão para marcar todas como lidas
+        const markAllAsReadButton = document.querySelector('.btn-outline-primary');
+        markAllAsReadButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+                const actions = item.querySelector('.notification-actions');
+                if (actions) actions.remove();
+            });
+            
+            // Aqui você pode fazer uma chamada AJAX para atualizar o status de todas as notificações no servidor
+            // fetch('/api/notifications/mark-all-as-read', { method: 'POST' });
+        });
+    });
+</script>
+{% endblock %}

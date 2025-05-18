@@ -1,0 +1,793 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/dashboard">Início</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Configurações</li>
+            </ol>
+        </nav>
+        
+        <h4 class="mb-4">Configurações</h4>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Menu lateral de configurações (visível apenas em desktop) -->
+    <div class="col-md-3 d-none d-md-block">
+        <div class="list-group">
+            <a href="#perfil" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                <i class="bi bi-person-fill me-2"></i> Perfil
+            </a>
+            <a href="#notificacoes" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                <i class="bi bi-bell-fill me-2"></i> Notificações
+            </a>
+            <a href="#integracao-whatsapp" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                <i class="bi bi-whatsapp me-2"></i> Integração WhatsApp
+            </a>
+            <a href="#categorias" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                <i class="bi bi-tags-fill me-2"></i> Categorias
+            </a>
+            <a href="#seguranca" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                <i class="bi bi-shield-lock-fill me-2"></i> Segurança
+            </a>
+            <a href="#exportacao" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                <i class="bi bi-download me-2"></i> Exportação de Dados
+            </a>
+            <a href="#integracoes" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                <i class="bi bi-puzzle-fill me-2"></i> Integrações
+            </a>
+        </div>
+    </div>
+    
+    <!-- Menu inferior para navegação em dispositivos móveis -->
+    <div class="col-12 d-md-none mb-3">
+        <select class="form-select config-select">
+            <option value="perfil">Perfil</option>
+            <option value="notificacoes">Notificações</option>
+            <option value="integracao-whatsapp">Integração WhatsApp</option>
+            <option value="categorias">Categorias</option>
+            <option value="seguranca">Segurança</option>
+            <option value="exportacao">Exportação de Dados</option>
+            <option value="integracoes">Integrações</option>
+        </select>
+    </div>
+    
+    <!-- Conteúdo das configurações -->
+    <div class="col-md-9 col-12">
+        <div class="tab-content">
+            <!-- PERFIL -->
+            <div class="tab-pane fade show active" id="perfil">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Informações Pessoais</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <!-- Avatar -->
+                            <div class="text-center mb-4">
+                                <div class="avatar-container mx-auto position-relative" style="width: 100px; height: 100px;">
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; overflow: hidden;">
+                                        <i class="bi bi-person-fill text-primary" style="font-size: 3rem;"></i>
+                                    </div>
+                                    <div class="position-absolute bottom-0 end-0">
+                                        <button type="button" class="btn btn-sm btn-primary rounded-circle" title="Alterar foto">
+                                            <i class="bi bi-camera"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label">Nome</label>
+                                    <input type="text" class="form-control" id="name" value="Usuário Teste">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" value="teste@despezap.com">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">Telefone</label>
+                                    <input type="tel" class="form-control" id="phone" value="+55 (11) 98765-4321">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cpf" class="form-label">CPF</label>
+                                    <input type="text" class="form-control" id="cpf" value="123.456.789-00">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- NOTIFICAÇÕES -->
+            <div class="tab-pane fade" id="notificacoes">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Configurações de Notificações</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">Notificações no Aplicativo</h6>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_app_transaction" checked>
+                                    <label class="form-check-label" for="notify_app_transaction">Transações</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_app_reminder" checked>
+                                    <label class="form-check-label" for="notify_app_reminder">Lembretes de pagamento</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_app_goal" checked>
+                                    <label class="form-check-label" for="notify_app_goal">Metas e Objetivos</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_app_budget" checked>
+                                    <label class="form-check-label" for="notify_app_budget">Alertas de orçamento</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_app_system" checked>
+                                    <label class="form-check-label" for="notify_app_system">Atualizações do sistema</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">Notificações por WhatsApp</h6>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_whatsapp_transaction" checked>
+                                    <label class="form-check-label" for="notify_whatsapp_transaction">Confirmação de transações</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_whatsapp_reminder" checked>
+                                    <label class="form-check-label" for="notify_whatsapp_reminder">Lembretes de pagamento</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_whatsapp_budget">
+                                    <label class="form-check-label" for="notify_whatsapp_budget">Alertas de orçamento</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_whatsapp_report">
+                                    <label class="form-check-label" for="notify_whatsapp_report">Relatório semanal</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">Notificações por E-mail</h6>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_email_reminder">
+                                    <label class="form-check-label" for="notify_email_reminder">Lembretes de pagamento</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_email_report" checked>
+                                    <label class="form-check-label" for="notify_email_report">Relatório mensal</label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify_email_system">
+                                    <label class="form-check-label" for="notify_email_system">Novidades e atualizações</label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Salvar Preferências</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- INTEGRAÇÃO WHATSAPP -->
+            <div class="tab-pane fade" id="integracao-whatsapp">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Integração com WhatsApp</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="status-container mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <span class="badge bg-success rounded-pill p-2">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Status: Conectado</h6>
+                                    <p class="text-muted mb-0 small">Último uso: Hoje, 14:35</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <span class="badge bg-light text-dark rounded-pill p-2">
+                                        <i class="bi bi-whatsapp text-success"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Número WhatsApp: +1 415 523 8886</h6>
+                                    <p class="text-muted mb-0 small">Código de ativação: join successful-angle</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">Instruções de Uso</h6>
+                            
+                            <div class="card mb-3 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="mb-2"><i class="bi bi-1-circle-fill me-2 text-primary"></i> Adicione o DespeZap no WhatsApp</h6>
+                                    <p class="mb-0">Adicione o número <strong>+1 415 523 8886</strong> aos seus contatos e envie a mensagem <strong>"join successful-angle"</strong> para ativar.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="mb-2"><i class="bi bi-2-circle-fill me-2 text-primary"></i> Registre suas despesas</h6>
+                                    <p class="mb-0">Exemplo: envie <strong>"50 alimentação almoço"</strong> para registrar uma despesa de R$ 50,00 na categoria Alimentação.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="mb-2"><i class="bi bi-3-circle-fill me-2 text-primary"></i> Consulte seu saldo</h6>
+                                    <p class="mb-0">Envie <strong>"saldo"</strong> para ver o resumo financeiro ou <strong>"extrato"</strong> para ver as últimas transações.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">Comandos Disponíveis</h6>
+                            
+                            <div class="row row-cols-1 row-cols-md-2 g-3">
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-cash-coin me-2 text-success"></i> Registrar Transação
+                                            </h6>
+                                            <p class="card-text text-muted small">
+                                                <strong>[valor] [categoria] [descrição]</strong><br>
+                                                Ex: "150 transporte uber para o trabalho"
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-piggy-bank me-2 text-primary"></i> Consultar Saldo
+                                            </h6>
+                                            <p class="card-text text-muted small">
+                                                <strong>saldo</strong><br>
+                                                Exibe o saldo atual e resumo por categoria
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-clock-history me-2 text-warning"></i> Consultar Extrato
+                                            </h6>
+                                            <p class="card-text text-muted small">
+                                                <strong>extrato [período]</strong><br>
+                                                Ex: "extrato semana" ou "extrato mês"
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-question-circle me-2 text-info"></i> Ajuda
+                                            </h6>
+                                            <p class="card-text text-muted small">
+                                                <strong>ajuda</strong> ou <strong>comandos</strong><br>
+                                                Lista todos os comandos disponíveis
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary">
+                                <i class="bi bi-qr-code me-2"></i> Mostrar QR Code
+                            </button>
+                            <button class="btn btn-outline-danger">
+                                <i class="bi bi-x-circle me-2"></i> Desconectar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CATEGORIAS -->
+            <div class="tab-pane fade" id="categorias">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Categorias de Transações</h5>
+                        <button class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg me-1"></i> Nova Categoria
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Personalize suas categorias para melhor organização das finanças.</p>
+                        
+                        <div class="category-list">
+                            <!-- Alimentação -->
+                            <div class="category-item d-flex align-items-center mb-3 p-2 border rounded">
+                                <div class="category-color me-3" style="width: 20px; height: 20px; background-color: #FFA726; border-radius: 4px;"></div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">Alimentação</h6>
+                                    <span class="text-muted small">Refeições, mercado, delivery</span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-palette me-2"></i>Mudar cor</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Excluir</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Transporte -->
+                            <div class="category-item d-flex align-items-center mb-3 p-2 border rounded">
+                                <div class="category-color me-3" style="width: 20px; height: 20px; background-color: #42A5F5; border-radius: 4px;"></div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">Transporte</h6>
+                                    <span class="text-muted small">Combustível, transporte público, aplicativos</span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-palette me-2"></i>Mudar cor</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Excluir</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Moradia -->
+                            <div class="category-item d-flex align-items-center mb-3 p-2 border rounded">
+                                <div class="category-color me-3" style="width: 20px; height: 20px; background-color: #66BB6A; border-radius: 4px;"></div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">Moradia</h6>
+                                    <span class="text-muted small">Aluguel, contas, manutenção</span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-palette me-2"></i>Mudar cor</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Excluir</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Saúde -->
+                            <div class="category-item d-flex align-items-center mb-3 p-2 border rounded">
+                                <div class="category-color me-3" style="width: 20px; height: 20px; background-color: #EC407A; border-radius: 4px;"></div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">Saúde</h6>
+                                    <span class="text-muted small">Consultas, medicamentos, plano de saúde</span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-palette me-2"></i>Mudar cor</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Excluir</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Educação -->
+                            <div class="category-item d-flex align-items-center mb-3 p-2 border rounded">
+                                <div class="category-color me-3" style="width: 20px; height: 20px; background-color: #AB47BC; border-radius: 4px;"></div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">Educação</h6>
+                                    <span class="text-muted small">Mensalidades, cursos, material escolar</span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-palette me-2"></i>Mudar cor</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Excluir</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SEGURANÇA -->
+            <div class="tab-pane fade" id="seguranca">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Segurança da Conta</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <h6 class="border-bottom pb-2 mb-3">Alteração de Senha</h6>
+                            
+                            <div class="mb-3">
+                                <label for="current_password" class="form-label">Senha Atual</label>
+                                <input type="password" class="form-control" id="current_password">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="new_password" class="form-label">Nova Senha</label>
+                                <input type="password" class="form-control" id="new_password">
+                                <div class="form-text">
+                                    Crie uma senha forte com pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="confirm_password" class="form-label">Confirmar Nova Senha</label>
+                                <input type="password" class="form-control" id="confirm_password">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary mb-4">Alterar Senha</button>
+                            
+                            <h6 class="border-bottom pb-2 mb-3">Verificação em Duas Etapas</h6>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="two_factor_auth">
+                                <label class="form-check-label" for="two_factor_auth">Ativar verificação em duas etapas</label>
+                            </div>
+                            
+                            <p class="text-muted mb-3">
+                                Com a verificação em duas etapas, um código adicional será enviado ao seu telefone sempre que você fizer login, garantindo maior segurança.
+                            </p>
+                            
+                            <button type="button" class="btn btn-outline-primary mb-4" disabled>Configurar Verificação</button>
+                            
+                            <h6 class="border-bottom pb-2 mb-3">Sessões Ativas</h6>
+                            
+                            <div class="session-item d-flex align-items-center mb-3 p-2 border rounded">
+                                <div class="me-3">
+                                    <i class="bi bi-laptop text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">Windows 10 - Chrome</h6>
+                                    <span class="text-muted small">São Paulo, Brasil - Ativa agora</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success">Atual</span>
+                                </div>
+                            </div>
+                            
+                            <div class="session-item d-flex align-items-center mb-3 p-2 border rounded">
+                                <div class="me-3">
+                                    <i class="bi bi-phone text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">iPhone - Safari</h6>
+                                    <span class="text-muted small">São Paulo, Brasil - 2 horas atrás</span>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-danger">Encerrar</button>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-outline-danger">Encerrar Todas as Outras Sessões</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- EXPORTAÇÃO DE DADOS -->
+            <div class="tab-pane fade" id="exportacao">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Exportação de Dados</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Exporte seus dados financeiros para usar em outras ferramentas.</p>
+                        
+                        <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+                            <!-- CSV -->
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-filetype-csv text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                        <h5 class="card-title">CSV</h5>
+                                        <p class="card-text small text-muted">Formato universal compatível com Excel, Google Sheets e outras planilhas.</p>
+                                        <button class="btn btn-primary btn-sm">Exportar CSV</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- PDF -->
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-filetype-pdf text-danger mb-3" style="font-size: 2.5rem;"></i>
+                                        <h5 class="card-title">PDF</h5>
+                                        <p class="card-text small text-muted">Relatório formatado ideal para impressão ou compartilhamento.</p>
+                                        <button class="btn btn-primary btn-sm">Exportar PDF</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Excel -->
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-file-earmark-excel text-success mb-3" style="font-size: 2.5rem;"></i>
+                                        <h5 class="card-title">Excel</h5>
+                                        <p class="card-text small text-muted">Planilha formatada pronta para análise no Microsoft Excel.</p>
+                                        <button class="btn btn-primary btn-sm">Exportar Excel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">Opções de Exportação</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="export_period" class="form-label">Período</label>
+                                        <select class="form-select" id="export_period">
+                                            <option value="month_current">Mês atual</option>
+                                            <option value="month_previous">Mês anterior</option>
+                                            <option value="quarter">Último trimestre</option>
+                                            <option value="year">Ano atual</option>
+                                            <option value="custom">Personalizado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="export_content" class="form-label">Conteúdo</label>
+                                        <select class="form-select" id="export_content">
+                                            <option value="all">Todas as transações</option>
+                                            <option value="expenses">Apenas despesas</option>
+                                            <option value="income">Apenas receitas</option>
+                                            <option value="summary">Resumo por categoria</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row date-range" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="export_date_start" class="form-label">Data Inicial</label>
+                                        <input type="date" class="form-control" id="export_date_start">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="export_date_end" class="form-label">Data Final</label>
+                                        <input type="date" class="form-control" id="export_date_end">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">Exportações Automáticas</h6>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="auto_export_month">
+                                <label class="form-check-label" for="auto_export_month">
+                                    Enviar relatório mensal por e-mail
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="auto_export_sheets">
+                                <label class="form-check-label" for="auto_export_sheets">
+                                    Sincronizar com Google Sheets
+                                </label>
+                            </div>
+                            
+                            <button type="button" class="btn btn-outline-primary">Configurar Exportações Automáticas</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- INTEGRAÇÕES -->
+            <div class="tab-pane fade" id="integracoes">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Integrações</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Conecte o DespeZap a outros serviços para ampliar suas funcionalidades.</p>
+                        
+                        <div class="integration-item mb-4 p-3 border rounded">
+                            <div class="d-flex">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg" alt="Google Sheets" class="me-3" style="width: 48px; height: 48px;">
+                                <div class="flex-grow-1">
+                                    <h5>Google Sheets</h5>
+                                    <p class="text-muted mb-2">Sincronize automaticamente suas transações com o Google Sheets para análises avançadas.</p>
+                                    <div class="integration-status text-success mb-2">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Conectado
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-primary">Configurar</button>
+                                        <button class="btn btn-sm btn-outline-danger">Desconectar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="integration-item mb-4 p-3 border rounded">
+                            <div class="d-flex">
+                                <img src="https://cdn.worldvectorlogo.com/logos/gmail-icon-2.svg" alt="Gmail" class="me-3" style="width: 48px; height: 48px;">
+                                <div class="flex-grow-1">
+                                    <h5>Gmail</h5>
+                                    <p class="text-muted mb-2">Detecte automaticamente faturas e compras em seus e-mails para registro automático.</p>
+                                    <div class="integration-status text-secondary mb-2">
+                                        <i class="bi bi-circle me-1"></i> Não conectado
+                                    </div>
+                                    <button class="btn btn-sm btn-primary">Conectar</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="integration-item mb-4 p-3 border rounded">
+                            <div class="d-flex">
+                                <img src="https://cdn.worldvectorlogo.com/logos/google-calendar-2020.svg" alt="Google Calendar" class="me-3" style="width: 48px; height: 48px;">
+                                <div class="flex-grow-1">
+                                    <h5>Google Calendar</h5>
+                                    <p class="text-muted mb-2">Adicione lembretes de pagamento diretamente ao seu calendário Google.</p>
+                                    <div class="integration-status text-secondary mb-2">
+                                        <i class="bi bi-circle me-1"></i> Não conectado
+                                    </div>
+                                    <button class="btn btn-sm btn-primary">Conectar</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="integration-item mb-4 p-3 border rounded">
+                            <div class="d-flex">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Twitter-logo.svg" alt="Twitter" class="me-3" style="width: 48px; height: 48px;">
+                                <div class="flex-grow-1">
+                                    <h5>Twitter</h5>
+                                    <p class="text-muted mb-2">Compartilhe automaticamente suas conquistas financeiras nas redes sociais.</p>
+                                    <div class="integration-status text-secondary mb-2">
+                                        <i class="bi bi-circle me-1"></i> Não conectado
+                                    </div>
+                                    <button class="btn btn-sm btn-primary">Conectar</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button class="btn btn-outline-primary">
+                                <i class="bi bi-search me-2"></i> Descobrir mais integrações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Manipular o menu de configurações em dispositivos móveis
+        const configSelect = document.querySelector('.config-select');
+        if (configSelect) {
+            configSelect.addEventListener('change', function() {
+                const targetId = this.value;
+                const tabEl = document.querySelector(`a[href="#${targetId}"]`);
+                if (tabEl) {
+                    const tab = new bootstrap.Tab(tabEl);
+                    tab.show();
+                }
+            });
+        }
+        
+        // Mostrar/esconder campos de data personalizada
+        const exportPeriod = document.getElementById('export_period');
+        const dateRange = document.querySelector('.date-range');
+        
+        if (exportPeriod && dateRange) {
+            exportPeriod.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    dateRange.style.display = 'flex';
+                } else {
+                    dateRange.style.display = 'none';
+                }
+            });
+        }
+        
+        // Ativar verificação em duas etapas
+        const twoFactorAuth = document.getElementById('two_factor_auth');
+        const configTwoFactorBtn = document.querySelector('.btn-outline-primary[disabled]');
+        
+        if (twoFactorAuth && configTwoFactorBtn) {
+            twoFactorAuth.addEventListener('change', function() {
+                configTwoFactorBtn.disabled = !this.checked;
+            });
+        }
+        
+        // Atualizar menu lateral quando a aba muda
+        const tabLinks = document.querySelectorAll('.list-group-item');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabLinks.forEach(link => {
+            link.addEventListener('shown.bs.tab', function (e) {
+                // Atualizar o select em dispositivos móveis
+                if (configSelect) {
+                    const targetId = e.target.getAttribute('href').substring(1);
+                    configSelect.value = targetId;
+                }
+            });
+        });
+        
+        // Manter guia ativa em recarregamentos
+        const urlHash = window.location.hash;
+        if (urlHash) {
+            const activeTab = document.querySelector(`a[href="${urlHash}"]`);
+            if (activeTab) {
+                const tab = new bootstrap.Tab(activeTab);
+                tab.show();
+                
+                // Atualizar select móvel
+                if (configSelect) {
+                    configSelect.value = urlHash.substring(1);
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
