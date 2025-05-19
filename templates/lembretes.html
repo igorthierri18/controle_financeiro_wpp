@@ -5,29 +5,29 @@
 {% block custom_styles %}
 .lembretes-header {
     background: linear-gradient(135deg, #28a745, #218838);
-    padding: 15px 0;
+    padding: 12px 0;
     color: white;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .lembretes-header h1 {
     font-weight: 600;
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     margin-bottom: 0.2rem;
 }
 
 .lembretes-header p {
     opacity: 0.9;
     margin-bottom: 0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .lembrete-compact {
     background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     position: relative;
     overflow: hidden;
     padding: 0;
@@ -35,11 +35,11 @@
 
 .lembrete-compact:hover {
     transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .lembrete-status-bar {
-    width: 5px;
+    width: 4px;
     height: 100%;
     position: absolute;
     left: 0;
@@ -63,7 +63,7 @@
 }
 
 .lembrete-compact-body {
-    padding: 10px 10px 10px 15px;
+    padding: 8px 8px 8px 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -71,13 +71,13 @@
 
 .lembrete-compact-info {
     flex-grow: 1;
-    padding-left: 5px;
+    padding-left: 4px;
 }
 
 .lembrete-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -85,27 +85,27 @@
 
 .lembrete-date {
     color: #6c757d;
-    font-size: 12px;
+    font-size: 11px;
     margin-bottom: 0;
 }
 
 .lembrete-value {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #28a745;
 }
 
 .lembrete-compact-tags {
     display: flex;
-    gap: 5px;
-    margin-right: 5px;
+    gap: 4px;
+    margin-right: 4px;
 }
 
 .lembrete-tag {
     display: inline-block;
-    padding: 3px 6px;
-    border-radius: 12px;
-    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 10px;
+    font-size: 9px;
 }
 
 .lembrete-tag-personal {
@@ -125,53 +125,53 @@
 
 .lembrete-compact-actions {
     display: flex;
-    gap: 5px;
+    gap: 4px;
 }
 
 .lembrete-compact-actions .btn {
-    padding: 3px 6px;
-    font-size: 12px;
+    padding: 2px 5px;
+    font-size: 11px;
 }
 
 .empty-state {
     text-align: center;
-    padding: 20px;
-    margin-top: 20px;
+    padding: 15px;
+    margin-top: 15px;
 }
 
 .empty-state i {
-    font-size: 32px;
+    font-size: 28px;
     color: #dee2e6;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .empty-state h3 {
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     color: #495057;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .empty-state p {
     color: #6c757d;
-    margin-bottom: 15px;
-    font-size: 0.9rem;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
 }
 
 .fab-button {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
+    bottom: 25px;
+    right: 25px;
+    width: 45px;
+    height: 45px;
     background-color: #28a745;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    font-size: 18px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     text-decoration: none;
 }
@@ -184,15 +184,15 @@
 
 .filter-bar {
     display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
+    gap: 8px;
+    margin-bottom: 12px;
     flex-wrap: wrap;
 }
 
 .filter-bar .btn {
     border-radius: 20px;
-    padding: 5px 12px;
-    font-size: 13px;
+    padding: 4px 10px;
+    font-size: 12px;
 }
 
 .filter-dropdown {
@@ -201,71 +201,71 @@
 
 .filter-dropdown .dropdown-menu {
     border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    padding: 10px;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+    padding: 8px;
 }
 
 .calendar-view {
     background-color: #fff;
-    border-radius: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    margin-bottom: 15px;
 }
 
 .calendar-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .calendar-title {
     font-weight: 600;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .calendar-nav {
     display: flex;
-    gap: 5px;
+    gap: 4px;
 }
 
 .calendar-nav .btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
+    gap: 4px;
 }
 
 .calendar-weekday {
     text-align: center;
     font-weight: 500;
     color: #6c757d;
-    padding: 5px 0;
-    font-size: 12px;
+    padding: 4px 0;
+    font-size: 11px;
 }
 
 .calendar-day {
     aspect-ratio: 1/1;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #dee2e6;
-    padding: 3px;
+    padding: 2px;
     position: relative;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     transition: all 0.2s ease;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .calendar-day:hover {
@@ -285,7 +285,7 @@
 
 .calendar-day-number {
     font-weight: 500;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
     text-align: center;
 }
 
@@ -298,8 +298,8 @@
 }
 
 .calendar-day-event {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     background-color: #28a745;
 }
@@ -314,29 +314,29 @@
 
 .lembretes-section {
     background-color: #fff;
-    border-radius: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 12px;
     height: 100%;
-    max-height: 700px;
+    max-height: 650px;
     overflow-y: auto;
 }
 
 .lembretes-section h3 {
-    font-size: 16px;
-    margin-bottom: 15px;
+    font-size: 15px;
+    margin-bottom: 12px;
     font-weight: 600;
 }
 
 .section-tabs {
     display: flex;
     border-bottom: 1px solid #dee2e6;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .section-tab {
-    padding: 8px 15px;
-    font-size: 14px;
+    padding: 6px 12px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -349,9 +349,9 @@
 
 .lembrete-countdown {
     display: inline-block;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-size: 9px;
     font-weight: 600;
 }
 
@@ -382,29 +382,59 @@
     }
     
     .calendar-view, .lembretes-section {
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
     
     .fab-button {
         bottom: 20px;
         right: 20px;
-        width: 45px;
-        height: 45px;
-        font-size: 18px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
     }
 }
 
 @media (max-width: 576px) {
     .lembretes-header {
-        padding: 10px 0;
+        padding: 8px 0;
     }
     
     .lembretes-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
     
     .filter-bar {
         justify-content: center;
+    }
+    
+    .lembrete-title {
+        font-size: 12px;
+    }
+    
+    .lembrete-date {
+        font-size: 10px;
+    }
+    
+    .lembrete-value {
+        font-size: 12px;
+    }
+    
+    .lembrete-tag {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+    
+    .lembrete-countdown {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+    
+    .calendar-day {
+        font-size: 10px;
+    }
+    
+    .calendar-weekday {
+        font-size: 10px;
     }
 }
 {% endblock %}
@@ -473,41 +503,10 @@
         </div>
     </div>
     
-    <!-- Layout com calendário à esquerda e lista à direita -->
+    <!-- Layout com calendário à esquerda e lista à direita (para desktop), invertido para mobile -->
     <div class="row row-reverse-on-mobile">
-        <!-- Calendário à esquerda -->
-        <div class="col-lg-5">
-            <div class="calendar-view">
-                <div class="calendar-header">
-                    <div class="calendar-title" id="calendar-month-year">Maio 2025</div>
-                    <div class="calendar-nav">
-                        <button class="btn btn-outline-secondary" id="btn-prev-month">
-                            <i class="bi bi-chevron-left"></i>
-                        </button>
-                        <button class="btn btn-outline-success" id="btn-today">Hoje</button>
-                        <button class="btn btn-outline-secondary" id="btn-next-month">
-                            <i class="bi bi-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="calendar-grid">
-                    <!-- Dias da semana -->
-                    <div class="calendar-weekday">Dom</div>
-                    <div class="calendar-weekday">Seg</div>
-                    <div class="calendar-weekday">Ter</div>
-                    <div class="calendar-weekday">Qua</div>
-                    <div class="calendar-weekday">Qui</div>
-                    <div class="calendar-weekday">Sex</div>
-                    <div class="calendar-weekday">Sáb</div>
-                    
-                    <!-- Os dias do mês serão inseridos aqui via JavaScript -->
-                </div>
-            </div>
-        </div>
-        
-        <!-- Lista de lembretes à direita -->
-        <div class="col-lg-7">
+        <!-- Lista de lembretes à direita (no desktop) -->
+        <div class="col-lg-7 order-1">
             <div class="lembretes-section">
                 <div class="section-tabs">
                     <div class="section-tab active" id="tab-todos">Todos os Lembretes</div>
@@ -899,6 +898,28 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Calendário à direita (no desktop) -->
+        <div class="col-lg-5 order-2">
+            <div class="calendar-view">
+                <div class="calendar-header">
+                    <div class="calendar-title" id="calendar-month-year">Maio 2025</div>
+                    <div class="calendar-nav">
+                        <button class="btn btn-outline-secondary" id="btn-prev-month">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="btn btn-outline-success" id="btn-today">Hoje</button>
+                        <button class="btn btn-outline-secondary" id="btn-next-month">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="calendar-grid">
+                    <!-- Dias da semana serão adicionados via JavaScript -->
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- Botão Flutuante para Adicionar -->
@@ -1044,12 +1065,40 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de sincronização com Google Calendar -->
+<div class="modal fade" id="modalSincGoogleCalendar" tabindex="-1" aria-labelledby="modalSincGoogleCalendarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSincGoogleCalendarLabel">Sincronizar com Google Calendar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="bi bi-calendar-check" style="font-size: 48px; color: #28a745;"></i>
+                </div>
+                <h5>Sincronizar seus lembretes com o Google Calendar?</h5>
+                <p class="text-muted">Isso permitirá que seus lembretes apareçam no seu Google Calendar e você receba notificações direto no seu celular.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('web.sincronizar_agenda') }}">
+                    <button type="submit" class="btn btn-success">Sincronizar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     // Inicializar variável para o plano do usuário
     var plano = "{{ plano }}";
+    
+    // Adicionar logs de depuração para verificar se o JavaScript está carregando
+    console.log('Carregando página de lembretes...');
 </script>
 <script src="{{ url_for('static', filename='js/lembretes.js') }}"></script>
 {% endblock %}
