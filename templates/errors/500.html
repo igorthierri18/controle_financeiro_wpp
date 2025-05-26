@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Erro interno - {{ app_name if app_name else 'Despezap' }}{% endblock %}
+
+{% block custom_styles %}
+<style>
+body {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom {
+    display: none !important;
+}
+
+.error-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.error-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    padding: 60px 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.error-icon {
+    font-size: 4rem;
+    color: #dc2626;
+    margin-bottom: 20px;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: 700;
+    color: #dc2626;
+    margin: 0;
+    line-height: 1;
+}
+
+.error-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 20px 0 10px 0;
+}
+
+.error-message {
+    color: #6b7280;
+    font-size: 1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.btn-home {
+    background: linear-gradient(135deg, #26983F, #1a7c33);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(38, 152, 63, 0.2);
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.btn-home:hover {
+    background: linear-gradient(135deg, #1a7c33, #155c27);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(38, 152, 63, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-back {
+    background: transparent;
+    border: 2px solid #26983F;
+    border-radius: 12px;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    color: #26983F;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.btn-back:hover {
+    background: #26983F;
+    color: white;
+    text-decoration: none;
+}
+
+.logo-container {
+    margin-bottom: 20px;
+}
+
+.logo-manual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background-color: #26983F;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo-icon::before {
+    content: '$';
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: #374151;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .error-card {
+        padding: 40px 30px;
+        margin: 20px;
+    }
+    
+    .error-code {
+        font-size: 4rem;
+    }
+    
+    .error-title {
+        font-size: 1.3rem;
+    }
+    
+    .error-message {
+        font-size: 0.9rem;
+    }
+    
+    .btn-home, .btn-back {
+        display: block;
+        margin: 10px 0;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-card">
+        <div class="logo-container">
+            <div class="logo-manual">
+                <div class="logo-icon"></div>
+                <h1 class="logo-text">despezap</h1>
+            </div>
+        </div>
+        
+        <div class="error-icon">⚠️</div>
+        <h1 class="error-code">500</h1>
+        <h2 class="error-title">Erro interno do servidor</h2>
+        <p class="error-message">
+            Ops! Algo deu errado em nossos servidores. 
+            Nossa equipe foi notificada e está trabalhando para resolver o problema. 
+            Tente novamente em alguns minutos.
+        </p>
+        
+        <div class="error-actions">
+            <a href="{{ url_for('index') if url_for else '/' }}" class="btn-home">
+                <i class="bi bi-house-door"></i> Ir para o início
+            </a>
+            <button onclick="history.back()" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Remove elementos de navegação que possam aparecer
+document.addEventListener('DOMContentLoaded', function() {
+    const navElements = document.querySelectorAll('.navbar, .bottom-nav, .navbar-nav, nav, .fixed-bottom');
+    navElements.forEach(element => {
+        element.remove();
+    });
+});
+</script>
+{% endblock %}

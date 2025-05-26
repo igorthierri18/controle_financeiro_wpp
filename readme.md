@@ -19,37 +19,55 @@ DespeZap é um sistema de controle financeiro que permite registrar gastos pelo 
   - Plano gratuito e premium
   - Exportação de dados
 
-## Estrutura do Projeto
-
-```
-DespeZap/
-│
-├── app.py                  # Arquivo principal
-├── config.py               # Configurações
-├── requirements.txt        # Dependências
-│
-├── database/               # Banco de dados
+##### Estrutura da despezap
+├── app.py                     # 🚀 Aplicação principal + Factory + Blueprints
+├── config.py                  # ⚙️ Configurações do sistema
+├── requirements.txt           # 📦 Dependências Python
+├── database/
 │   ├── __init__.py
-│   ├── models.py           # Modelos de dados
-│   └── financas.db         # Banco SQLite
-│
-├── templates/              # Templates HTML
-│   ├── base.html           # Template base
-│   ├── index.html          # Página inicial
-│   ├── dashboard.html      # Painel de controle
-│   ├── login.html          # Página de login
-│   └── cadastro.html       # Cadastro de usuários
-│
-├── static/                 # Arquivos estáticos
-│   └── img/
-│       └── favicon.ico
-│
-└── rotas/                  # Rotas da aplicação
-    ├── __init__.py
-    ├── web_rotas.py        # Rotas web
-    ├── api_rotas.py        # Rotas API
-    └── webhook_rotas.py    # Webhook WhatsApp
-```
+│   └── models.py              # 🗄️ Modelos de dados + ORM + TextProcessor
+├── logs/                      # 📝 Arquivos de log do sistema
+├── rotas/                    
+│   ├── __init__.py
+│   ├── auth.py               # 🔐 WEB: Login/Cadastro/Logout + Recuperação senha
+│   ├── dashboard.py          # 📊 WEB: Dashboard principal + Resumos + Widgets
+│   ├── despesas.py           # 💸 WEB + API + WEBHOOK: CRUD despesas + Relatórios + WhatsApp
+│   ├── receitas.py           # 💰 WEB + API + WEBHOOK: CRUD receitas + Relatórios + WhatsApp
+│   ├── lembretes.py          # ⏰ WEB + API + WEBHOOK: CRUD lembretes + Notificações + WhatsApp
+│   ├── dividas.py            # 💳 WEB + API + WEBHOOK: CRUD dívidas + Pagamentos + WhatsApp
+│   ├── categorias.py         # 🏷️ WEB + API: CRUD categorias personalizadas (Premium+)
+│   ├── membros.py            # 👥 WEB + API: Gestão membros família/empresa (Família+)
+│   ├── relatorios.py         # 📈 WEB + API: Relatórios avançados + Gráficos (Premium+)
+│   ├── planos.py             # 💎 WEB + API: Assinaturas + Pagamentos + Upgrades
+│   ├── webhooks.py           # 🔗 WEBHOOK: Centralizador WhatsApp + Roteamento + Twilio
+│   └── uploads.py            # 📤 API: Upload arquivos + OCR + Transcrição áudio
+├── templates/   
+│   ├── js/
+│   │   ├── dashboard.js      # 📊 JavaScript do dashboard + Gráficos + AJAX
+│   │   ├── dividas.js        # 💳 JavaScript gestão dívidas + Calculadoras
+│   │   └── lembretes.js      # ⏰ JavaScript lembretes + Notificações browser
+│   ├── base.html             # 🎨 Template base + Menu + Layout responsivo
+│   ├── index.html            # 🏠 Página inicial + Landing page + WhatsApp link
+│   ├── login.html            # 🔐 Formulário login + Validação + Links
+│   ├── dashboard.html        # 📊 Dashboard principal + Cards + Resumos
+│   ├── despesas.html         # 💸 Lista/Formulário despesas + Filtros + Tabelas
+│   ├── receitas.html         # 💰 Lista/Formulário receitas + Filtros + Tabelas
+│   ├── lembretes.html        # ⏰ Lista/Formulário lembretes + Calendar + Notifs
+│   ├── dividas.html          # 💳 Lista/Formulário dívidas + Calculadoras + Status
+│   ├── categorias.html       # 🏷️ CRUD categorias + Ícones + Cores (Premium+)
+│   ├── admin_cupons.html     # 🎫 Admin cupons desconto + Gestão promocional
+│   ├── relatorios.html       # 📈 Relatórios + Gráficos interativos (Premium+)
+│   ├── configuracoes.html    # ⚙️ Configurações usuário + Preferências + Tema
+│   ├── metas_financeiras.html # 🎯 Gestão metas + Progresso + Motivação
+│   ├── recuperar_senha.html  # 🔑 Formulário recuperação senha + Email
+│   ├── orcamentos.html       # 💰 Gestão orçamentos + Limites + Alertas
+│   ├── notificacoes.html     # 🔔 Central notificações + Histórico + Config
+│   ├── planos.html           # 💎 Comparação planos + Assinatura + Pagamento
+│   ├── perfil.html           # 👤 Perfil usuário + Dados pessoais + Segurança
+│   └── cadastro.html         # 📝 Formulário cadastro + Validação + Termos
+└── static/                  
+   ├── images/               # 🖼️ Imagens estáticas + Logos + Ícones
+   └── uploads/              # 📁 Arquivos enviados usuários + Comprovantes + Áudios
 
 ## Tecnologias Utilizadas
 

@@ -1,172 +1,855 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block title %}Notificações - {{ app_name }}{% endblock %}
 
+{% block custom_styles %}
+.lembretes-header {
+    background: linear-gradient(135deg, #28a745, #218838);
+    padding: 12px 0;
+    color: white;
+    margin-bottom: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.lembretes-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lembretes-header h1 {
+    font-weight: 600;
+    font-size: 1.7rem;
+    margin-bottom: 0.2rem;
+}
+
+.lembretes-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+}
+
+.lembretes-header .badge {
+    background-color: white !important;
+    color: #28a745 !important;
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 50px;
+}
+
+.filters-section {
+    background: white;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.filter-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-tab {
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    background: #f1f5f9;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.filter-tab.active,
+.filter-tab:hover {
+    background: #28a745;
+    color: white;
+}
+
+.notifications-container {
+    padding: 1rem;
+    max-width: 100%;
+}
+
+.notification-item {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+}
+
+.notification-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.notification-item.unread {
+    border-left: 4px solid #28a745;
+    background: linear-gradient(90deg, rgba(40, 167, 69, 0.02), white);
+}
+
+.notification-content {
+    padding: 1.25rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.notification-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.notification-icon.success {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.notification-icon.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.notification-icon.info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.notification-icon.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.notification-icon.primary {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.notification-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    color: #1e293b;
+    line-height: 1.4;
+}
+
+.notification-description {
+    color: #64748b;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 0.75rem;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.notification-btn {
+    padding: 0.375rem 0.875rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.notification-btn.primary {
+    background: #28a745;
+    color: white;
+}
+
+.notification-btn.primary:hover {
+    background: #218838;
+}
+
+.notification-btn.secondary {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.notification-btn.secondary:hover {
+    background: #e2e8f0;
+}
+
+.floating-actions {
+    position: fixed;
+    bottom: 2rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 50;
+}
+
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #28a745;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.fab:hover {
+    background: #218838;
+    transform: scale(1.1);
+}
+
+.fab.secondary {
+    width: 48px;
+    height: 48px;
+    background: white;
+    color: #28a745;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+}
+
+.empty-state-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-description {
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+.load-more {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.load-more-btn {
+    background: white;
+    border: 2px solid #e2e8f0;
+    color: #64748b;
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.load-more-btn:hover {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.notification-type-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.625rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.type-transacao {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.type-lembrete {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.type-sistema {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.type-alerta {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .lembretes-header {
+        padding: 8px 0;
+    }
+    
+    .lembretes-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .lembretes-header p {
+        font-size: 0.8rem;
+    }
+
+    .notifications-container {
+        padding: 0.75rem;
+    }
+
+    .notification-content {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.125rem;
+    }
+
+    .notification-title {
+        font-size: 0.9375rem;
+    }
+
+    .notification-actions {
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    .notification-btn {
+        text-align: center;
+    }
+
+    .floating-actions {
+        bottom: 5rem;
+        right: 1rem;
+    }
+
+    .fab {
+        width: 52px;
+        height: 52px;
+    }
+
+    .fab.secondary {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .lembretes-header {
+        padding: 6px 0;
+    }
+
+    .lembretes-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .lembretes-header p {
+        font-size: 0.75rem;
+    }
+
+    .filters-section {
+        padding: 0.75rem;
+    }
+
+    .notification-item {
+        margin-bottom: 0.75rem;
+        border-radius: 12px;
+    }
+
+    .notification-content {
+        padding: 0.875rem;
+    }
+}
+
+/* Pull to refresh indicator */
+.ptr-indicator {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #28a745;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 12px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.ptr-indicator.show {
+    opacity: 1;
+}
+
+/* Loading animation */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Notificações</h5>
-                <div>
-                    <button class="btn btn-sm btn-outline-primary rounded-pill me-2">
-                        <i class="bi bi-check-all"></i> Marcar todas como lidas
-                    </button>
-                    <div class="dropdown d-inline-block">
-                        <button class="btn btn-sm btn-outline-secondary rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-filter"></i> Filtrar
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-                            <li><a class="dropdown-item" href="?filter=all">Todas</a></li>
-                            <li><a class="dropdown-item" href="?filter=unread">Não lidas</a></li>
-                            <li><a class="dropdown-item" href="?filter=transacoes">Transações</a></li>
-                            <li><a class="dropdown-item" href="?filter=lembretes">Lembretes</a></li>
-                            <li><a class="dropdown-item" href="?filter=sistema">Sistema</a></li>
-                        </ul>
-                    </div>
-                </div>
+<!-- Header seguindo padrão lembretes.html -->
+<div class="lembretes-header">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h1>Notificações</h1>
+                <p>Acompanhe suas notificações e lembretes importantes</p>
             </div>
-            <div class="card-body p-0">
-                <div class="p-4">
-                    <ul class="notification-list">
-                        <!-- Notificação não lida - Transação -->
-                        <li class="notification-item unread">
-                            <div class="notification-item-content">
-                                <div class="notification-icon">
-                                    <i class="bi bi-cash-coin"></i>
-                                </div>
-                                <div>
-                                    <h6 class="notification-title">Nova transação registrada via WhatsApp</h6>
-                                    <p class="notification-desc">Despesa de R$ 89,90 em "Alimentação" foi registrada com sucesso.</p>
-                                    <span class="notification-time">Hoje, 14:35</span>
-                                    <div class="notification-actions">
-                                        <button class="btn btn-sm btn-outline-primary notification-btn-sm">Ver detalhes</button>
-                                        <button class="btn btn-sm btn-outline-secondary notification-btn-sm">Marcar como lida</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                        
-                        <!-- Notificação não lida - Lembrete -->
-                        <li class="notification-item unread">
-                            <div class="notification-item-content">
-                                <div class="notification-icon" style="background-color: #e3f2fd; color: #0d6efd;">
-                                    <i class="bi bi-alarm"></i>
-                                </div>
-                                <div>
-                                    <h6 class="notification-title">Lembrete de pagamento</h6>
-                                    <p class="notification-desc">Conta de energia elétrica vence amanhã. Valor: R$ 235,45</p>
-                                    <span class="notification-time">Hoje, 10:00</span>
-                                    <div class="notification-actions">
-                                        <button class="btn btn-sm btn-outline-primary notification-btn-sm">Marcar como paga</button>
-                                        <button class="btn btn-sm btn-outline-secondary notification-btn-sm">Marcar como lida</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                        
-                        <!-- Notificação não lida - Sistema -->
-                        <li class="notification-item unread">
-                            <div class="notification-item-content">
-                                <div class="notification-icon" style="background-color: #fff3cd; color: #ffc107;">
-                                    <i class="bi bi-rocket-takeoff"></i>
-                                </div>
-                                <div>
-                                    <h6 class="notification-title">Nova funcionalidade disponível</h6>
-                                    <p class="notification-desc">Agora você pode sincronizar suas despesas com Google Sheets. Experimente agora!</p>
-                                    <span class="notification-time">Ontem, 16:20</span>
-                                    <div class="notification-actions">
-                                        <button class="btn btn-sm btn-outline-primary notification-btn-sm">Explorar</button>
-                                        <button class="btn btn-sm btn-outline-secondary notification-btn-sm">Marcar como lida</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                        
-                        <!-- Notificação já lida - Transação -->
-                        <li class="notification-item">
-                            <div class="notification-item-content">
-                                <div class="notification-icon">
-                                    <i class="bi bi-cash-coin"></i>
-                                </div>
-                                <div>
-                                    <h6 class="notification-title">Transação registrada via WhatsApp</h6>
-                                    <p class="notification-desc">Despesa de R$ 150,00 em "Transporte" foi registrada com sucesso.</p>
-                                    <span class="notification-time">15/05/2025, 09:12</span>
-                                </div>
-                            </div>
-                        </li>
-                        
-                        <!-- Notificação já lida - Meta atingida -->
-                        <li class="notification-item">
-                            <div class="notification-item-content">
-                                <div class="notification-icon" style="background-color: #d1e7dd; color: #198754;">
-                                    <i class="bi bi-trophy"></i>
-                                </div>
-                                <div>
-                                    <h6 class="notification-title">Meta de economia atingida! 🎉</h6>
-                                    <p class="notification-desc">Você atingiu sua meta de economia para o mês. Continue assim!</p>
-                                    <span class="notification-time">10/05/2025, 23:59</span>
-                                </div>
-                            </div>
-                        </li>
-                        
-                        <!-- Notificação já lida - Sistema -->
-                        <li class="notification-item">
-                            <div class="notification-item-content">
-                                <div class="notification-icon" style="background-color: #f8d7da; color: #dc3545;">
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                </div>
-                                <div>
-                                    <h6 class="notification-title">Alerta de orçamento</h6>
-                                    <p class="notification-desc">Você já utilizou 85% do orçamento mensal para "Alimentação".</p>
-                                    <span class="notification-time">08/05/2025, 14:30</span>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="card-footer text-center">
-                <button class="btn btn-outline-primary rounded-pill">
-                    <i class="bi bi-arrow-down"></i> Carregar mais
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-link text-white p-0 d-md-none" onclick="history.back()">
+                    <i class="bi bi-arrow-left fs-5"></i>
                 </button>
+                <span class="badge bg-white text-success px-2 py-1 rounded-pill" id="unreadCount">3 não lidas</span>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Pull to refresh indicator -->
+<div class="ptr-indicator" id="ptrIndicator">
+    <i class="bi bi-arrow-clockwise me-2"></i>
+    Puxe para atualizar
+</div>
+
+<!-- Filters Section -->
+<div class="filters-section">
+    <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">
+            <i class="bi bi-list-ul me-1"></i>
+            Todas
+        </button>
+        <button class="filter-tab" data-filter="unread">
+            <i class="bi bi-circle-fill me-1"></i>
+            Não lidas
+        </button>
+        <button class="filter-tab" data-filter="transacoes">
+            <i class="bi bi-cash-coin me-1"></i>
+            Transações
+        </button>
+        <button class="filter-tab" data-filter="lembretes">
+            <i class="bi bi-bell me-1"></i>
+            Lembretes
+        </button>
+        <button class="filter-tab" data-filter="sistema">
+            <i class="bi bi-gear me-1"></i>
+            Sistema
+        </button>
+    </div>
+</div>
+
+<!-- Notifications Container -->
+<div class="notifications-container" id="notificationsContainer">
+    <!-- Notification 1 - Unread Transaction -->
+    <div class="notification-item unread" data-type="transacoes">
+        <div class="notification-content">
+            <div class="notification-icon success">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="notification-body">
+                <div class="notification-title">Nova transação via WhatsApp</div>
+                <div class="notification-description">
+                    Despesa de R$ 89,90 em "Alimentação" foi registrada com sucesso.
+                </div>
+                <div class="notification-time">Hoje, 14:35</div>
+                <div class="notification-meta">
+                    <span class="notification-type-badge type-transacao">Transação</span>
+                </div>
+                <div class="notification-actions">
+                    <button class="notification-btn primary">
+                        <i class="bi bi-eye me-1"></i>
+                        Ver detalhes
+                    </button>
+                    <button class="notification-btn secondary" onclick="markAsRead(this)">
+                        <i class="bi bi-check me-1"></i>
+                        Marcar como lida
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification 2 - Unread Reminder -->
+    <div class="notification-item unread" data-type="lembretes">
+        <div class="notification-content">
+            <div class="notification-icon info">
+                <i class="bi bi-alarm"></i>
+            </div>
+            <div class="notification-body">
+                <div class="notification-title">Lembrete de pagamento</div>
+                <div class="notification-description">
+                    Conta de energia elétrica vence amanhã. Valor: R$ 235,45
+                </div>
+                <div class="notification-time">Hoje, 10:00</div>
+                <div class="notification-meta">
+                    <span class="notification-type-badge type-lembrete">Lembrete</span>
+                </div>
+                <div class="notification-actions">
+                    <button class="notification-btn primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Marcar como paga
+                    </button>
+                    <button class="notification-btn secondary" onclick="markAsRead(this)">
+                        <i class="bi bi-check me-1"></i>
+                        Marcar como lida
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification 3 - Unread System -->
+    <div class="notification-item unread" data-type="sistema">
+        <div class="notification-content">
+            <div class="notification-icon warning">
+                <i class="bi bi-rocket-takeoff"></i>
+            </div>
+            <div class="notification-body">
+                <div class="notification-title">Nova funcionalidade disponível</div>
+                <div class="notification-description">
+                    Agora você pode sincronizar suas despesas com Google Sheets. Experimente agora!
+                </div>
+                <div class="notification-time">Ontem, 16:20</div>
+                <div class="notification-meta">
+                    <span class="notification-type-badge type-sistema">Sistema</span>
+                </div>
+                <div class="notification-actions">
+                    <button class="notification-btn primary">
+                        <i class="bi bi-play-circle me-1"></i>
+                        Explorar
+                    </button>
+                    <button class="notification-btn secondary" onclick="markAsRead(this)">
+                        <i class="bi bi-check me-1"></i>
+                        Marcar como lida
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification 4 - Read Transaction -->
+    <div class="notification-item" data-type="transacoes">
+        <div class="notification-content">
+            <div class="notification-icon success">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="notification-body">
+                <div class="notification-title">Transação registrada via WhatsApp</div>
+                <div class="notification-description">
+                    Despesa de R$ 150,00 em "Transporte" foi registrada com sucesso.
+                </div>
+                <div class="notification-time">15/05/2025, 09:12</div>
+                <div class="notification-meta">
+                    <span class="notification-type-badge type-transacao">Transação</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification 5 - Read Achievement -->
+    <div class="notification-item" data-type="sistema">
+        <div class="notification-content">
+            <div class="notification-icon success">
+                <i class="bi bi-trophy"></i>
+            </div>
+            <div class="notification-body">
+                <div class="notification-title">Meta de economia atingida! 🎉</div>
+                <div class="notification-description">
+                    Você atingiu sua meta de economia para o mês. Continue assim!
+                </div>
+                <div class="notification-time">10/05/2025, 23:59</div>
+                <div class="notification-meta">
+                    <span class="notification-type-badge type-sistema">Sistema</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification 6 - Read Alert -->
+    <div class="notification-item" data-type="sistema">
+        <div class="notification-content">
+            <div class="notification-icon danger">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="notification-body">
+                <div class="notification-title">Alerta de orçamento</div>
+                <div class="notification-description">
+                    Você já utilizou 85% do orçamento mensal para "Alimentação".
+                </div>
+                <div class="notification-time">08/05/2025, 14:30</div>
+                <div class="notification-meta">
+                    <span class="notification-type-badge type-alerta">Alerta</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load More Section -->
+<div class="load-more">
+    <button class="load-more-btn">
+        <i class="bi bi-arrow-down me-2"></i>
+        Carregar mais
+    </button>
+</div>
+
+<!-- Floating Action Buttons -->
+<div class="floating-actions d-none d-md-flex">
+    <button class="fab secondary" onclick="scrollToTop()" title="Voltar ao topo">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+    <button class="fab" onclick="markAllAsRead()" title="Marcar todas como lidas">
+        <i class="bi bi-check-all"></i>
+    </button>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Marcar notificação como lida
-        const markAsReadButtons = document.querySelectorAll('.notification-btn-sm:nth-child(2)');
-        markAsReadButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const notificationItem = this.closest('.notification-item');
-                notificationItem.classList.remove('unread');
-                this.parentElement.remove(); // Remove os botões de ação
-                
-                // Aqui você pode fazer uma chamada AJAX para atualizar o status da notificação no servidor
-                // fetch('/api/notifications/mark-as-read', { method: 'POST', body: JSON.stringify({id: notificationId}) });
-            });
-        });
+// Filter functionality
+document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+
+        // Filter notifications
+        const filter = this.dataset.filter;
+        const notifications = document.querySelectorAll('.notification-item');
         
-        // Botão para marcar todas como lidas
-        const markAllAsReadButton = document.querySelector('.btn-outline-primary');
-        markAllAsReadButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.querySelectorAll('.notification-item.unread').forEach(item => {
-                item.classList.remove('unread');
-                const actions = item.querySelector('.notification-actions');
-                if (actions) actions.remove();
-            });
-            
-            // Aqui você pode fazer uma chamada AJAX para atualizar o status de todas as notificações no servidor
-            // fetch('/api/notifications/mark-all-as-read', { method: 'POST' });
+        notifications.forEach(notification => {
+            if (filter === 'all') {
+                notification.style.display = 'block';
+            } else if (filter === 'unread') {
+                notification.style.display = notification.classList.contains('unread') ? 'block' : 'none';
+            } else {
+                notification.style.display = notification.dataset.type === filter ? 'block' : 'none';
+            }
         });
+
+        // Update URL without page reload
+        const url = new URL(window.location);
+        url.searchParams.set('filter', filter);
+        window.history.replaceState({}, '', url);
     });
+});
+
+// Mark as read functionality
+function markAsRead(button) {
+    const notification = button.closest('.notification-item');
+    notification.classList.remove('unread');
+    
+    // Remove action buttons
+    const actions = notification.querySelector('.notification-actions');
+    if (actions) {
+        actions.remove();
+    }
+
+    // Update unread count
+    updateUnreadCount();
+    
+    // Add success feedback
+    button.innerHTML = '<i class="bi bi-check me-1"></i> Lida';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        if (actions) actions.remove();
+    }, 1000);
+}
+
+// Mark all as read
+function markAllAsRead() {
+    const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+    
+    unreadNotifications.forEach(notification => {
+        notification.classList.remove('unread');
+        const actions = notification.querySelector('.notification-actions');
+        if (actions) actions.remove();
+    });
+
+    updateUnreadCount();
+    
+    // Show success message
+    showToast('Todas as notificações foram marcadas como lidas', 'success');
+}
+
+// Update unread count
+function updateUnreadCount() {
+    const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+    const badge = document.getElementById('unreadCount');
+    if (unreadCount > 0) {
+        badge.textContent = `${unreadCount} não ${unreadCount === 1 ? 'lida' : 'lidas'}`;
+        badge.style.display = 'inline';
+    } else {
+        badge.textContent = 'Todas lidas';
+        badge.style.display = 'inline';
+    }
+}
+
+// Scroll to top
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        <i class="bi bi-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 3000);
+}
+
+// Pull to refresh functionality (mobile)
+let startY = 0;
+let pullDistance = 0;
+const ptrIndicator = document.getElementById('ptrIndicator');
+
+document.addEventListener('touchstart', function(e) {
+    if (window.scrollY === 0) {
+        startY = e.touches[0].pageY;
+    }
+});
+
+document.addEventListener('touchmove', function(e) {
+    if (window.scrollY === 0 && startY) {
+        pullDistance = e.touches[0].pageY - startY;
+        
+        if (pullDistance > 0) {
+            e.preventDefault();
+            
+            if (pullDistance > 50) {
+                ptrIndicator.classList.add('show');
+            } else {
+                ptrIndicator.classList.remove('show');
+            }
+        }
+    }
+});
+
+document.addEventListener('touchend', function(e) {
+    if (pullDistance > 50) {
+        // Trigger refresh
+        ptrIndicator.textContent = 'Atualizando...';
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    } else {
+        ptrIndicator.classList.remove('show');
+    }
+    
+    startY = 0;
+    pullDistance = 0;
+});
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Check URL parameters for initial filter
+    const urlParams = new URLSearchParams(window.location.search);
+    const filter = urlParams.get('filter') || 'all';
+    
+    document.querySelector(`[data-filter="${filter}"]`)?.click();
+    
+    // Update initial unread count
+    updateUnreadCount();
+    
+    // Add smooth scroll behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
+});
+
+// Intersection Observer for animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+}, observerOptions);
+
+// Observe all notification items
+document.querySelectorAll('.notification-item').forEach(item => {
+    item.style.opacity = '0';
+    item.style.transform = 'translateY(20px)';
+    item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(item);
+});
 </script>
 {% endblock %}

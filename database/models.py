@@ -3427,3 +3427,426 @@ class Divida:
         conn.close()
         
         return pagamentos
+
+class Notificacao:
+    """Classe para manipulação de notificações"""
+    def __init__(self, db_path=None, user_id=None, type=None, title=None, description=None, 
+                 icon=None, icon_color=None, icon_bg=None, action_url=None, action_text=None, 
+                 metadata=None, is_read=False, created_at=None, id=None):
+        self.db_path = db_path or Config.DATABASE
+        self.id = id
+        self.user_id = user_id
+        self.type = type
+        self.title = title
+        self.description = description
+        self.icon = icon
+        self.icon_color = icon_color
+        self.icon_bg = icon_bg
+        self.action_url = action_url
+        self.action_text = action_text
+        self.metadata = metadata or {}
+        self.is_read = is_read
+        self.created_at = created_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    def criar_tabela(self):
+        """Cria a tabela de notificações se não existir"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notificacoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            icon TEXT,
+            icon_color TEXT,
+            icon_bg TEXT,
+            action_url TEXT,
+            action_text TEXT,
+            metadata TEXT DEFAULT '{}',
+            is_read INTEGER DEFAULT 0,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES usuarios (id)
+        )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    
+    def save(self):
+        """Salva a notificação no banco de dados"""
+        self.criar_tabela()
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Serializa metadata para JSON se for um dicionário
+            metadata_json = json.dumps(self.metadata) if isinstance(self.metadata, dict) else self.metadata
+            
+            cursor.execute('''
+            INSERT INTO notificacoes 
+            (user_id, type, title, description, icon, icon_color, icon_bg, 
+             action_url, action_text, metadata, is_read, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                self.user_id, self.type, self.title, self.description,
+                self.icon, self.icon_color, self.icon_bg,
+                self.action_url, self.action_text, metadata_json,
+                1 if self.is_read else 0, self.created_at
+            ))
+            
+            self.id = cursor.lastrowid
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Erro ao salvar notificação: {e}")
+            return False
+        finally:
+            conn.close()
+    
+    def to_dict(self):
+        """Converte a notificação para dicionário"""
+        metadata = self.metadata
+        if isinstance(metadata, str):
+            try:
+                metadata = json.loads(metadata)
+            except:
+                metadata = {}
+        
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'type': self.type,
+            'title': self.title,
+            'description': self.description,
+            'icon': self.icon,
+            'icon_color': self.icon_color,
+            'icon_bg': self.icon_bg,
+            'action_url': self.action_url,
+            'action_text': self.action_text,
+            'metadata': metadata,
+            'is_read': bool(self.is_read),
+            'created_at': self.created_at
+        }
+    
+    def mark_as_read(self):
+        """Marca a notificação como lida"""
+        if not self.id:
+            return False
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute(
+                "UPDATE notificacoes SET is_read = 1 WHERE id = ?",
+                (self.id,)
+            )
+            conn.commit()
+            self.is_read = True
+            return True
+        except Exception as e:
+            print(f"Erro ao marcar notificação como lida: {e}")
+            return False
+        finally:
+            conn.close()
+    
+    def delete(self):
+        """Exclui a notificação"""
+        if not self.id:
+            return False
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("DELETE FROM notificacoes WHERE id = ?", (self.id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Erro ao excluir notificação: {e}")
+            return False
+        finally:
+            conn.close()
+    
+    @classmethod
+    def get_by_id(cls, notification_id, user_id=None):
+        """Busca uma notificação pelo ID"""
+        db_path = Config.DATABASE
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        try:
+            query = "SELECT * FROM notificacoes WHERE id = ?"
+            params = [notification_id]
+            
+            if user_id:
+                query += " AND user_id = ?"
+                params.append(user_id)
+            
+            cursor.execute(query, params)
+            row = cursor.fetchone()
+            
+            if row:
+                return cls(
+                    db_path=db_path,
+                    id=row['id'],
+                    user_id=row['user_id'],
+                    type=row['type'],
+                    title=row['title'],
+                    description=row['description'],
+                    icon=row['icon'],
+                    icon_color=row['icon_color'],
+                    icon_bg=row['icon_bg'],
+                    action_url=row['action_url'],
+                    action_text=row['action_text'],
+                    metadata=row['metadata'],
+                    is_read=bool(row['is_read']),
+                    created_at=row['created_at']
+                )
+            return None
+        except Exception as e:
+            print(f"Erro ao buscar notificação: {e}")
+            return None
+        finally:
+            conn.close()
+    
+    @classmethod
+    def get_for_user(cls, user_id, filter_type=None, is_read=None, page=1, per_page=10):
+        """Busca notificações para um usuário com filtros e paginação"""
+        db_path = Config.DATABASE
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        try:
+            # Cria a tabela se não existir
+            temp_instance = cls(db_path=db_path)
+            temp_instance.criar_tabela()
+            
+            query = "SELECT * FROM notificacoes WHERE user_id = ?"
+            params = [user_id]
+            
+            if filter_type:
+                query += " AND type = ?"
+                params.append(filter_type)
+            
+            if is_read is not None:
+                query += " AND is_read = ?"
+                params.append(1 if is_read else 0)
+            
+            query += " ORDER BY created_at DESC"
+            
+            # Adiciona paginação
+            offset = (page - 1) * per_page
+            query += " LIMIT ? OFFSET ?"
+            params.extend([per_page, offset])
+            
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            
+            notifications = []
+            for row in rows:
+                notifications.append(cls(
+                    db_path=db_path,
+                    id=row['id'],
+                    user_id=row['user_id'],
+                    type=row['type'],
+                    title=row['title'],
+                    description=row['description'],
+                    icon=row['icon'],
+                    icon_color=row['icon_color'],
+                    icon_bg=row['icon_bg'],
+                    action_url=row['action_url'],
+                    action_text=row['action_text'],
+                    metadata=row['metadata'],
+                    is_read=bool(row['is_read']),
+                    created_at=row['created_at']
+                ))
+            
+            return notifications
+        except Exception as e:
+            print(f"Erro ao buscar notificações: {e}")
+            return []
+        finally:
+            conn.close()
+    
+    @classmethod
+    def count_for_user(cls, user_id, filter_type=None, is_read=None):
+        """Conta notificações para um usuário com filtros"""
+        db_path = Config.DATABASE
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Cria a tabela se não existir
+            temp_instance = cls(db_path=db_path)
+            temp_instance.criar_tabela()
+            
+            query = "SELECT COUNT(*) FROM notificacoes WHERE user_id = ?"
+            params = [user_id]
+            
+            if filter_type:
+                query += " AND type = ?"
+                params.append(filter_type)
+            
+            if is_read is not None:
+                query += " AND is_read = ?"
+                params.append(1 if is_read else 0)
+            
+            cursor.execute(query, params)
+            return cursor.fetchone()[0]
+        except Exception as e:
+            print(f"Erro ao contar notificações: {e}")
+            return 0
+        finally:
+            conn.close()
+    
+    @classmethod
+    def mark_all_as_read(cls, user_id, filter_type=None):
+        """Marca todas as notificações de um usuário como lidas"""
+        db_path = Config.DATABASE
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        try:
+            query = "UPDATE notificacoes SET is_read = 1 WHERE user_id = ?"
+            params = [user_id]
+            
+            if filter_type:
+                query += " AND type = ?"
+                params.append(filter_type)
+            
+            cursor.execute(query, params)
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Erro ao marcar todas as notificações como lidas: {e}")
+            return False
+        finally:
+            conn.close()
+    
+    @classmethod
+    def criar_notificacao_lembrete(cls, user_id, lembrete):
+        """Cria uma notificação para um lembrete"""
+        from datetime import datetime, timedelta
+        
+        # Calcula dias restantes
+        data_lembrete = datetime.strptime(lembrete['data'], '%Y-%m-%d')
+        hoje = datetime.now()
+        dias_restantes = (data_lembrete - hoje).days
+        
+        # Determina o título e descrição
+        if dias_restantes == 0:
+            titulo = f"Lembrete para hoje: {lembrete['titulo']}"
+            descricao = f"Você tem um lembrete que vence hoje."
+        elif dias_restantes == 1:
+            titulo = f"Lembrete para amanhã: {lembrete['titulo']}"
+            descricao = f"Você tem um lembrete que vence amanhã."
+        else:
+            titulo = f"Lembrete em {dias_restantes} dias: {lembrete['titulo']}"
+            descricao = f"Você tem um lembrete que vence em {dias_restantes} dias."
+        
+        # Adiciona valor se houver
+        if lembrete.get('valor'):
+            descricao += f" Valor: R$ {lembrete['valor']:.2f}"
+        
+        # Cria a notificação
+        notificacao = cls(
+            user_id=user_id,
+            type='lembrete',
+            title=titulo,
+            description=descricao,
+            icon='bi-bell',
+            icon_color='text-warning',
+            icon_bg='bg-warning bg-opacity-10',
+            action_url='/lembretes',
+            action_text='Ver Lembretes',
+            metadata={
+                'lembrete_id': lembrete['id'],
+                'dias_restantes': dias_restantes,
+                'valor': lembrete.get('valor')
+            }
+        )
+        
+        return notificacao.save()
+    
+    @classmethod
+    def criar_notificacao_orcamento(cls, user_id, orcamento, gasto_atual, percentual_usado):
+        """Cria uma notificação para orçamento excedido"""
+        titulo = f"Orçamento da categoria {orcamento['categoria']} em {percentual_usado:.0f}%"
+        
+        if percentual_usado >= 100:
+            descricao = f"Você já gastou R$ {gasto_atual:.2f} de R$ {orcamento['valor_limite']:.2f}. Orçamento excedido!"
+            icon_color = 'text-danger'
+            icon_bg = 'bg-danger bg-opacity-10'
+        elif percentual_usado >= 80:
+            descricao = f"Você já gastou R$ {gasto_atual:.2f} de R$ {orcamento['valor_limite']:.2f}. Atenção ao limite!"
+            icon_color = 'text-warning'
+            icon_bg = 'bg-warning bg-opacity-10'
+        else:
+            return False  # Não cria notificação se não atingiu o limite de alerta
+        
+        notificacao = cls(
+            user_id=user_id,
+            type='orcamento',
+            title=titulo,
+            description=descricao,
+            icon='bi-piggy-bank',
+            icon_color=icon_color,
+            icon_bg=icon_bg,
+            action_url='/orcamentos',
+            action_text='Ver Orçamentos',
+            metadata={
+                'orcamento_id': orcamento['id'],
+                'categoria': orcamento['categoria'],
+                'valor_limite': orcamento['valor_limite'],
+                'gasto_atual': gasto_atual,
+                'percentual_usado': percentual_usado
+            }
+        )
+        
+        return notificacao.save()
+    
+    @classmethod
+    def criar_notificacao_meta(cls, user_id, meta, progresso):
+        """Cria uma notificação para meta atingida"""
+        percentual = (meta['valor_atual'] / meta['valor_alvo']) * 100
+        
+        if percentual >= 100:
+            titulo = f"🎉 Meta '{meta['titulo']}' concluída!"
+            descricao = f"Parabéns! Você atingiu sua meta de R$ {meta['valor_alvo']:.2f}."
+            icon_color = 'text-success'
+            icon_bg = 'bg-success bg-opacity-10'
+        elif percentual >= 75:
+            titulo = f"Meta '{meta['titulo']}' quase concluída!"
+            descricao = f"Faltam apenas R$ {meta['valor_alvo'] - meta['valor_atual']:.2f} para atingir sua meta."
+            icon_color = 'text-info'
+            icon_bg = 'bg-info bg-opacity-10'
+        else:
+            return False  # Não cria notificação se não atingiu marcos importantes
+        
+        notificacao = cls(
+            user_id=user_id,
+            type='meta',
+            title=titulo,
+            description=descricao,
+            icon='bi-trophy',
+            icon_color=icon_color,
+            icon_bg=icon_bg,
+            action_url='/metas',
+            action_text='Ver Metas',
+            metadata={
+                'meta_id': meta['id'],
+                'titulo': meta['titulo'],
+                'valor_alvo': meta['valor_alvo'],
+                'valor_atual': meta['valor_atual'],
+                'percentual': percentual
+            }
+        )
+        
+        return notificacao.save()

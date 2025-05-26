@@ -166,6 +166,80 @@ def add_despesa():
         except Exception as e:
             return jsonify({"error": str(e)}), 400
 
+@api_bp.route('/test')
+def test_api():
+    """Rota de teste para verificar se a API está funcionando"""
+    return jsonify({"status": "API funcionando", "timestamp": datetime.now().isoformat()})
+
+# 2. Adicione esta rota para verificar dados do usuário:
+@api_bp.route('/debug/usuario')
+@api_login_required
+def debug_usuario():
+    """Debug: Verifica dados do usuário"""
+    usuario_id = session.get('usuario_id')
+    
+    try:
+        # Testa todas as models
+        usuario_model = Usuario(Config.DATABASE)
+        usuario = usuario_model.buscar_por_id(usuario_id)
+        
+        lembrete_model = Lembrete(Config.DATABASE)
+        lembretes = lembrete_model.buscar(usuario_id=usuario_id, concluido=0)
+        
+        despesa_model = Despesa(Config.DATABASE)
+        despesas = despesa_model.buscar(usuario_id=usuario_id, limit=5)
+        
+        return jsonify({
+            "usuario_id": usuario_id,
+            "usuario": usuario,
+            "lembretes_count": len(lembretes),
+            "lembretes": lembretes[:3] if lembretes else [],
+            "despesas_count": len(despesas),
+            "despesas": despesas[:3] if despesas else [],
+            "status": "OK"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "usuario_id": usuario_id,
+            "status": "ERROR"
+        }), 500
+    
+@api_bp.route('/debug/tabelas')
+@api_login_required  
+def debug_tabelas():
+    """Debug: Verifica se as tabelas existem no banco"""
+    try:
+        conn = sqlite3.connect(Config.DATABASE)
+        cursor = conn.cursor()
+        
+        # Lista todas as tabelas
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tabelas = cursor.fetchall()
+        
+        # Verifica estrutura de cada tabela importante
+        estruturas = {}
+        tabelas_importantes = ['usuarios', 'despesas', 'receitas', 'lembretes', 'orcamentos', 'metas_financeiras', 'dividas']
+        
+        for tabela in tabelas_importantes:
+            try:
+                cursor.execute(f"PRAGMA table_info({tabela})")
+                estruturas[tabela] = cursor.fetchall()
+            except:
+                estruturas[tabela] = "TABELA NÃO EXISTE"
+        
+        conn.close()
+        
+        return jsonify({
+            "tabelas_existentes": [t[0] for t in tabelas],
+            "estruturas": estruturas,
+            "status": "OK"
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e), "status": "ERROR"}), 500
+    
 # Rota para obter receitas
 @api_bp.route('/receitas')
 @api_login_required
@@ -1080,24 +1154,33 @@ from database.models import Lembrete
 @api_login_required
 def get_lembretes():
     """API para obter lembretes do usuário"""
-    usuario_id = session.get('usuario_id')
-    
-    # Parâmetros de filtro
-    tipo_perfil = request.args.get('tipo_perfil')
-    concluido = request.args.get('concluido')
-    
-    if concluido is not None:
-        concluido = int(concluido)
-    
-    # Busca os lembretes
-    lembrete_model = Lembrete(Config.DATABASE)
-    lembretes = lembrete_model.buscar(
-        usuario_id=usuario_id,
-        tipo_perfil=tipo_perfil,
-        concluido=concluido
-    )
-    
-    return jsonify(lembretes)
+    try:
+        usuario_id = session.get('usuario_id')
+        
+        # Parâmetros de filtro
+        tipo_perfil = request.args.get('tipo_perfil')
+        concluido = request.args.get('concluido')
+        
+        if concluido is not None:
+            concluido = int(concluido)
+        
+        # Busca os lembretes
+        lembrete_model = Lembrete(Config.DATABASE)
+        lembretes = lembrete_model.buscar(
+            usuario_id=usuario_id,
+            tipo_perfil=tipo_perfil,
+            concluido=concluido
+        )
+        
+        # Ordena por data se houver lembretes
+        if lembretes:
+            lembretes = sorted(lembretes, key=lambda x: x.get('data', '9999-12-31'))
+        
+        return jsonify(lembretes)
+        
+    except Exception as e:
+        print(f"Erro em get_lembretes: {str(e)}")
+        return jsonify({"error": str(e), "lembretes": []}), 500
 
 # Rota para adicionar um lembrete
 @api_bp.route('/lembretes', methods=['POST'])

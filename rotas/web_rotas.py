@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, session, jsonify, send_file
-from database.models import Usuario, Despesa, Receita, Lembrete, CategoriaPersonalizada, Membro, TextProcessor, MetaFinanceira, Divida, Orcamento
+from database.models import Usuario, Despesa, Receita, Lembrete, CategoriaPersonalizada, Membro, TextProcessor, MetaFinanceira, Divida, Orcamento, Notificacao
 from functools import wraps
 import os
 import sqlite3
@@ -96,7 +96,10 @@ def dashboard():
         usuario_id=usuario_id,
         concluido=0
     )
-    lembretes = sorted(lembretes, key=lambda x: x['data'])[:3]  # Top 3 próximos
+    # Ordena por data e pega os 3 próximos
+    if lembretes:
+        from datetime import datetime
+        lembretes = sorted(lembretes, key=lambda x: x['data'])[:3]
     
     # Busca orçamentos
     orcamento_model = Orcamento(Config.DATABASE)
@@ -107,9 +110,18 @@ def dashboard():
     
     # Adiciona gastos atuais para orçamentos
     for orcamento in orcamentos:
-        orcamento['gasto_atual'] = orcamento_model.calcular_gasto_atual(
-            orcamento_id=orcamento['id']
-        )
+        try:
+            orcamento['gasto_atual'] = orcamento_model.calcular_gasto_atual(
+                orcamento_id=orcamento['id']
+            )
+            # Calcula percentual
+            if orcamento['valor_limite'] > 0:
+                orcamento['percentual'] = (orcamento['gasto_atual'] / orcamento['valor_limite']) * 100
+            else:
+                orcamento['percentual'] = 0
+        except:
+            orcamento['gasto_atual'] = 0
+            orcamento['percentual'] = 0
     
     # Busca metas financeiras
     meta_model = MetaFinanceira(Config.DATABASE)
@@ -118,12 +130,98 @@ def dashboard():
         tipo_perfil='pessoal'
     )
     
+    # Calcula percentual das metas
+    for meta in metas:
+        if meta['valor_alvo'] > 0:
+            meta['percentual'] = (meta['valor_atual'] / meta['valor_alvo']) * 100
+        else:
+            meta['percentual'] = 0
+    
     # Busca dívidas
     divida_model = Divida(Config.DATABASE)
     dividas = divida_model.buscar(
         usuario_id=usuario_id,
         tipo_perfil='pessoal'
     )
+    
+    # Calcula percentual pago das dívidas
+    for divida in dividas:
+        if divida['valor_total'] > 0:
+            divida['percentual_pago'] = (divida['valor_pago'] / divida['valor_total']) * 100
+        else:
+            divida['percentual_pago'] = 0
+    
+    # Busca últimas transações
+    despesa_model = Despesa(Config.DATABASE)
+    receita_model = Receita(Config.DATABASE)
+    
+    # Define período (últimos 30 dias)
+    from datetime import datetime, timedelta
+    hoje = datetime.now()
+    data_inicio = (hoje - timedelta(days=30)).strftime("%Y-%m-%d")
+    data_fim = hoje.strftime("%Y-%m-%d")
+    
+    # Busca despesas e receitas recentes
+    despesas_recentes = despesa_model.buscar(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        limit=10
+    )
+    
+    receitas_recentes = receita_model.buscar(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        limit=10
+    )
+    
+    # Combina e ordena transações por data
+    transacoes = []
+    
+    for despesa in despesas_recentes:
+        transacoes.append({
+            'id': despesa['id'],
+            'tipo': 'despesa',
+            'valor': despesa['valor'],
+            'descricao': despesa['descricao'],
+            'categoria': despesa['categoria'],
+            'data': despesa['data'],
+            'data_criacao': despesa['data_criacao']
+        })
+    
+    for receita in receitas_recentes:
+        transacoes.append({
+            'id': receita['id'],
+            'tipo': 'receita',
+            'valor': receita['valor'],
+            'descricao': receita['descricao'],
+            'categoria': receita['categoria'],
+            'data': receita['data'],
+            'data_criacao': receita['data_criacao']
+        })
+    
+    # Ordena por data de criação (mais recentes primeiro)
+    transacoes = sorted(transacoes, key=lambda x: x['data_criacao'], reverse=True)[:10]
+    
+    # Calcula totais do mês atual
+    data_inicio_mes = f"{hoje.year}-{hoje.month:02d}-01"
+    
+    total_despesas_mes = despesa_model.total_periodo(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio_mes,
+        data_fim=data_fim,
+        tipo_perfil='pessoal'
+    )
+    
+    total_receitas_mes = receita_model.total_periodo(
+        usuario_id=usuario_id,
+        data_inicio=data_inicio_mes,
+        data_fim=data_fim,
+        tipo_perfil='pessoal'
+    )
+    
+    saldo_mes = total_receitas_mes - total_despesas_mes
     
     # Determina quais funcionalidades o usuário pode acessar com base no plano
     plano = usuario.get('plano', 'gratuito')
@@ -139,6 +237,10 @@ def dashboard():
         orcamentos=orcamentos,
         metas=metas,
         dividas=dividas,
+        transacoes=transacoes,
+        total_despesas_mes=total_despesas_mes,
+        total_receitas_mes=total_receitas_mes,
+        saldo_mes=saldo_mes,
         plano=plano,
         pode_acesso_empresarial=pode_acesso_empresarial
     )
@@ -2002,7 +2104,7 @@ def api_whatsapp_atualizar():
 def notificacoes():
     # Se o usuário não estiver logado, redireciona para a página inicial
     if 'usuario_id' not in session:
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login'))
     return render_template('notificacoes.html')
 
 # API de Notificações
